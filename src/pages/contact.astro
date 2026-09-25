@@ -13,9 +13,20 @@ import Base from '../layouts/Base.astro';
         <p class="visually-hidden"><label>Leave this empty <input name="company" /></label></p>
         <label>Your name<input name="name" autocomplete="name" required /></label>
         <label>Email address<input type="email" name="email" autocomplete="email" required /></label>
-        <label>Message<textarea name="message" rows="6" required></textarea></label>
+        <input type="hidden" name="tour" id="cf-tour" />
+        <label>Message<textarea name="message" id="cf-message" rows="6" required></textarea></label>
         <button class="btn btn--primary" type="submit" data-track="submit_contact">Send message</button>
       </form>
+      <script is:inline>
+        // Coming from a tour page (?tour=slug): note the tour and start the message for the guest
+        (function () {
+          var t = new URLSearchParams(location.search).get('tour');
+          if (!t || !/^[a-z0-9-]+$/.test(t)) return;
+          document.getElementById('cf-tour').value = t;
+          var m = document.getElementById('cf-message');
+          if (!m.value) m.value = 'Tour: ' + t.replace(/-/g, ' ') + '\nPreferred dates: \nNumber of guests: ';
+        })();
+      </script>
     </div>
   </section>
 </Base>

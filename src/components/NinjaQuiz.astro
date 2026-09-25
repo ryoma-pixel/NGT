@@ -1,19 +1,21 @@
 ---
-// "Which mission is yours?" Three quick picks, then a scroll unrolls with the matching tour and the price for the group size.
+// "Which mission is yours?" Three quick picks (where, day or night, what you're into), then a scroll unrolls with the matching tour.
+// Tours marked comingSoon are left out because they cannot be booked yet.
 import Icon from './Icon.astro';
 import { priceTiers, type Tour } from '../lib/tours';
+import { USD_PER_JPY } from '../lib/fx';
 import type { IconName } from './icons';
 interface Props { tours: Tour[] }
 const { tours } = Astro.props;
 
-const data = tours.map((t) => {
+const data = tours.filter((t) => !t.data.comingSoon).map((t) => {
   const d = t.data;
   const times = d.startTimes ?? '';
   const night = d.themes.includes('Nightlife') || /night/i.test(times);
   const day = !d.themes.includes('Nightlife') || /day/i.test(times);
   const img = d.heroImage?.replace(/\.webp$/, '-640.webp');
   return {
-    id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', img, alt: d.heroAlt ?? '',
+    id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', img, alt: d.heroAlt ?? '', area: d.area, booking: d.bookingUrl ?? '',
     themes: d.themes, icons: d.features.map((f) => f.icon), night, day, seasonal: d.themes.includes('FourSeasons'),
     tiers: priceTiers(t).map((x) => [x.minGuests, x.pricePerPerson]),
   };
@@ -21,25 +23,25 @@ const data = tours.map((t) => {
 
 type Opt = { v: string; icon: IconName; label: string };
 const questions: { key: string; q: string; opts: Opt[] }[] = [
-  { key: 'time', q: 'When do you strike?', opts: [
-    { v: 'day', icon: 'city', label: 'By day' },
-    { v: 'night', icon: 'lantern', label: 'By night' },
+  { key: 'area', q: 'Where are you staying?', opts: [
+    { v: 'Shinjuku', icon: 'pin', label: 'Shinjuku' },
+    { v: 'Ueno', icon: 'pin', label: 'Ueno' },
+    { v: 'Asakusa', icon: 'pin', label: 'Asakusa' },
+    { v: 'any', icon: 'shuriken', label: 'Anywhere is fine' },
   ] },
-  { key: 'skill', q: 'Pick your ninjutsu', opts: [
-    { v: 'hidden', icon: 'torii', label: 'Find hidden places' },
-    { v: 'eat', icon: 'bowl', label: 'Eat & drink' },
-    { v: 'make', icon: 'stamp', label: 'Make & shop' },
-    { v: 'ride', icon: 'scooter', label: 'Ride' },
+  { key: 'time', q: 'Day or night?', opts: [
+    { v: 'day', icon: 'sun', label: 'Daytime' },
+    { v: 'night', icon: 'moon', label: 'After dark' },
   ] },
-  { key: 'squad', q: 'Your squad?', opts: [
-    { v: '1', icon: 'mask', label: 'Solo' },
-    { v: '2', icon: 'group', label: '2 of us' },
-    { v: '3', icon: 'group', label: '3 of us' },
-    { v: '4', icon: 'group', label: '4 or more' },
+  { key: 'into', q: 'What are you into?', opts: [
+    { v: 'culture', icon: 'torii', label: 'Shrines & old Tokyo' },
+    { v: 'food', icon: 'sake', label: 'Local food & drinks' },
+    { v: 'craft', icon: 'stamp', label: 'Crafts & souvenirs' },
+    { v: 'ride', icon: 'scooter', label: 'Riding an e-scooter' },
   ] },
 ];
 ---
-<section class="qz" id="quiz" data-quiz>
+<section class="qz" id="quiz" data-quiz data-usd-per-jpy={USD_PER_JPY}>
   <div class="wrap qz__in">
     <div class="qz__head">
       <p class="eyebrow">Can’t choose?</p>
@@ -90,12 +92,12 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
 </section>
 
 <script>
-  type T = { id: string; title: string; tagline: string; img?: string; alt: string; themes: string[]; icons: string[]; night: boolean; day: boolean; seasonal: boolean; tiers: [number, number][] };
+  type T = { id: string; title: string; tagline: string; img?: string; alt: string; area: string; booking: string; themes: string[]; icons: string[]; night: boolean; day: boolean; seasonal: boolean; tiers: [number, number][] };
   // Each answer scores tours by their themes and by the icons on their "What you'll do" list
-  const SKILL: Record<string, { themes: Record<string, number>; icons: string[] }> = {
-    hidden: { themes: { History: 2, Entertainment: 2, Culture: 1 }, icons: ['torii', 'lantern'] },
-    eat: { themes: { Food: 3, Nightlife: 2 }, icons: ['sake', 'glass', 'bowl', 'dango', 'cup'] },
-    make: { themes: { JapaneseCustoms: 2, Shopping: 2 }, icons: ['stamp', 'knife', 'brush', 'bag'] },
+  const INTO: Record<string, { themes: Record<string, number>; icons: string[] }> = {
+    culture: { themes: { History: 2, Entertainment: 2, Culture: 1 }, icons: ['torii', 'lantern'] },
+    food: { themes: { Food: 3, Nightlife: 2 }, icons: ['sake', 'glass', 'dango', 'cup'] },
+    craft: { themes: { JapaneseCustoms: 2, Shopping: 2 }, icons: ['stamp', 'knife', 'brush', 'bag'] },
     ride: { themes: { 'E-Scooter': 6 }, icons: ['scooter'] },
   };
   const track = (event: string, params: Record<string, unknown> = {}) => {
@@ -120,15 +122,17 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
     };
 
     const pick = () => {
-      const want = SKILL[answers.skill] ?? { themes: {}, icons: [] };
+      const want = INTO[answers.into] ?? { themes: {}, icons: [] };
       let best: T | undefined; let bestScore = -Infinity;
       tours.forEach((t) => {
         let s = 0;
+        if (answers.area !== 'any') s += t.area === answers.area ? 6 : -6;
         s += (answers.time === 'night' ? t.night : t.day) ? 4 : -4;
         t.themes.forEach((th) => { s += want.themes[th] ?? 0; });
         s += t.icons.filter((ic) => want.icons.includes(ic)).length * 2;
-        if (answers.skill !== 'ride' && t.themes.includes('E-Scooter')) s -= 3;
-        if (t.seasonal) s -= 1;
+        if (answers.into !== 'ride' && t.themes.includes('E-Scooter')) s -= 3;
+        // Seasonal tours (the spring cherry blossom walk) only win in March–April
+        if (t.seasonal) s -= [2, 3].includes(new Date().getMonth()) ? 1 : 8;
         if (s > bestScore) { bestScore = s; best = t; }
       });
       return best!;
@@ -136,24 +140,30 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
 
     const show = () => {
       const t = pick();
-      const n = Number(answers.squad);
-      const tier = [...t.tiers].reverse().find(([min]) => n >= min) ?? t.tiers[0];
+      const prices = t.tiers.map(([, p]) => p);
       const yen = (v: number) => `¥${v.toLocaleString('en-US')}`;
       const img = root.querySelector<HTMLImageElement>('[data-qz-img]')!;
       if (t.img) { img.src = t.img; img.alt = t.alt; }
       root.querySelector('[data-qz-title]')!.textContent = t.title;
       root.querySelector('[data-qz-tag]')!.textContent = t.tagline;
-      root.querySelector('[data-qz-price]')!.textContent = `${yen(tier[1])} per person${t.tiers.length > 1 ? ` · ${n === 4 ? '4+ guests' : n === 1 ? 'solo' : `${n} guests`}` : ''}`;
+      const lo = Math.min(...prices), hi = Math.max(...prices);
+      const usdPerJpy = Number(root.dataset.usdPerJpy) || 0;
+      let rate = usdPerJpy;
+      try { const c = JSON.parse(localStorage.getItem('ngt-fx') || 'null'); if (c?.r) rate = c.r; } catch {}
+      const usd = (a: number, b: number) => (a === b ? `≈US$${Math.round(a * rate)}` : `≈US$${Math.round(a * rate)}–${Math.round(b * rate)}`);
+      root.querySelector('[data-qz-price]')!.textContent = lo === hi
+        ? `${yen(lo)} (${usd(lo, lo)}) per person`
+        : `${yen(lo)}–${hi.toLocaleString('en-US')} (${usd(lo, hi)}) per person, by group size`;
       const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
       const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
-      book.href = `/tour/${t.id}#book`; book.dataset.tour = t.id;
+      book.href = t.booking || `/tour/${t.id}#book`; book.dataset.tour = t.id;
       more.href = `/tour/${t.id}#scroll`; more.dataset.tour = t.id;
       steps.parentElement!.classList.add('is-done');
       result.hidden = false;
       const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
       root.style.setProperty('--half', `${scroll.offsetWidth / 2 - 22}px`);
       requestAnimationFrame(() => requestAnimationFrame(() => result.classList.add('is-open')));
-      track('quiz_complete', { tour: t.id, time: answers.time, skill: answers.skill, squad: answers.squad });
+      track('quiz_complete', { tour: t.id, area: answers.area, time: answers.time, into: answers.into });
     };
 
     qs.forEach((q, i) => q.addEventListener('click', (e) => {

@@ -3,10 +3,10 @@ import Base from '../../layouts/Base.astro';
 import { getColumns } from '../../lib/tours';
 const columns = await getColumns();
 ---
-<Base title="Tokyo Guide" description="Local tips for Shinjuku, Ueno and Asakusa from our Ninja guides: izakaya, souvenirs, retro cafes and more.">
+<Base title="Column: Tokyo tips from our Ninja guides" description="Local tips for Shinjuku, Ueno and Asakusa from our Ninja guides: izakaya, souvenirs, retro cafes and more.">
   <section class="section">
     <div class="wrap">
-      <p class="eyebrow">Tokyo Guide</p>
+      <p class="eyebrow">Column</p>
       <h1>Local tips from our Ninja guides</h1>
       <div class="grid grid--3">
         {columns.map((c) => (

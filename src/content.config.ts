@@ -58,6 +58,10 @@ const tours = defineCollection({
     bookingUrl: z.string().url().optional(),
     otaLinks: z.array(z.object({ name: z.string(), url: z.string().url() })).default([]),
     seasonal: z.string().optional(),
+    // Shown on the site but not bookable yet (no bookingUrl): the card says "Coming soon" and the page asks guests to get in touch
+    comingSoon: z.boolean().default(false),
+    // Photo for the back of the tour card (defaults to the second gallery photo)
+    cardBack: z.string().optional(),
     order: z.number().default(100),
     // Drafts are shown on preview builds only, never on the production site
     draft: z.boolean().default(true),

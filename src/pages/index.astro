@@ -1,4 +1,5 @@
 ---
+import Usd from '../components/Usd.astro';
 import NextStep from '../components/NextStep.astro';
 import Base from '../layouts/Base.astro';
 import HeroSlideshow from '../components/HeroSlideshow.astro';
@@ -15,6 +16,8 @@ import pricing from '../data/pricing.json';
 import reviews from '../data/reviews.json';
 import { getTours, yen } from '../lib/tours';
 const tours = await getTours();
+// The home picture scroll tells the Secret Shrine tour, so its button books that tour directly
+const shrineBooking = tours.find((t) => t.id === 'shinjuku-secret-shrine')?.data.bookingUrl ?? '/tour/shinjuku-secret-shrine#book';
 
 const jsonLd = [
   { '@context': 'https://schema.org', '@type': 'TravelAgency', name: site.name, url: Astro.site?.toString(), description: site.description, sameAs: [site.instagram, site.tiktok] },
@@ -97,6 +100,17 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
 
   <NinjaQuiz tours={tours} />
 
+
+
+  <div id="night">
+    <Emaki
+      scenes={night}
+      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
+      kamon="torii"
+      end={{ title: 'Your turn.', cta: 'Book this night', href: shrineBooking, external: true }}
+    />
+  </div>
+
   <section class="stats" aria-label="NINJA GO TOURS in numbers">
     <div class="wrap stats__grid">
       <div data-reveal><strong><span data-count="280">0</span>+</strong><span>tiny bars, one Ninja</span></div>
@@ -105,15 +119,6 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       <div data-reveal style="--d:300ms"><strong><span data-count="1">0</span></strong><span>guide, just for you</span></div>
     </div>
   </section>
-
-  <div id="night">
-    <Emaki
-      scenes={night}
-      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
-      kamon="torii"
-      end={{ title: 'Your turn.', cta: 'Book this night', href: '/tour/shinjuku-secret-shrine#book' }}
-    />
-  </div>
 
   <Reviews />
 
@@ -127,6 +132,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
           <li class="stamp" data-stamp style={`--d:${i * 140}ms; --r:${[-8, 5, -4, 7][i]}deg`}>
             <span class="stamp__who">{t.label}</span>
             <strong>{yen(t.pricePerPerson)}</strong>
+            <Usd jpy={t.pricePerPerson} class="stamp__usd" />
             <span class="stamp__per">per adult</span>
           </li>
         ))}
@@ -258,6 +264,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .stamp strong { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3.2vw, 2.6rem); line-height: 1; }
   .stamp__who { font-family: var(--mono); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
   .stamp__per { font-size: 0.8rem; opacity: 0.8; }
+  .stamp :global(.stamp__usd) { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; }
   .stamp:last-child { background: var(--shu); color: #fff; }
   .price__note { color: var(--muted); font-size: 0.9rem; }
 

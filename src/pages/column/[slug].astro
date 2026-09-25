@@ -17,7 +17,7 @@ const { Content } = await render(column);
 <Base title={column.data.title} description={column.data.description} image={column.data.heroImage}>
   <article class="section">
     <div class="wrap">
-      <p class="eyebrow"><a href="/column">Tokyo Guide</a></p>
+      <p class="eyebrow"><a href="/column">Column</a></p>
       {column.data.draft && <span class="badge badge--draft">DRAFT</span>}
       <h1>{column.data.title}</h1>
       {column.data.heroImage && <img class="hero" src={column.data.heroImage} alt="" width="1200" height="675" />}

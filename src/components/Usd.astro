@@ -1,0 +1,10 @@
+---
+// "≈US$17" next to a yen price. The build bakes in a recent rate; the page script in Base.astro
+// updates every [data-jpy] element with the current rate (cached for 12 hours in the browser).
+import { usdAmount } from '../lib/fx';
+interface Props { jpy: number | [number, number]; class?: string }
+const { jpy, class: cls } = Astro.props;
+const [lo, hi] = Array.isArray(jpy) ? jpy : [jpy, jpy];
+const text = lo === hi ? `≈US$${usdAmount(lo)}` : `≈US$${usdAmount(lo)}–${usdAmount(hi)}`;
+---
+<span class:list={['usd', cls]} data-jpy={lo === hi ? String(lo) : `${lo}-${hi}`} title="Approximate, at today’s exchange rate. You pay in Japanese yen.">{text}</span>

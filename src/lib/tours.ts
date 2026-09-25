@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import pricing from '../data/pricing.json';
+import { usdAmount } from './fx';
 
 // Netlify sets CONTEXT=production only for the live site; previews and local builds show drafts.
 export const showDrafts = process.env.CONTEXT !== 'production';
@@ -29,12 +30,26 @@ export function fromPrice(tour: Tour) {
   return Math.min(...priceTiers(tour).map((t) => t.pricePerPerson));
 }
 
+/**
+ * Price as guests should read it. Showing only "¥2,500 (4+ guests)" made people think
+ * the tour needs 4 people, so tiered tours show the full range: "¥2,500–8,000", "per person, by group size".
+ */
+export function priceLabel(tour: Tour): { amount: string; note: string; jpy: [number, number] } {
+  if (tour.data.fixedPricePerPerson) {
+    const p = tour.data.fixedPricePerPerson;
+    return { amount: yen(p), note: 'per person', jpy: [p, p] };
+  }
+  const prices = priceTiers(tour).map((t) => t.pricePerPerson);
+  const lo = Math.min(...prices), hi = Math.max(...prices);
+  return { amount: `${yen(lo)}–${hi.toLocaleString('en-US')}`, note: 'per person, by group size', jpy: [lo, hi] };
+}
+
 export function yen(n: number) {
   return `¥${n.toLocaleString('en-US')}`;
 }
 
 export function usd(n: number) {
-  return `US$${Math.round(n / pricing.usdRate)}`;
+  return `US$${usdAmount(n)}`;
 }
 
 // Areas with their own listing page (Osaka is reserved in the schema but redirects to /tours for now)

@@ -1,7 +1,7 @@
 ---
 title: Ueno Ameyoko! “The First 60 Minutes in Tokyo” to Master Local Rules
 shortTitle: 'Ueno Ameyoko: Your First 60 Minutes'
-hook: Your first 60 minutes in Tokyo, the way locals actually live it.
+hook: Hand over ¥1,000, shout your bid and win a mountain of snacks at Ameyoko’s street auction.
 summary: Ask your local friend anything, try Ameyoko’s street auction, scout the izakaya under the tracks and learn shrine etiquette at Ueno Toshogu.
 area: Ueno
 themes:
@@ -12,8 +12,9 @@ themes:
 durationMinutes: 60
 startTimes: 11:00 AM – 5:00 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
-heroImage: /images/tours/ueno-ameyoko.webp
-heroAlt: Fresh fruit stalls along the Ameyoko market street in Ueno
+heroImage: /images/tours/ueno-ameyoko/hero-g1.webp
+heroAlt: A guest taking a photo of the Ameyoko sign on Ueno’s busy market street
+cardBack: /images/tours/ueno-ameyoko/back-g4.webp
 meetingPoint:
   name: JR Ueno Station, Ueno no Mori Sakura Terrace (1F, in front of Tully’s Coffee)
   access: 'From the JR Ueno Station Shinobazu Exit: turn right, walk under the elevated tracks and cross the pedestrian bridge. From the Keisei Ueno Station Main Exit: turn left and you are there.'
@@ -61,7 +62,7 @@ gallery:
   alt: A seafood stall in Ameyoko
 - src: /images/tours/ueno-ameyoko/gallery-8.webp
   alt: The golden gate of Ueno Toshogu
-tagline: Your first 60 minutes in Tokyo.
+tagline: Join the snack auction!
 pattern: asanoha
 kamon: asanoha
 features:

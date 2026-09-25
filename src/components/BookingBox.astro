@@ -1,22 +1,26 @@
 ---
-import { fromPrice, yen, type Tour } from '../lib/tours';
+import Usd from './Usd.astro';
+import { priceLabel, yen, type Tour } from '../lib/tours';
 import PriceTable from './PriceTable.astro';
 interface Props { tour: Tour }
 const { tour } = Astro.props;
 const d = tour.data;
+const pl = priceLabel(tour);
+const soon = d.comingSoon || !d.bookingUrl;
 ---
 <aside class="bb card" id="book">
   {d.fixedPricePerPerson
-    ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> per person</p>
-    : <p class="bb__from">from <strong>{yen(fromPrice(tour))}</strong> per adult in groups of 4+</p>}
+    ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> <Usd jpy={d.fixedPricePerPerson} /> per person</p>
+    : <p class="bb__from"><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> per adult. The bigger your group, the less each person pays.</p>}
   <PriceTable tour={tour} />
-  {d.bookingUrl
-    ? <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>
-    : <p class="bb__missing">Booking link not set yet (bookingUrl).</p>}
+  {soon
+    ? <><p class="bb__soon">Launching soon. Tell us your dates and we’ll let you know first.</p><a class="btn btn--primary btn--block" href={`/contact?tour=${tour.id}`} data-track="click_coming_soon" data-tour={tour.id}>Ask about dates</a></>
+    : <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>}
   <ul class="bb__why">
     <li>Best price when you book here</li>
     {d.privateTour && <li>Private: your group only</li>}
     <li>Confirmation by email</li>
+    <li>Charged in Japanese yen. US$ amounts are approximate, at today’s rate.</li>
   </ul>
   {d.otaLinks.length > 0 && (
     <div class="bb__ota">
@@ -30,15 +34,13 @@ const d = tour.data;
   )}
 </aside>
 
-{d.bookingUrl && (
-  <div class="bbar" aria-hidden="false">
-    <div>
-      <span class="bbar__t">{d.shortTitle}</span>
-      <span class="bbar__p">from <strong>{yen(fromPrice(tour))}</strong></span>
-    </div>
-    <a class="btn btn--primary" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="mobile_bar">Book now</a>
+<div class="bbar" aria-hidden="false">
+  <div>
+    <span class="bbar__t">{d.shortTitle}</span>
+    <span class="bbar__p">{soon ? 'Coming soon' : <><strong>{pl.amount}</strong> /person</>}</span>
   </div>
-)}
+  <a class="btn btn--primary" href={soon ? `/contact?tour=${tour.id}` : d.bookingUrl} data-track={soon ? 'click_coming_soon' : 'click_book'} data-tour={tour.id} data-location="mobile_bar">{soon ? 'Ask us' : 'Book now'}</a>
+</div>
 
 <style>
   .bb { padding: 20px; position: sticky; top: 76px; }
@@ -67,4 +69,5 @@ const d = tour.data;
   .bb__ota-list { display: flex; flex-wrap: wrap; gap: 8px; }
   .bb__ota-btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 11px; border: 1.5px solid var(--ai); border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ai); text-decoration: none; }
   .bb__ota-btn:hover { background: var(--ai); color: var(--cream); }
+  .bb__soon { margin: 12px 0 10px; font-size: 0.92rem; color: var(--ink-2); }
 </style>

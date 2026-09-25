@@ -12,8 +12,9 @@ themes:
 durationMinutes: 60
 startTimes: 10:00 AM – 4:00 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
-heroImage: /images/tours/asakusa-kappabashi-knife-tour.webp
-heroAlt: A wall of Japanese kitchen knives on display in a Kappabashi knife shop
+heroImage: /images/tours/asakusa-kappabashi-knife-tour/hero-h1.webp
+heroAlt: The giant chef head on top of the Niimi building, the landmark of Kappabashi kitchen town
+cardBack: /images/tours/asakusa-kappabashi-knife-tour.webp
 meetingPoint:
   name: Tawaramachi Station Exit 3, in front of Sanzendo
   access: Right outside Tawaramachi Station Exit 3 on the Tokyo Metro Ginza Line (about 10 minutes’ walk from Asakusa Station).

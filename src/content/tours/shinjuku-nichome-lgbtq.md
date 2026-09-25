@@ -13,8 +13,8 @@ durationMinutes: 60
 startTimes: 5:00 PM – 9:00 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
 ageNote: No strict age limit, but parental discretion is advised.
-heroImage: /images/tours/shinjuku-nichome-lgbtq.webp
-heroAlt: Two smiling guests in happi coats on a neon-lit Shinjuku street
+heroImage: /images/tours/shinjuku-nichome-lgbtq/gallery-1.webp
+heroAlt: A rainbow flag outside a bar in Shinjuku Nichome at dusk
 meetingPoint:
   name: In front of Starbucks Coffee (Keio Shinjuku 3-chome Building)
   access: Directly outside Exit C1 of Shinjuku-sanchome Station (subway), or about a 10-minute walk from JR Shinjuku Station.

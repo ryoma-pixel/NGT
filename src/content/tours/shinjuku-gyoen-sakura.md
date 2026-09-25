@@ -64,6 +64,7 @@ gallery:
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-8.webp
   alt: Shinjuku skyline over the garden pond
 tagline: Sweets first, then sakura.
+seasonal: Spring only
 pattern: seigaiha
 kamon: sakura
 features:

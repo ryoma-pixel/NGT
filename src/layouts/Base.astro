@@ -93,6 +93,36 @@ const indexable = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninja
       }
     </script>
     <script>
+      // Live exchange rate: refresh every "≈US$" amount ([data-jpy]) with today's rate, cached for 12 hours.
+      import { FX_URLS } from '../lib/fx-sources';
+      const KEY = 'ngt-fx';
+      const apply = (rate: number) => {
+        document.querySelectorAll<HTMLElement>('[data-jpy]').forEach((el) => {
+          const [lo, hi] = el.dataset.jpy!.split('-').map(Number);
+          const a = Math.round(lo * rate);
+          el.textContent = hi ? `≈US$${a}–${Math.round(hi * rate)}` : `≈US$${a}`;
+        });
+      };
+      (async () => {
+        if (!document.querySelector('[data-jpy]')) return;
+        try {
+          const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+          if (c && Date.now() - c.t < 12 * 3600e3) return apply(c.r);
+        } catch {}
+        for (const url of FX_URLS) {
+          try {
+            const j = await (await fetch(url)).json();
+            const r = j?.rates?.USD;
+            if (r > 0.001 && r < 0.1) {
+              apply(r);
+              try { localStorage.setItem(KEY, JSON.stringify({ r, t: Date.now() })); } catch {}
+              return;
+            }
+          } catch {}
+        }
+      })();
+    </script>
+    <script>
       // Analytics: any element with data-track sends an event (GA4 via gtag, or GTM via dataLayer).
       document.addEventListener('click', (e) => {
         const el = (e.target as HTMLElement).closest<HTMLElement>('[data-track]');
