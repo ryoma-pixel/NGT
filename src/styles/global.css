@@ -154,4 +154,7 @@ table.price td:last-child, table.price th:last-child { text-align: right; }
 .is-offscreen, .is-offscreen *, .is-offscreen *::before, .is-offscreen *::after { animation-play-state: paused !important; }
 @media (hover: none) {
   .hdr, .hdr--overlay.is-scrolled, .sbar, .tc__feat li, .th__meta li { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  /* without the blur, text scrolling under the header showed through: make the bars solid instead */
+  .hdr:not(.hdr--overlay), .hdr--overlay.is-scrolled { background: rgb(13 15 28 / 0.98) !important; }
+  .sbar { background: rgb(13 15 28 / 0.98) !important; }
 }
