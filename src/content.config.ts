@@ -64,7 +64,7 @@ const tours = defineCollection({
     bookingUrl: z.string().url().optional(),
     otaLinks: z.array(z.object({ name: z.string(), url: z.string().url() })).default([]),
     seasonal: z.string().optional(),
-    // Guides on some tours (Ueno, Asakusa, Nichome) do not wear the Ninja costume: a notice then shows on the card, the tour page and the booking box
+    // Guides on some tours (Ueno, Asakusa, Nichome) do not wear the Ninja costume: a notice then shows on the tour page (hero, above the FAQ, booking box)
     noCostume: z.boolean().default(false),
     // What the guide wears instead, e.g. "Your guide wears smart-casual clothing." (optional, added to the notice)
     outfit: z.string().optional(),

@@ -20,7 +20,7 @@ meetingPoint:
   lookFor: Your friendly guide holding a NINJA GO TOURS logo or sign.
   image: /images/tours/shinjuku-hanko/meeting.webp
   imageAlt: The Ninja guide pointing to the Busta Shinjuku sign
-  mapUrl: https://www.google.com/maps/search/?api=1&query=Busta+Shinjuku
+  mapUrl: https://maps.app.goo.gl/7wAYwVs4nM4GKcjT7
   mapEmbed: https://www.google.com/maps?q=Busta%20Shinjuku&hl=en&z=17&output=embed
 itinerary:
 - title: Meet up & Kanji workshop (10 min)

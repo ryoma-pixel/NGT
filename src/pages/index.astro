@@ -50,8 +50,7 @@ const scrollTours = Object.fromEntries(
         ? '<strong>Launching soon</strong> <span>Ask us about dates</span>'
         : `<strong>${pl.amount}</strong> <span>≈US$${usdAmount(pl.jpy[0])}${pl.jpy[1] !== pl.jpy[0] ? `–${usdAmount(pl.jpy[1])}` : ''} ${pl.note}</span>`;
       return [t.id, {
-        // tours whose guide wears no Ninja costume say so under the price
-        price: d.noCostume ? `${price}<br><span>No Ninja costume on this tour</span>` : price, soon,
+        price, soon,
         id: t.id,
         eyebrow: `Your mission: ${d.shortTitle}`,
         title: d.tagline ?? d.shortTitle,

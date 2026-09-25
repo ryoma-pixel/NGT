@@ -1,9 +1,9 @@
 ---
 # New tour (planned for October 2026, from the guide manual in Drive: 2609｜浅草ナイトツアー / 夜の浅草ナイトツアー_ガイドマニュアル).
 # Shown as "Coming soon" until bookingUrl is set. Add story photos from Drive (素材_2609｜浅草ナイトツアー) to get the picture scroll.
-title: "Asakusa After Dark: A Photogenic Night Walk with a Ninja"
+title: "Asakusa After Dark: A Photogenic Night Walk"
 shortTitle: "Asakusa Night Photo Walk"
-hook: "The lanterns glow, the crowds are gone, and your Ninja knows where to stand for the shot."
+hook: "The lanterns glow, the crowds are gone, and your guide knows where to stand for the shot."
 summary: "Walk lit-up Senso-ji, Kaminarimon and Asakusa Shrine after the day crowds leave, with a local guide who helps you take the best photos of the night."
 area: Asakusa
 themes: [Culture, Nightlife, History, Walk]
@@ -15,7 +15,7 @@ meetingPoint:
   name: Asakusa Culture Tourist Information Center, 1F entrance (across from Kaminarimon)
   access: 0–2 minutes from Asakusa Station (Ginza Line / Asakusa Line), Exit 2 or A4.
   lookFor: Look for the guide dressed in black with a black mask or bandana. This tour’s guides do not wear the full Ninja costume.
-  mapUrl: https://www.google.com/maps/search/?api=1&query=Asakusa+Culture+Tourist+Information+Center
+  mapUrl: https://maps.app.goo.gl/yQ8SrMyFZX3RGSKS9
   mapEmbed: https://www.google.com/maps?q=Asakusa%20Culture%20Tourist%20Information%20Center&hl=en&z=17&output=embed
 itinerary:
 - title: Meet up & rooftop view of Senso-ji and Skytree (8 min)
