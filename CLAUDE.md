@@ -82,6 +82,9 @@
 - 口コミ：Drive の「NGT_英語口コミ一覧_20260908」に実際のレビューがある。掲載できる範囲を確認してから使う（捏造しない）。
 
 ## コラムの自動生成（2026-09-25 ご本人依頼「SEO・AIO対策で1日1本」）
+- **2026-09-25 決定：費用をかけない方式（A案）で運用**。Claude Code の Routine（定期実行、ご本人の契約の利用枠内・追加費用なし）が **月・水・金 05:53 JST** に新しいセッションを起動し、`docs/column-routine.md` の手順どおりに1本の下書き（`draft: true`）を書いて作業ブランチに push する。未確認の下書きが7本たまると書かずに終わる。書き方・本数・書き込み先ブランチを変えるときは `docs/column-routine.md` を直す（次回から反映）。Routine の時刻・停止は claude.ai の Routines 画面、またはこのセッションから。
+- リスク（ご本人に説明済み）：ご本人の個人契約の利用枠を使う／ご本人が担当を外れると止まる → 効果が出たら Kiranah Resort 名義の API（下記の GitHub Actions 版）へ移す。GitHub Actions の定期実行はコメントアウトで停止中（手動実行は残す）。
+- 以下は API 版（有料・停止中）の記録。
 - **2026-09-25 ご本人指示で保留（コラムは最後に進める）**。仕組みは入っているが、`ANTHROPIC_API_KEY` 未設定のため動いていない。
 - 仕組み：GitHub Actions（`.github/workflows/daily-column.yml`、毎日 05:53 JST）が `scripts/generate-column.ts` を実行 → 下書き（`draft: true`・`generated: true`）を `src/content/columns/` にコミット → 人が Pages CMS で事実確認して `draft: false` にすると公開。**自動では公開しない**。
 - 手順：①ネタ帳 `src/data/column-topics.json` の先頭を使う（Pages CMS の「Column topics」で編集可。空になったら Claude が既存記事と重ならない題を選ぶ）②Claude（`claude-opus-5`）がウェブ検索で調べて出典つきメモを作る ③メモだけを根拠に、構造化出力（JSON）で本文・FAQ・関連ツアー・出典を書く ④ビルドが通ったらコミット。

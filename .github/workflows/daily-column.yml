@@ -4,9 +4,11 @@
 # Optional: repository variable COLUMN_BRANCH = branch to write to (default: the branch the workflow runs on).
 name: Daily column draft
 
+# 2026-09-25: columns are written by a Claude Code Routine on the owner's plan (docs/column-routine.md), so the schedule is off.
+# Turn it back on (and add the API key) only if the paid API version is wanted.
 on:
-  schedule:
-    - cron: '53 20 * * *' # 05:53 JST
+  # schedule:
+  #   - cron: '53 20 * * *' # 05:53 JST
   workflow_dispatch:
 
 permissions:
