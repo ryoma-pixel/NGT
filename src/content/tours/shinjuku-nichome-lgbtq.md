@@ -11,7 +11,7 @@ themes:
 - Culture
 - Walk
 durationMinutes: 60
-startTimes: 5:00 PM – 9:00 PM (every 30 minutes)
+startTimes: 5:00 PM – 10:00 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
 ageNote: No strict age limit, but parental discretion is advised.
 heroImage: /images/tours/shinjuku-nichome-lgbtq/gallery-1.webp

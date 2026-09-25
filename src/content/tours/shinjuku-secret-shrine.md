@@ -11,7 +11,7 @@ themes:
 - Nightlife
 - Walk
 durationMinutes: 60
-startTimes: 5:00 PM – 9:00 PM (every 30 minutes)
+startTimes: 5:00 PM – 9:30 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
 heroImage: /images/tours/shinjuku-secret-shrine.webp
 heroAlt: A Ninja guide standing in a tunnel of red torii gates at a hidden Shinjuku shrine

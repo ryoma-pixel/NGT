@@ -10,7 +10,7 @@ themes:
 - History
 - Walk
 durationMinutes: 60
-startTimes: 5:00 PM – 9:00 PM (every 30 minutes)
+startTimes: 5:00 PM – 10:00 PM (every 30 minutes)
 bookingDeadline: Reserve by 12:00 PM the day before
 heroImage: /images/hero/goldengai-night.webp
 heroAlt: Two guests and their Ninja guide smiling under the neon of Kabukicho at night
