@@ -51,7 +51,7 @@ story:
   imageAlt: A craftsman hand-engraving a name on a Japanese knife
 gallery:
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-1.webp
-  alt: The giant chef head on a Kappabashi building
+  alt: A new Japanese knife wrapped in newspaper, ready to take home
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-2.webp
   alt: Kappabashi kitchen town street
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-3.webp
@@ -66,6 +66,8 @@ gallery:
   alt: A tableware shop full of plates and bowls
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-8.webp
   alt: The modern Kama-Asa knife store
+- src: /images/tours/asakusa-kappabashi-knife-tour/gallery-9.webp
+  alt: A quiet Kiriko cut-glass gallery with glassware on white shelves
 tagline: The street where chefs shop.
 pattern: yagasuri
 kamon: knives

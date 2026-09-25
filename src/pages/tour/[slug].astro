@@ -173,7 +173,7 @@ const reels = getReels(await getTours(), tour.id);
         <div class="gal__grid">
           {d.gallery.map((g, i) => (
             <button type="button" class={galClass(i)} data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
-              <img src={g.src} srcset={srcset(g.src, 1100)} sizes="(max-width: 900px) 50vw, 25vw" alt={g.alt} width="1100" height="733" loading="lazy" />
+              <img src={g.src} srcset={srcset(g.src, 2048)} sizes="(max-width: 900px) 50vw, 25vw" alt={g.alt} width="1100" height="733" loading="lazy" />
             </button>
           ))}
         </div>
@@ -226,7 +226,7 @@ const reels = getReels(await getTours(), tour.id);
         <Split text="Questions? Answered." />
         {d.meetingPoint?.image && (
           <figure class="mp">
-            <img src={d.meetingPoint.image} alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />
+            <img src={d.meetingPoint.image} srcset={srcset(d.meetingPoint.image, 2048)} sizes="(max-width: 900px) 92vw, 480px" alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />
             <figcaption><Icon name="pin" size={18} /> Meeting point: {d.meetingPoint.name}</figcaption>
           </figure>
         )}
