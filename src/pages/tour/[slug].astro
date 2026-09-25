@@ -1,0 +1,132 @@
+---
+import Base from '../../layouts/Base.astro';
+import BookingBox from '../../components/BookingBox.astro';
+import TourCard from '../../components/TourCard.astro';
+import { getTours, fromPrice, THEME_LABELS } from '../../lib/tours';
+import { render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tours = await getTours();
+  return tours.map((tour) => ({ params: { slug: tour.id }, props: { tour, tours } }));
+}
+const { tour, tours } = Astro.props;
+const d = tour.data;
+const { Content } = await render(tour);
+const related = tours.filter((t) => t.id !== tour.id && t.data.area === d.area).slice(0, 3);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TouristTrip',
+  name: d.title,
+  description: d.summary,
+  touristType: 'Private group',
+  ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
+  offers: {
+    '@type': 'Offer',
+    price: fromPrice(tour),
+    priceCurrency: 'JPY',
+    availability: 'https://schema.org/InStock',
+    url: new URL(`/tour/${tour.id}`, Astro.site).toString(),
+  },
+  provider: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
+};
+---
+<Base title={d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd}>
+  <section class="th">
+    {d.heroImage && <img class="th__img" src={d.heroImage} alt={d.heroAlt ?? ''} width="1600" height="900" />}
+    <div class="wrap th__in">
+      <nav class="th__crumbs" aria-label="Breadcrumb"><a href="/tours">Tours</a> / <a href={`/area/${d.area}`}>{d.area}</a></nav>
+      {d.draft && <span class="badge badge--draft">DRAFT – not shown on the live site</span>}
+      <h1>{d.title}</h1>
+      <p class="th__sum">{d.summary}</p>
+      <ul class="th__facts">
+        <li>⏱ {d.durationMinutes} minutes</li>
+        <li>👥 Private – your group only</li>
+        <li>🗣 English-speaking Ninja guide</li>
+        {d.startTimes.length > 0 && <li>🕒 Starts {d.startTimes.join(' / ')}</li>}
+        {d.seasonal && <li>🌸 {d.seasonal}</li>}
+      </ul>
+    </div>
+  </section>
+
+  <div class="wrap tl">
+    <div class="tl__main">
+      {d.highlights.length > 0 && (
+        <section>
+          <h2>Highlights</h2>
+          <ul class="hl">{d.highlights.map((h) => <li>{h}</li>)}</ul>
+        </section>
+      )}
+
+      <section class="prose"><Content /></section>
+
+      {d.itinerary.length > 0 && (
+        <section>
+          <h2>Route</h2>
+          <ol class="it">
+            {d.itinerary.map((s) => <li><h3>{s.title}</h3><p>{s.text}</p></li>)}
+          </ol>
+        </section>
+      )}
+
+      {(d.included.length > 0 || d.notIncluded.length > 0) && (
+        <section class="inc">
+          <div><h2>Included</h2><ul>{d.included.map((i) => <li>{i}</li>)}</ul></div>
+          <div><h2>Not included</h2><ul>{d.notIncluded.map((i) => <li>{i}</li>)}</ul></div>
+        </section>
+      )}
+
+      {d.meetingPoint && (
+        <section>
+          <h2>Meeting point</h2>
+          <p><strong>{d.meetingPoint.name}</strong>{d.meetingPoint.address && <><br />{d.meetingPoint.address}</>}</p>
+          {d.meetingPoint.mapUrl && <a class="btn btn--ghost" href={d.meetingPoint.mapUrl} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}>Open in Google Maps</a>}
+        </section>
+      )}
+
+      {d.themes.length > 0 && (
+        <p class="tags">{d.themes.map((t) => <a class="badge" href={`/theme/${t}`}>{THEME_LABELS[t]}</a>)}</p>
+      )}
+    </div>
+    <div class="tl__side">
+      <BookingBox tour={tour} />
+    </div>
+  </div>
+
+  {related.length > 0 && (
+    <section class="section">
+      <div class="wrap">
+        <h2>More tours in {d.area}</h2>
+        <div class="grid grid--3">{related.map((t) => <TourCard tour={t} />)}</div>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .th { position: relative; background: var(--ink); color: #fff; overflow: hidden; }
+  .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
+  .th__in { position: relative; padding: 48px 16px 40px; }
+  .th__crumbs { font-size: 0.85rem; opacity: 0.8; margin-bottom: 12px; }
+  .th__crumbs a { text-decoration: none; }
+  .th__sum { font-size: 1.1rem; max-width: 40em; color: #e6e1d8; }
+  .th__facts { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 8px 20px; font-weight: 600; font-size: 0.95rem; }
+  .tl { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; padding-top: 40px; padding-bottom: 40px; }
+  .tl__main > section { margin-bottom: 36px; }
+  .hl { list-style: none; padding: 0; display: grid; gap: 10px; }
+  .hl li { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 8px; padding: 10px 14px; }
+  .it { list-style: none; padding: 0; counter-reset: s; }
+  .it li { position: relative; padding: 0 0 18px 44px; counter-increment: s; border-left: 2px dashed var(--line); margin-left: 15px; }
+  .it li::before { content: counter(s); position: absolute; left: -16px; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
+  .it li:last-child { border-left-color: transparent; }
+  .it h3 { font-family: var(--body); font-weight: 700; font-size: 1.05rem; margin: 0.2em 0; }
+  .inc { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .inc h2 { font-size: 1.3rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tags a { text-decoration: none; }
+  @media (max-width: 900px) {
+    .tl { grid-template-columns: 1fr; gap: 8px; }
+    .inc { grid-template-columns: 1fr; }
+    :global(body) { padding-bottom: 76px; }
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import TourList from '../../components/TourList.astro';
+import { getTours, THEMES, THEME_LABELS } from '../../lib/tours';
+
+export async function getStaticPaths() {
+  const tours = await getTours();
+  return THEMES.map((theme) => ({ params: { theme }, props: { tours: tours.filter((t) => t.data.themes.includes(theme)) } }));
+}
+const { theme } = Astro.params;
+const { tours } = Astro.props;
+const label = THEME_LABELS[theme];
+---
+<Base title={`${label} Tours in Tokyo`} description={`${label} tours in Tokyo with a Ninja guide. Private for your group, around 60 minutes.`}>
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow"><a href="/tours">All tours</a> / {label}</p>
+      <h1>{label}</h1>
+      <TourList tours={tours} />
+    </div>
+  </section>
+</Base>

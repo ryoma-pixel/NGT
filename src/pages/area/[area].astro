@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import TourList from '../../components/TourList.astro';
+import { getTours, AREAS } from '../../lib/tours';
+
+export async function getStaticPaths() {
+  const tours = await getTours();
+  return AREAS.map((area) => ({ params: { area }, props: { tours: tours.filter((t) => t.data.area === area) } }));
+}
+const { area } = Astro.params;
+const { tours } = Astro.props;
+---
+<Base title={`${area} Tours with a Ninja Guide`} description={`Private Ninja-guided walking tours in ${area}, Tokyo. 60 minutes, your group only. Book direct for the best price.`}>
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow"><a href="/tours">All tours</a> / {area}</p>
+      <h1>{area} tours</h1>
+      <TourList tours={tours} />
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getColumns } from '../../lib/tours';
+const columns = await getColumns();
+---
+<Base title="Tokyo Guide" description="Local tips for Shinjuku, Ueno and Asakusa from our Ninja guides: izakaya, souvenirs, retro cafes and more.">
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">Tokyo Guide</p>
+      <h1>Local tips from our Ninja guides</h1>
+      <div class="grid grid--3">
+        {columns.map((c) => (
+          <a class="card col" href={`/column/${c.id}`}>
+            {c.data.heroImage && <img src={c.data.heroImage} alt="" loading="lazy" width="640" height="400" />}
+            <div class="col__b">
+              {c.data.draft && <span class="badge badge--draft">DRAFT</span>}
+              <h2>{c.data.title}</h2>
+              <p>{c.data.description}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+<style>
+  .col { text-decoration: none; display: block; }
+  .col img { aspect-ratio: 16/10; object-fit: cover; width: 100%; }
+  .col__b { padding: 16px 18px; }
+  .col h2 { font-size: 1.15rem; margin-top: 0.3em; }
+  .col p { color: var(--muted); font-size: 0.95rem; margin: 0; }
+</style>

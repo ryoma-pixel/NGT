@@ -1,0 +1,12 @@
+{
+  "currency": "JPY",
+  "usdRate": 150,
+  "tiers": [
+    { "label": "1 guest", "minGuests": 1, "maxGuests": 1, "pricePerPerson": 8000 },
+    { "label": "2 guests", "minGuests": 2, "maxGuests": 2, "pricePerPerson": 4000 },
+    { "label": "3 guests", "minGuests": 3, "maxGuests": 3, "pricePerPerson": 2800 },
+    { "label": "4+ guests", "minGuests": 4, "maxGuests": 99, "pricePerPerson": 2500 }
+  ],
+  "childPolicy": "Kids 12 and under join free (one child per paying adult). Additional children pay the adult rate.",
+  "note": "Price per adult (13+). Your group only — no strangers join your tour."
+}

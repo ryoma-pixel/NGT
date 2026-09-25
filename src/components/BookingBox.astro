@@ -1,0 +1,62 @@
+---
+import { fromPrice, yen, type Tour } from '../lib/tours';
+import PriceTable from './PriceTable.astro';
+interface Props { tour: Tour }
+const { tour } = Astro.props;
+const d = tour.data;
+---
+<aside class="bb card" id="book">
+  <p class="bb__from">from <strong>{yen(fromPrice(tour))}</strong> per adult in groups of 4+</p>
+  <PriceTable tour={tour} />
+  {d.bookingUrl
+    ? <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>
+    : <p class="bb__missing">Booking link not set yet (bookingUrl).</p>}
+  <ul class="bb__why">
+    <li>Best price when you book here</li>
+    <li>Private: your group only</li>
+    <li>Instant confirmation by email</li>
+  </ul>
+  {d.otaLinks.length > 0 && (
+    <p class="bb__ota">
+      Read reviews on:
+      {d.otaLinks.map((o, i) => (
+        <>{i > 0 && ' · '}<a href={o.url} rel="noopener" target="_blank" data-track="click_ota" data-tour={tour.id} data-ota={o.name}>{o.name}</a></>
+      ))}
+    </p>
+  )}
+</aside>
+
+{d.bookingUrl && (
+  <div class="bbar" aria-hidden="false">
+    <div>
+      <span class="bbar__t">{d.shortTitle}</span>
+      <span class="bbar__p">from <strong>{yen(fromPrice(tour))}</strong></span>
+    </div>
+    <a class="btn btn--primary" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="mobile_bar">Book now</a>
+  </div>
+)}
+
+<style>
+  .bb { padding: 20px; position: sticky; top: 76px; }
+  .bb__from { margin-bottom: 0.6em; color: var(--muted); }
+  .bb__from strong { font-family: var(--display); font-weight: 400; font-size: 1.8rem; color: var(--ink); }
+  .bb .btn { margin-top: 12px; }
+  .bb__missing { background: #ffe58a; padding: 0.6em; border-radius: 8px; font-size: 0.9rem; }
+  .bb__why { list-style: none; padding: 0; margin: 14px 0 0; font-size: 0.9rem; }
+  .bb__why li { padding-left: 1.4em; position: relative; margin: 0.3em 0; }
+  .bb__why li::before { content: '✓'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+  .bb__ota { font-size: 0.85rem; color: var(--muted); margin: 12px 0 0; }
+  .bbar { display: none; }
+  @media (max-width: 900px) {
+    .bb { position: static; }
+    .bbar {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+      align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: #fff; border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgb(0 0 0 / 0.08);
+    }
+    .bbar > div { display: flex; flex-direction: column; min-width: 0; }
+    .bbar__t { font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bbar__p strong { font-size: 1.15rem; }
+  }
+</style>

@@ -1,0 +1,28 @@
+---
+import pricing from '../data/pricing.json';
+import { priceTiers, yen, usd, type Tour } from '../lib/tours';
+interface Props { tour?: Tour }
+const { tour } = Astro.props;
+const tiers = tour ? priceTiers(tour) : pricing.tiers;
+---
+<div class="pt">
+  <table class="price">
+    <caption class="visually-hidden">Price per adult by group size</caption>
+    <thead><tr><th scope="col">Your group</th><th scope="col">Per adult</th><th scope="col">Group total</th></tr></thead>
+    <tbody>
+      {tiers.map((t) => (
+        <tr>
+          <td>{t.label}</td>
+          <td><strong>{yen(t.pricePerPerson)}</strong> <span class="pt__usd">≈{usd(t.pricePerPerson)}</span></td>
+          <td>{t.maxGuests === 99 ? `${yen(t.pricePerPerson * t.minGuests)}+` : yen(t.pricePerPerson * t.minGuests)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p class="pt__note">{pricing.note} {pricing.childPolicy} USD amounts are approximate.</p>
+</div>
+
+<style>
+  .pt__usd { color: var(--muted); font-size: 0.85em; margin-left: 0.3em; }
+  .pt__note { font-size: 0.85rem; color: var(--muted); margin-top: 0.8em; }
+</style>

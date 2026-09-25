@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import TourList from '../components/TourList.astro';
+import PriceTable from '../components/PriceTable.astro';
+import faq from '../data/faq.json';
+import site from '../data/site.json';
+import { getTours } from '../lib/tours';
+const tours = await getTours();
+
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'TravelAgency', name: site.name, url: Astro.site?.toString(), description: site.description, sameAs: [site.instagram, site.tiktok] },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+---
+<Base jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="wrap hero__in">
+      <p class="eyebrow">Private walking tours · Tokyo</p>
+      <h1>Tokyo's backstreets,<br />guided by a Ninja.</h1>
+      <p class="hero__lead">Hidden shrines, tiny bars, retro alleys and the best souvenirs — explored in 60 minutes with a friendly local Ninja guide. Just you and your group.</p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="#tours" data-track="click_hero_cta">Find your tour</a>
+        <a class="btn btn--ghost" href="#how">How it works</a>
+      </div>
+      <ul class="hero__facts">
+        <li><strong>60 min</strong><span>easy walk</span></li>
+        <li><strong>Private</strong><span>your group only</span></li>
+        <li><strong>Kids free</strong><span>12 & under</span></li>
+        <li><strong>Best price</strong><span>when you book here</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="tours">
+    <div class="wrap">
+      <p class="eyebrow">Tours</p>
+      <h2>Choose your neighborhood</h2>
+      <TourList tours={tours} />
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="wrap split">
+      <div>
+        <p class="eyebrow">Group pricing</p>
+        <h2>Bring friends, pay less each</h2>
+        <p class="lead">Your guide is yours alone, so the price per person drops as your group grows. Kids 12 and under join free with an adult.</p>
+      </div>
+      <div class="card pbox"><PriceTable /></div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps to your Ninja adventure</h2>
+      <ol class="steps">
+        <li><strong>Pick a tour</strong><p>Choose a neighborhood and a theme you love.</p></li>
+        <li><strong>Choose a date & time</strong><p>Book online in a few minutes and get instant confirmation by email.</p></li>
+        <li><strong>Meet your Ninja</strong><p>Find your guide at the meeting point and start exploring.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section faq" id="faq">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h2>Good to know</h2>
+      <div class="faq__list">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+      <p><a class="btn btn--primary" href="#tours">See all tours</a></p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { background: radial-gradient(ellipse at 80% 0%, #3a1f2a 0%, var(--ink) 60%); color: #fff; }
+  .hero__in { padding: 72px 16px 56px; }
+  .hero h1 { font-size: clamp(2.2rem, 7vw, 4rem); }
+  .hero__lead { font-size: 1.15rem; max-width: 36em; color: #ddd7cc; }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 36px; }
+  .hero__facts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; max-width: 720px; }
+  .hero__facts li { border-left: 3px solid var(--red); padding-left: 12px; display: flex; flex-direction: column; }
+  .hero__facts strong { font-family: var(--display); font-weight: 400; font-size: 1.1rem; }
+  .hero__facts span { font-size: 0.85rem; color: #bdb7ac; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .pbox { padding: 20px; color: var(--ink); }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: st; }
+  .steps li { counter-increment: st; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .steps li::before { content: counter(st); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .steps p { margin: 0.3em 0 0; color: var(--muted); }
+  .faq__list { max-width: 760px; margin-bottom: 24px; }
+  .faq details { border-bottom: 1px solid var(--line); padding: 14px 0; }
+  .faq summary { font-weight: 700; cursor: pointer; }
+  .faq details p { margin: 0.6em 0 0; color: var(--muted); }
+  @media (max-width: 800px) {
+    .hero__facts { grid-template-columns: repeat(2, 1fr); }
+    .split, .steps { grid-template-columns: 1fr; }
+  }
+</style>

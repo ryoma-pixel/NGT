@@ -1,0 +1,38 @@
+---
+import { fromPrice, yen, type Tour } from '../lib/tours';
+interface Props { tour: Tour }
+const { tour } = Astro.props;
+const d = tour.data;
+---
+<article class="card tc">
+  <a href={`/tour/${tour.id}`} class="tc__link" data-track="click_tour_card" data-tour={tour.id}>
+    <div class="tc__img">
+      {d.heroImage
+        ? <img src={d.heroImage} alt={d.heroAlt ?? ''} loading="lazy" width="640" height="400" />
+        : <div class="tc__ph" aria-hidden="true">忍</div>}
+      <span class="tc__area">{d.area}</span>
+    </div>
+    <div class="tc__body">
+      {d.draft && <span class="badge badge--draft">DRAFT</span>}
+      <h3>{d.shortTitle}</h3>
+      <p class="tc__sum">{d.summary}</p>
+      <div class="tc__meta">
+        <span>{d.durationMinutes} min · Private</span>
+        <span class="tc__price"><strong>{yen(fromPrice(tour))}</strong>/person <small>(4+ guests)</small></span>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .tc__link { display: flex; flex-direction: column; height: 100%; text-decoration: none; }
+  .tc__img { position: relative; aspect-ratio: 16 / 10; background: var(--ink-2); }
+  .tc__img img { width: 100%; height: 100%; object-fit: cover; }
+  .tc__ph { display: grid; place-items: center; height: 100%; color: #ffffff22; font-size: 5rem; font-family: var(--display); }
+  .tc__area { position: absolute; left: 12px; top: 12px; background: var(--ink); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25em 0.7em; border-radius: 999px; }
+  .tc__body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+  .tc__body h3 { margin: 0.3em 0; }
+  .tc__sum { color: var(--muted); font-size: 0.95rem; flex: 1; }
+  .tc__meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+  .tc__price strong { color: var(--ink); font-size: 1.1rem; }
+</style>

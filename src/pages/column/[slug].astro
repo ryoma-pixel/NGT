@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import TourCard from '../../components/TourCard.astro';
+import { getColumns, getTours } from '../../lib/tours';
+import { render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const [columns, tours] = await Promise.all([getColumns(), getTours()]);
+  return columns.map((column) => ({
+    params: { slug: column.id },
+    props: { column, related: tours.filter((t) => column.data.relatedTours.includes(t.id)) },
+  }));
+}
+const { column, related } = Astro.props;
+const { Content } = await render(column);
+---
+<Base title={column.data.title} description={column.data.description} image={column.data.heroImage}>
+  <article class="section">
+    <div class="wrap">
+      <p class="eyebrow"><a href="/column">Tokyo Guide</a></p>
+      {column.data.draft && <span class="badge badge--draft">DRAFT</span>}
+      <h1>{column.data.title}</h1>
+      {column.data.heroImage && <img class="hero" src={column.data.heroImage} alt="" width="1200" height="675" />}
+      <div class="prose"><Content /></div>
+    </div>
+  </article>
+  {related.length > 0 && (
+    <section class="section section--dark">
+      <div class="wrap">
+        <p class="eyebrow">See it with a local</p>
+        <h2>Join a Ninja-guided tour</h2>
+        <div class="grid grid--3">{related.map((t) => <TourCard tour={t} />)}</div>
+      </div>
+    </section>
+  )}
+</Base>
+<style>
+  .hero { border-radius: var(--radius); margin: 20px 0 28px; }
+  .section--dark :global(.card) { color: var(--ink); }
+</style>

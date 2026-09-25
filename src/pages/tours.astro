@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import TourList from '../components/TourList.astro';
+import { getTours, AREAS } from '../lib/tours';
+const tours = await getTours();
+const areas = AREAS.filter((a) => tours.some((t) => t.data.area === a));
+---
+<Base title="All Ninja Tours & Activities in Tokyo" description="All private Ninja-guided walking tours in Shinjuku, Ueno and Asakusa. 60 minutes, your group only, kids free. Book direct for the best price.">
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">All tours</p>
+      <h1>Pick your Tokyo adventure</h1>
+      <p class="lead">Every tour is private for your group, around 60 minutes, and led by an English-speaking Ninja guide.</p>
+      <nav class="chips" aria-label="Filter by area">
+        <a class="badge" href="/tours" aria-current="page">All</a>
+        {areas.map((a) => <a class="badge" href={`/area/${a}`}>{a}</a>)}
+      </nav>
+      <TourList tours={tours} />
+    </div>
+  </section>
+</Base>
+<style>
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 28px; }
+  .chips a { text-decoration: none; padding: 0.45em 1em; }
+  .chips a[aria-current] { background: var(--ink); color: #fff; }
+</style>

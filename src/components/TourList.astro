@@ -1,0 +1,9 @@
+---
+import TourCard from './TourCard.astro';
+import type { Tour } from '../lib/tours';
+interface Props { tours: Tour[] }
+const { tours } = Astro.props;
+---
+{tours.length > 0
+  ? <div class="grid grid--3">{tours.map((t) => <TourCard tour={t} />)}</div>
+  : <p class="lead">No tours here yet. <a href="/tours">See all tours</a>.</p>}

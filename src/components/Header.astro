@@ -1,0 +1,33 @@
+---
+import site from '../data/site.json';
+---
+<header class="hdr">
+  <div class="wrap hdr__in">
+    <a href="/" class="hdr__logo" aria-label={`${site.name} home`}>
+      <span class="hdr__mark" aria-hidden="true">忍</span>
+      <span>NINJA GO TOURS</span>
+    </a>
+    <nav class="hdr__nav" aria-label="Main">
+      <a href="/tours">Tours</a>
+      <a href="/column">Tokyo Guide</a>
+      <a href="/#faq">FAQ</a>
+    </nav>
+    <a href="/tours" class="btn btn--primary hdr__cta" data-track="click_header_cta">Book a tour</a>
+  </div>
+</header>
+
+<style>
+  .hdr { position: sticky; top: 0; z-index: 50; background: rgb(22 22 31 / 0.96); color: #fff; backdrop-filter: blur(6px); }
+  .hdr__in { display: flex; align-items: center; gap: 16px; height: 60px; }
+  .hdr__logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-size: 1.05rem; white-space: nowrap; }
+  .hdr__mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--red); font-size: 1rem; }
+  .hdr__nav { display: flex; gap: 20px; margin-left: auto; font-weight: 600; font-size: 0.95rem; }
+  .hdr__nav a { text-decoration: none; opacity: 0.85; }
+  .hdr__nav a:hover { opacity: 1; }
+  .hdr__cta { padding: 0.6em 1.1em; font-size: 0.9rem; }
+  @media (max-width: 720px) {
+    .hdr__nav { display: none; }
+    .hdr__cta { margin-left: auto; }
+    .hdr__logo span:last-child { font-size: 0.95rem; }
+  }
+</style>

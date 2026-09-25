@@ -1,0 +1,48 @@
+---
+import site from '../data/site.json';
+import { AREAS } from '../lib/tours';
+---
+<footer class="ftr">
+  <div class="wrap ftr__grid">
+    <div>
+      <p class="ftr__brand">NINJA GO TOURS</p>
+      <p class="ftr__small">{site.tagline}. Operated by {site.operator}</p>
+    </div>
+    <div>
+      <p class="ftr__h">Tours by area</p>
+      <ul>
+        {AREAS.map((a) => <li><a href={`/area/${a}`}>{a}</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <p class="ftr__h">Info</p>
+      <ul>
+        <li><a href="/tours">All tours</a></li>
+        <li><a href="/column">Tokyo Guide</a></li>
+        <li><a href="/term">Terms &amp; Cancellation</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="ftr__h">Follow</p>
+      <ul>
+        <li><a href={site.instagram} rel="noopener">Instagram</a></li>
+        <li><a href={site.tiktok} rel="noopener">TikTok</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap ftr__copy">© {new Date().getFullYear()} {site.operator}</div>
+</footer>
+
+<style>
+  .ftr { background: var(--ink); color: #cfc9bf; padding: 48px 0 24px; margin-top: 40px; }
+  .ftr__grid { display: grid; gap: 28px; grid-template-columns: 2fr repeat(3, 1fr); }
+  .ftr__brand { font-family: var(--display); color: #fff; font-size: 1.2rem; margin-bottom: 0.3em; }
+  .ftr__small { font-size: 0.9rem; }
+  .ftr__h { color: #fff; font-weight: 700; margin-bottom: 0.4em; }
+  .ftr ul { list-style: none; margin: 0; padding: 0; }
+  .ftr li { margin: 0.3em 0; }
+  .ftr a { text-decoration: none; }
+  .ftr a:hover { text-decoration: underline; }
+  .ftr__copy { border-top: 1px solid #33333f; margin-top: 32px; padding-top: 16px; font-size: 0.85rem; }
+  @media (max-width: 720px) { .ftr__grid { grid-template-columns: 1fr 1fr; } .ftr__grid > div:first-child { grid-column: 1 / -1; } }
+</style>
