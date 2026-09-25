@@ -184,9 +184,10 @@ content:
           - { name: name, label: Name, type: string }
           - { name: url, label: Website, type: string }
           - { name: about, label: One line about it, type: string }
-          - name: rating
-            label: Rating shown for it
+          - name: ratings
+            label: Ratings shown for it (first one is shown first)
             type: object
+            list: true
             fields:
               - { name: source, label: Site, type: string }
               - { name: score, label: Score, type: number }

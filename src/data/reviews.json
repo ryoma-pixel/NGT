@@ -5,13 +5,22 @@
     "name": "Ninja + Kabuki Tokyo",
     "url": "https://ninja-kabukitokyo.com/",
     "about": "the ninja & kabuki live show in Kabukicho, Shinjuku",
-    "rating": {
-      "source": "Tripadvisor",
-      "score": 4.7,
-      "countLabel": "400+",
-      "url": "https://www.tripadvisor.com/AttractionProductReview-g14133667-d28225594-Ninja_Kabuki_Tokyo-Kabukicho_Shinjuku_Tokyo_Tokyo_Prefecture_Kanto.html",
-      "checked": "Official site: 4.7, 416 reviews (January 2026)"
-    }
+    "ratings": [
+      {
+        "source": "Google",
+        "score": 4.8,
+        "countLabel": "2,000+",
+        "url": "https://www.google.com/maps/search/?api=1&query=Ninja+%2B+Kabuki+Tokyo+Kabukicho",
+        "checked": "Official site: 4.8, 2,042 reviews (January 2026)"
+      },
+      {
+        "source": "Tripadvisor",
+        "score": 4.7,
+        "countLabel": "400+",
+        "url": "https://www.tripadvisor.com/AttractionProductReview-g14133667-d28225594-Ninja_Kabuki_Tokyo-Kabukicho_Shinjuku_Tokyo_Tokyo_Prefecture_Kanto.html",
+        "checked": "Official site: 4.7, 416 reviews (January 2026)"
+      }
+    ]
   },
   "ratings": [
     {
