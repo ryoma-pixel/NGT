@@ -1,5 +1,6 @@
 ---
 // "Produced by Ninja + Kabuki Tokyo": the house behind NINJA GO TOURS, with review ratings as proof.
+// Light washi paper, so it reads apart from the dark footer below.
 // A kabuki curtain (joshiki-maku: black, persimmon, green) is drawn aside when the section comes into view.
 // The ratings shown are Ninja + Kabuki Tokyo's own, Google first (src/data/reviews.json > producer.ratings, editable in Pages CMS).
 import reviews from '../data/reviews.json';
@@ -12,7 +13,7 @@ const plaques: Plaque[] = p.ratings.map((r) => ({ score: r.score, source: r.sour
   <div class="wrap nkt__in">
     <div class="nkt__logo">
       <span class="nkt__tate" aria-hidden="true">座元</span>
-      <img src="/images/brand/nkt-logo-white.webp" width="600" height="456" alt="Ninja + Kabuki Tokyo" loading="lazy" decoding="async" />
+      <img src="/images/brand/nkt-logo-ink.webp" width="600" height="456" alt="Ninja + Kabuki Tokyo" loading="lazy" decoding="async" />
     </div>
     <div class="nkt__text">
       <p class="eyebrow">The house behind the Ninja</p>
@@ -44,7 +45,7 @@ const plaques: Plaque[] = p.ratings.map((r) => ({ score: r.score, source: r.sour
 </script>
 
 <style>
-  .nkt { --kaki: #9b5230; --moegi: #3d5a36; --sumi: #141418; position: relative; overflow: hidden; background: var(--night) var(--seigaiha); color: var(--cream); padding: 46px 0 38px; isolation: isolate; }
+  .nkt { --kaki: #9b5230; --moegi: #3d5a36; --sumi: #141418; position: relative; overflow: hidden; background: var(--cream) var(--washi); color: var(--ai); padding: 46px 0 38px; isolation: isolate; }
   /* the striped band of the curtain stays along the top once it is drawn aside */
   .nkt::before, .nkt::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
     background: repeating-linear-gradient(90deg, var(--sumi) 0 56px, var(--kaki) 56px 112px, var(--moegi) 112px 168px); }
@@ -59,29 +60,28 @@ const plaques: Plaque[] = p.ratings.map((r) => ({ score: r.score, source: r.sour
 
   .nkt__in { position: relative; z-index: 2; display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 20px 36px; align-items: center; }
   .nkt__logo { position: relative; display: grid; place-items: center; padding: 8px; }
-  .nkt__logo::before { content: ''; position: absolute; inset: 6% 10%; border-radius: 50%; background: radial-gradient(circle, rgb(247 240 227 / 0.14), transparent 65%); }
-  .nkt__logo img { position: relative; width: 100%; height: auto; filter: drop-shadow(0 10px 30px rgb(0 0 0 / 0.5)); }
-  .nkt__tate { position: absolute; top: 4px; left: -30px; writing-mode: vertical-rl; font-family: var(--mincho); font-weight: 800; font-size: 1rem; letter-spacing: 0.15em; padding: 6px 4px; background: var(--cream); color: var(--ai); border: 2px solid var(--cream); box-shadow: inset 0 0 0 1.5px var(--ai); }
+    .nkt__logo img { position: relative; width: 100%; height: auto;  }
+  .nkt__tate { position: absolute; top: 4px; left: -30px; writing-mode: vertical-rl; font-family: var(--mincho); font-weight: 800; font-size: 1rem; letter-spacing: 0.15em; padding: 6px 4px; background: var(--ai); color: var(--cream); border: 2px solid var(--ai); box-shadow: inset 0 0 0 1.5px var(--cream); }
 
-  .nkt .eyebrow { color: #e7c465; }
+  .nkt .eyebrow { color: var(--ai); }
   .nkt h2 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); line-height: 1; margin: 0 0 8px; }
-  .nkt h2 span { color: transparent; -webkit-text-stroke: 2px var(--cream); }
-  .nkt__lead { margin: 0; max-width: 46ch; color: rgb(247 240 227 / 0.8); font-size: 0.95rem; }
+  .nkt h2 span { color: transparent; -webkit-text-stroke: 2px var(--ai); }
+  .nkt__lead { margin: 0; max-width: 46ch; color: rgb(31 45 82 / 0.82); font-size: 0.95rem; }
   .nkt .eyebrow { margin-bottom: 0.5em; }
   .nkt__proof { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
 
   /* rating plaques: gold wooden tags, like votive plaques at a shrine */
   .nkt__plaques { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 150px); gap: 10px; }
   .nkt__plaque { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; height: 100%; padding: 14px 12px 10px; color: #2c1d06; text-decoration: none; border-radius: 6px 6px 10px 10px;
-    background: linear-gradient(160deg, #f6dc8f, #e0b95a 45%, #c99a3e); box-shadow: inset 0 0 0 2px rgb(255 240 190 / 0.6), inset 0 0 0 4px rgb(90 60 10 / 0.35), 0 8px 20px rgb(0 0 0 / 0.35); transition: transform 0.25s cubic-bezier(.3,1.5,.5,1); }
+    background: linear-gradient(160deg, #f6dc8f, #e0b95a 45%, #c99a3e); box-shadow: inset 0 0 0 2px rgb(255 240 190 / 0.6), inset 0 0 0 4px rgb(90 60 10 / 0.35), 0 6px 14px rgb(60 40 10 / 0.22); transition: transform 0.25s cubic-bezier(.3,1.5,.5,1); }
   .nkt__plaque::before { content: ''; position: absolute; top: 7px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #5a3c0a; box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.5); }
   .nkt__plaque:hover, .nkt__plaque:focus-visible { transform: translateY(-4px) rotate(-1deg); outline: none; }
   .nkt__score { font-family: var(--display); font-size: 2rem; line-height: 1; margin-top: 4px; }
   .nkt__score i { font-style: normal; font-size: 1rem; vertical-align: 0.9em; margin-left: 2px; }
   .nkt__src { font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .nkt__count { margin-top: auto; padding-top: 2px; font-family: var(--mono); font-size: 0.72rem; }
-  .nkt__go { border: 2px solid var(--cream); color: var(--cream); background: transparent; padding: 0.7em 1em; font-size: 0.8rem; text-align: center; }
-  .nkt__go:hover { background: var(--cream); color: var(--ai); }
+  .nkt__go { border: 2px solid var(--ai); color: var(--ai); background: transparent; padding: 0.7em 1em; font-size: 0.8rem; text-align: center; }
+  .nkt__go:hover { background: var(--ai); color: var(--cream); }
 
   /* entrance: plaques hang in one by one after the curtain opens */
   :global(.js) .nkt:not(.is-open) .nkt__plaques li, :global(.js) .nkt:not(.is-open) .nkt__logo img { opacity: 0; }

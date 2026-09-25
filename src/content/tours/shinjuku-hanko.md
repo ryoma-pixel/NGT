@@ -48,8 +48,8 @@ story:
   imageAlt: Colorful daruma dolls in a Shinjuku shop
 - title: Coffee & the big reveal
   text: Relax at a retro café with our hand-drawn map, then pick up your seal.
-  image: /images/tours/shinjuku-hanko/gallery-1.webp
-  imageAlt: Hanko cases in many colors
+  image: /images/tours/shinjuku-hanko/story-4.webp
+  imageAlt: The brick entrance of a retro coffee house in Shinjuku
 gallery:
 - src: /images/tours/shinjuku-hanko/gallery-1.webp
   alt: Hanko cases in many colors

@@ -437,9 +437,10 @@ const puffs: [number, number, number, number, number][] = [
   .qz__ask { position: relative; overflow: clip; padding: 4px 0 12px; min-height: 330px; transition: opacity 0.35s, transform 0.35s cubic-bezier(.7,0,.2,1); }
   .qz__ask.is-leaving { opacity: 0; transform: translateY(-16px) scale(0.98); }
   .qz__box.is-done .qz__ask { display: none; }
-  .qz__steps { display: flex; transition: transform 0.55s cubic-bezier(.7,0,.2,1); }
+  /* only the current question takes up height, so a short question leaves no blank under it */
+  .qz__steps { display: flex; align-items: flex-start; transition: transform 0.55s cubic-bezier(.7,0,.2,1); }
   .qz__step { flex: none; width: 100%; border: 0; margin: 0; padding: 0; min-width: 0; transition: opacity 0.4s; }
-  .qz__step[disabled] { opacity: 0; }
+  .qz__step[disabled] { opacity: 0; max-height: 0; overflow: hidden; }
   .qz__back { position: absolute; top: 0; right: 0; z-index: 2; background: none; border: 0; padding: 6px 2px; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
   .qz__back:hover, .qz__back:focus-visible { border-bottom-color: var(--ai); outline: none; }
   .qz__q { display: block; min-height: 118px; margin-bottom: 14px; padding: 0 84px 0 0; }
@@ -564,7 +565,8 @@ const puffs: [number, number, number, number, number][] = [
     .qz__fig--ninja .qz__fig-name { right: 18%; }
     .qz__fig-smoke { bottom: 30%; }
     /* dialogue window over the edge of the stage */
-    .qz__box { margin-top: -14px; }
+    .qz__box { position: relative; z-index: 3; margin-top: 8px; }
+    .qz__line::before { margin-left: 0; }
     .qz__ask { position: relative; }
     .qz__q { width: 100%; box-sizing: border-box; min-height: 104px; }
     .qz__q .qz__say { font-size: 1.5rem; }
