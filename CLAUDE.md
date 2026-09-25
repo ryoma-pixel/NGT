@@ -55,7 +55,8 @@
   - 霧のような煙（`Mist.astro`）：トップのヒーロー下部、絵巻の足元、トップとツアーページの最後のCTAに、2層の霧がゆっくり流れる（transformだけで動かす）。
   - RPGの要素は「ツアーのイメージづくりのアクセント程度」（ご本人方針）：トップのヒーローにRPG風の会話ウィンドウ（YOU／NINJA、1文字ずつ表示、PCのみ）、ツアーページの各場面に「SIDE QUEST」ラベル、診断結果に「MISSION ACCEPTED」。
 - リール（2026-09-25）：`src/data/reels.json`（Pages CMS で編集可）。ツアーページにだけ表示（`tour` が一致するもの。2026-09-25 ご本人指示でトップからは外した）。最初は表紙画像だけ読み込み、再生ボタンを押したときに Instagram の埋め込み（`/p/<code>/embed/`）をダイアログで開く。表紙は各ツアーの写真（ご本人OK）。登録済み：NINJA WALK（Dcn20xZTHe0、秘境神社ツアー）、合羽橋（Dcx-OQ_Bdfu）、NINJA GO RIDE（DPQh4p-k-N_、Eスクーターのページ）。**投稿者の了承を取ってから載せる**。作業環境から Instagram に接続できないため、再生の確認は Netlify の確認用URLで行う。
-- 本番以外（Netlify の確認用URL・ローカル）は `noindex, nofollow` を出す（`Base.astro`、`CONTEXT=production` のときだけ外れる）。
+- 検索よけ：`noindex, nofollow` を出し、外れるのは Netlify の本番（`CONTEXT=production`）かつ `URL` が ninjagotours.com のときだけ（`Base.astro`）。確認用の `stellar-bavarois-8bc38e.netlify.app` は作業ブランチを本番ブランチとして登録しているため、URL で判定している。
+- 確認用URL（2026-09-25 ご本人が作成）：https://stellar-bavarois-8bc38e.netlify.app （Netlify上は Private＝Netlifyのチームメンバーだけ閲覧可。作業ブランチに push すると自動で更新）。作業環境からはこのURLに接続できない。
 - FAQの分担（2026-09-25 ご本人指示）：トップ＝全体の質問（`src/data/faq.json`：貸切・料金の仕組み・子ども・言語・予約方法・集合場所・直販の理由）。ツアー詳細＝そのツアーの質問（集合場所・開始時刻・そのツアーの料金・予約方法と締切＋各ツアーの `faq`）で、最後に全体FAQへのリンク。
 - CTAは「広告っぽくなく自然に、多めに」（ご本人方針）：`NextStep.astro`（ひとこと＋タイプライター風の下線リンク1つ）を、迷いやすい所の直後に置く。トップ：ツアー一覧の後（→診断）、料金の後、流れの後、口コミの後、FAQの後（→問い合わせ）。ツアー詳細：体験の後、行程の後、リールの後、口コミの後、FAQの後（→全体FAQ）。予約エンジンへのリンクは `click_book`、それ以外は `click_next_step` で計測。
 - OTAボタン：ツアー詳細の予約ボックスに「Prefer a booking app? Also on」として枠線ボタンで表示（`otaLinks`）。**載せるOTAは Klook と Viator の2社だけ**（ご本人指示）。2026-09-25 時点で見つかったのは Klook（196854「Tokyo Shinjuku Ninja Walking Tour: Kabukicho & Golden Gai (60min)」）のみで、同名のGetYourGuide商品の行程（花園神社→ゴールデン街→ゴジラ）からゴールデン街ツアーに仮登録。Viator の掲載は見つからず。ほかのツアーのKlook・ViatorのURLは LINKTIVITY に確認する。
