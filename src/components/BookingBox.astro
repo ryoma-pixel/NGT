@@ -12,7 +12,7 @@ const soon = d.comingSoon || !d.bookingUrl;
   {d.fixedPricePerPerson
     ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> <Usd jpy={d.fixedPricePerPerson} /> per person</p>
     : <p class="bb__from"><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> per adult. The more adults in your booking, the less each pays.</p>}
-  <PriceTable tour={tour} />
+  {!d.fixedPricePerPerson && <PriceTable tour={tour} />}
   {d.noCostume && <p class="bb__nc"><strong>Please note:</strong> your guide does not wear a Ninja costume on this tour.</p>}
   {soon
     ? <><p class="bb__soon">Launching soon. Tell us your dates and we’ll let you know first.</p><a class="btn btn--primary btn--block" href={`/contact?tour=${tour.id}`} data-track="click_coming_soon" data-tour={tour.id}>Ask about dates</a></>
