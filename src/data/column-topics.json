@@ -1,7 +1,6 @@
 {
   "_note": "Queue for the daily column generator (scripts/generate-column.ts). The first item in 'queue' is written next and then moved to 'done'. Add, remove or reorder freely. When the queue is empty the generator picks a topic itself.",
   "queue": [
-    { "keyword": "is Kabukicho safe at night", "angle": "Honest safety guide for first-time visitors: what is fine, what to avoid (touts, cover charges), and how to enjoy it", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "shinjuku-secret-shrine"] },
     { "keyword": "Hanazono Shrine Shinjuku", "angle": "The shrine in the middle of the nightlife district: history, how to visit, what to look for after dark", "area": "Shinjuku", "relatedTours": ["shinjuku-secret-shrine", "goldengai-nightlife"] },
     { "keyword": "Japanese bar cover charge otoshi", "angle": "Why you pay a table charge and get a small dish you did not order, and how to handle it politely", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "ueno-ameyoko"] },
     { "keyword": "Ameyoko shopping guide", "angle": "What to buy and eat on Ameyoko, how the market calls work, best time to go", "area": "Ueno", "relatedTours": ["ueno-ameyoko"] },
@@ -30,5 +29,7 @@
     { "keyword": "Tokyo date ideas for couples", "angle": "Date ideas in Tokyo for couples, including guided evening walks", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "asakusa-night-photo-walk", "shinjuku-secret-shrine"] },
     { "keyword": "Japanese souvenirs you can make yourself", "angle": "Hands-on souvenirs in Tokyo: name seals, food samples, calligraphy and more", "area": "Shinjuku", "relatedTours": ["shinjuku-hanko", "asakusa-kappabashi-knife-tour"] }
   ],
-  "done": []
+  "done": [
+    { "keyword": "is Kabukicho safe at night", "angle": "Honest safety guide for first-time visitors: what is fine, what to avoid (touts, cover charges), and how to enjoy it", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "shinjuku-secret-shrine"], "slug": "is-kabukicho-safe-at-night", "date": "2026-09-25" }
+  ]
 }
