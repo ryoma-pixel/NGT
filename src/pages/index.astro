@@ -170,11 +170,11 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .curtain { display: none; }
   :global(html.intro) .curtain { display: block; position: fixed; inset: 0; z-index: 100; pointer-events: none; }
   .curtain__door { position: absolute; top: 0; bottom: 0; width: 50.5%; background: var(--night) var(--seigaiha); animation: door 1s cubic-bezier(.7,0,.2,1) 0.55s forwards; }
-  .curtain__door--l { left: 0; border-right: 3px solid var(--shu); }
-  .curtain__door--r { right: 0; border-left: 3px solid var(--shu); --dir: 1; }
+  .curtain__door--l { left: 0; border-right: 1px solid rgb(247 240 227 / 0.55); }
+  .curtain__door--r { right: 0; border-left: 1px solid rgb(247 240 227 / 0.55); --dir: 1; }
   .curtain__door--l { --dir: -1; }
   @keyframes door { to { transform: translateX(calc(var(--dir) * 101%)); } }
-  .curtain__seal { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: url(/images/brand/logo-light-320.webp) center / contain no-repeat; animation: seal 1.2s ease forwards; }
+  .curtain__seal { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: var(--night) url(/images/brand/logo-light-320.webp) center / contain no-repeat; animation: seal 1.2s ease forwards; }
   @keyframes seal { 0% { transform: scale(2) rotate(-40deg); opacity: 0; } 28% { transform: scale(1) rotate(-8deg); opacity: 1; } 62% { transform: scale(1) rotate(-8deg); opacity: 1; } 100% { transform: scale(0.5) rotate(20deg); opacity: 0; } }
 
   /* Hero */
