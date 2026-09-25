@@ -1,0 +1,94 @@
+---
+// The tour's timeline as a string of paper lanterns (chōchin) over a night street.
+// Each stop is a lantern with its icon painted on like a family crest; longer stops hang bigger lanterns.
+// They light up one after another when the band scrolls into view, and sway gently.
+import Icon from './Icon.astro';
+import Mist from './Mist.astro';
+import type { IconName } from './icons';
+
+interface Stop { label: string; time: string; minutes: number; icon: IconName }
+interface Props { stops: Stop[]; caption?: string }
+const { stops, caption } = Astro.props;
+const longest = Math.max(1, ...stops.map((s) => s.minutes));
+// lantern size follows the length of the stop (0.78–1.12), string length alternates for a hand-hung look
+const scale = (m: number) => (0.78 + 0.34 * (m / longest)).toFixed(2);
+---
+<div class="lp" data-reveal>
+  <span class="lp__rope" aria-hidden="true"></span>
+  <ol class="lp__list" aria-label="Tour timeline" style={`--n:${stops.length}`}>
+    {stops.map((s, k) => (
+      <li class="lp__stop" style={`--k:${k}; --s:${scale(s.minutes)}; --str:${k % 2 ? 46 : 18}px`}>
+        <span class="lp__lantern" aria-hidden="true">
+          <span class="lp__cap"></span>
+          <span class="lp__body">
+            <span class="lp__mon"><Icon name={s.icon} size={30} /></span>
+          </span>
+          <span class="lp__cap lp__cap--b"></span>
+          <span class="lp__tassel"></span>
+        </span>
+        <span class="lp__time">{s.time}</span>
+        <span class="lp__title">{s.label}</span>
+      </li>
+    ))}
+  </ol>
+  {caption && <p class="lp__cap-note">{caption}</p>}
+  <Mist strength={0.7} />
+</div>
+
+<style>
+  .lp { position: relative; margin: 26px 0 56px; padding: 0 clamp(16px, 3vw, 40px) 46px; border-radius: 28px; overflow: hidden; color: var(--cream); isolation: isolate;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 0%, rgb(247 240 227 / 0.07), transparent 70%),
+      linear-gradient(180deg, #0c0e1c 0%, #141833 60%, #1b1f3d 100%); box-shadow: var(--shadow); }
+  /* the rope the lanterns hang from */
+  .lp__rope { position: absolute; left: -2%; right: -2%; top: 26px; height: 40px; border-top: 2px solid rgb(247 240 227 / 0.35); border-radius: 50% / 100% 100% 0 0; transform: scaleY(-1); transform-origin: top; }
+  .lp__list { position: relative; z-index: 2; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: 8px; }
+  /* lanterns hang at different heights, but times and names line up on one baseline */
+  .lp__stop { display: grid; grid-row: span 3; grid-template-rows: subgrid; justify-items: center; align-items: start; text-align: center; padding-top: calc(28px + var(--str)); position: relative; }
+  /* the string from the rope */
+  .lp__stop::before { content: ''; position: absolute; top: 28px; left: 50%; width: 2px; height: var(--str); margin-left: -1px; background: rgb(247 240 227 / 0.4); }
+
+  .lp__lantern { position: relative; display: flex; flex-direction: column; align-items: center; width: calc(96px * var(--s)); transform-origin: 50% 0; animation: sway 5s ease-in-out infinite alternate; animation-delay: calc(var(--k) * -0.9s); }
+  @keyframes sway { from { transform: rotate(-2.2deg); } to { transform: rotate(2.2deg); } }
+  .lp__cap { width: 62%; height: calc(12px * var(--s)); background: #111322; border-radius: 4px 4px 2px 2px; box-shadow: inset 0 -3px 0 rgb(255 255 255 / 0.08); position: relative; z-index: 2; }
+  .lp__cap--b { border-radius: 2px 2px 4px 4px; }
+  .lp__body { position: relative; width: 100%; aspect-ratio: 96 / 112; margin: -2px 0; border-radius: 46% / 50%; display: grid; place-items: center; color: var(--ai);
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 50%, transparent 55%, rgb(70 42 12 / 0.4) 100%),
+      repeating-linear-gradient(180deg, rgb(70 42 12 / 0.22) 0 1.5px, transparent 1.5px calc(10px * var(--s))),
+      #d9cdb4; }
+  /* light inside the paper, and the glow around it: both fade in with opacity */
+  .lp__body::before { content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 50%, transparent 55%, rgb(150 70 10 / 0.45) 100%),
+      repeating-linear-gradient(180deg, rgb(120 60 10 / 0.25) 0 1.5px, transparent 1.5px calc(10px * var(--s))),
+      radial-gradient(ellipse at 50% 55%, #fff4cf 0%, #ffd27a 45%, #f0a347 100%);
+    opacity: 0; transition: opacity 0.9s ease; transition-delay: calc(0.3s + var(--k) * 0.35s); }
+  .lp__body::after { content: ''; position: absolute; inset: -70%; z-index: -1; border-radius: 50%; background: radial-gradient(circle, rgb(255 196 110 / 0.34), rgb(255 170 80 / 0.1) 40%, transparent 68%); opacity: 0; transition: opacity 1.2s ease; transition-delay: calc(0.3s + var(--k) * 0.35s); pointer-events: none; }
+  .lp__mon { position: relative; z-index: 1; display: grid; place-items: center; width: 52%; aspect-ratio: 1; border-radius: 50%; border: 2px solid currentColor; }
+  .lp__mon :global(svg) { width: 62%; height: auto; }
+  .lp__tassel { width: 3px; height: calc(18px * var(--s)); background: #b8412b; border-radius: 0 0 2px 2px; box-shadow: 0 calc(10px * var(--s)) 0 -1px #b8412b; }
+
+  .lp__time { margin-top: 18px; font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; color: #f3d27a; white-space: nowrap; }
+  .lp__title { margin-top: 6px; font-weight: 700; font-size: 0.95rem; line-height: 1.35; max-width: 15ch; }
+  .lp__cap-note { position: relative; z-index: 2; margin: 26px 0 0; text-align: center; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(247 240 227 / 0.6); }
+
+  /* before JS reveals the band, lanterns stay unlit; without JS they are lit */
+  :global(.js) .lp[data-reveal] { opacity: 1; transform: none; }
+  .lp.is-in .lp__body::before, .lp.is-in .lp__body::after, :global(html:not(.js)) .lp__body::before { opacity: 1; }
+
+  @media (max-width: 760px) {
+    .lp { padding: 18px 16px 40px; }
+    .lp__rope { left: 58px; right: auto; top: 0; bottom: 0; width: 0; height: auto; border-top: 0; border-left: 2px solid rgb(247 240 227 / 0.3); border-radius: 0; transform: none; }
+    .lp__list { grid-template-columns: 1fr; grid-template-rows: none; gap: 22px; }
+    .lp__stop { display: grid; grid-row: auto; grid-template-columns: 84px 1fr; grid-template-rows: auto auto; column-gap: 14px; align-items: center; text-align: left; padding-top: 0; }
+    .lp__stop::before { display: none; }
+    .lp__lantern { grid-row: 1 / span 2; justify-self: center; width: calc(72px * var(--s)); }
+    .lp__time { margin: 0; align-self: end; }
+    .lp__title { margin: 2px 0 0; max-width: none; align-self: start; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lp__lantern { animation: none; }
+    .lp__body::before, .lp__body::after { transition: none; }
+  }
+</style>

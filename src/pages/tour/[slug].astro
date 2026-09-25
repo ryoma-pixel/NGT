@@ -14,7 +14,7 @@ import { getReels } from '../../lib/reels';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { stepIcon } from '../../lib/step-icon';
-import NinjaStage from '../../components/NinjaStage.astro';
+import LanternPath from '../../components/LanternPath.astro';
 import { getTours, priceLabel, priceTiers, yen, AREA_JP } from '../../lib/tours';
 import pricing from '../../data/pricing.json';
 import reviews from '../../data/reviews.json';
@@ -149,13 +149,13 @@ const reels = getReels(await getTours(), tour.id);
       <div class="wrap">
         <Split text={`Your ${d.durationMinutes} minutes`} />
         {timeline.length > 1 && (
-          <NinjaStage
-            world={d.area.toUpperCase()}
-            total={showRanges ? clock : d.durationMinutes}
+          <LanternPath
+            caption={`${d.shortTitle} · about ${d.durationMinutes} min`}
             stops={timeline.map((s, k) => ({
               label: s.label,
               icon: stepIcon(s.label),
-              time: showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} MIN` : s.minutes ? `${s.minutes} MIN` : k === 0 ? 'START' : k === timeline.length - 1 ? 'GOAL' : '',
+              minutes: s.minutes,
+              time: showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} min` : s.minutes ? `${s.minutes} min` : k === 0 ? 'Start' : 'End',
             }))}
           />
         )}
