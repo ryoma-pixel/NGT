@@ -38,14 +38,20 @@ content:
           - { name: access, label: How to get there, type: text }
           - { name: lookFor, label: How to find the guide, type: string }
           - { name: mapUrl, label: Google Maps URL, type: string }
-      - name: highlights
-        label: Highlights
+          - { name: image, label: Meeting point photo, type: image }
+          - { name: imageAlt, label: Meeting point photo description, type: string }
+      - { name: hook, label: Hook (one line under the title on social/SEO), type: string }
+      - { name: tagline, label: Big catchphrase (max ~5 words), type: string }
+      - name: features
+        label: What you'll do (icon + 2-4 words)
         type: object
         list: true
         fields:
-          - { name: icon, label: Emoji, type: string }
-          - { name: title, label: Title, type: string }
-          - { name: text, label: Text, type: text }
+          - name: icon
+            label: Icon
+            type: select
+            options: { values: [torii, lantern, sake, camera, stamp, brush, bag, knife, bowl, glass, sakura, dango, rainbow, scooter, yen, city, chat, cup, pin, clock, group, kid, mask, shuriken] }
+          - { name: label, label: Label, type: string }
       - name: itinerary
         label: Itinerary
         type: object
@@ -54,13 +60,29 @@ content:
           - { name: title, label: Step (with minutes), type: string }
           - { name: text, label: Description (optional), type: text }
       - { name: itineraryNote, label: Note under itinerary, type: text }
-      - name: notes
-        label: Important notes
+      - name: story
+        label: Chapters (photo + short catch)
         type: object
         list: true
         fields:
-          - { name: title, label: Title, type: string }
-          - { name: text, label: Text, type: text }
+          - { name: title, label: Catch (max ~5 words), type: string }
+          - { name: text, label: One short sentence, type: text }
+          - { name: image, label: Photo, type: image }
+          - { name: imageAlt, label: Photo description, type: string }
+      - name: gallery
+        label: Photo gallery
+        type: object
+        list: true
+        fields:
+          - { name: src, label: Photo, type: image }
+          - { name: alt, label: Photo description, type: string }
+      - name: faq
+        label: FAQ for this tour (meeting point, times, price, language and booking are added automatically)
+        type: object
+        list: true
+        fields:
+          - { name: q, label: Question, type: string }
+          - { name: a, label: Answer, type: text }
       - { name: materialCostPerPerson, label: Materials fee per person (JPY), type: number, default: 0 }
       - { name: fixedPricePerPerson, label: Flat price per person (JPY, only for tours outside the group tiers), type: number }
       - { name: privateTour, label: Private tour (one group per guide), type: boolean, default: true }

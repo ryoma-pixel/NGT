@@ -1,6 +1,7 @@
 ---
 import { fromPrice, yen, type Tour } from '../lib/tours';
 import { srcset } from '../lib/img';
+import Icon from './Icon.astro';
 interface Props { tour: Tour }
 const { tour } = Astro.props;
 const d = tour.data;
@@ -15,7 +16,12 @@ const d = tour.data;
       {d.draft && <span class="badge badge--draft">DRAFT</span>}
       <p class="tc__area">{d.area} · {d.durationMinutes} min{d.privateTour ? ' · Private' : ''}</p>
       <h3>{d.shortTitle}</h3>
-      <p class="tc__sum">{d.summary}</p>
+      {d.tagline ? <p class="tc__tag">{d.tagline}</p> : <p class="tc__sum">{d.summary}</p>}
+      {d.features.length > 0 && (
+        <ul class="tc__feat">
+          {d.features.slice(0, 3).map((f) => <li><Icon name={f.icon} size={16} />{f.label}</li>)}
+        </ul>
+      )}
       <p class="tc__price"><strong>{yen(fromPrice(tour))}</strong> /person {!d.fixedPricePerPerson && <small>(4+ guests)</small>}<span class="tc__go" aria-hidden="true">→</span></p>
     </div>
   </a>
@@ -32,6 +38,10 @@ const d = tour.data;
   .tc__area { margin: 0 0 4px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lantern); }
   .tc__body h3 { margin: 0 0 6px; font-size: 1.3rem; }
   .tc__sum { font-size: 0.92rem; color: rgb(255 255 255 / 0.82); margin: 0 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tc__tag { font-family: var(--display); font-size: 1.05rem; line-height: 1.2; color: var(--lantern); margin: 0 0 10px; }
+  .tc__feat { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tc__feat li { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: rgb(255 255 255 / 0.14); backdrop-filter: blur(4px); font-size: 0.78rem; font-weight: 700; }
+  .tc__feat :global(.icon) { color: var(--lantern); }
   .tc__price { margin: 0; font-size: 0.85rem; display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
   .tc__price strong { font-size: 1.15rem; }
   .tc__price small { opacity: 0.75; }

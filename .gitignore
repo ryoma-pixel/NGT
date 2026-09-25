@@ -5,3 +5,6 @@ dist/
 .DS_Store
 # Booking exports contain customer personal data: never commit them
 *.csv
+
+# Preview videos (large, shared outside git)
+docs/preview/

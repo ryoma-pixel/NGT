@@ -2,11 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import BookingBox from '../../components/BookingBox.astro';
 import Split from '../../components/Split.astro';
-import { srcset } from '../../lib/img';
+import Icon from '../../components/Icon.astro';
 import TourCard from '../../components/TourCard.astro';
-import { getTours, fromPrice, yen, THEME_LABELS, AREA_JP } from '../../lib/tours';
+import { srcset } from '../../lib/img';
+import { getTours, fromPrice, priceTiers, yen, AREA_JP } from '../../lib/tours';
+import pricing from '../../data/pricing.json';
 import reviews from '../../data/reviews.json';
-import { render } from 'astro:content';
 
 export async function getStaticPaths() {
   const tours = await getTours();
@@ -14,20 +15,38 @@ export async function getStaticPaths() {
 }
 const { tour, tours } = Astro.props;
 const d = tour.data;
-const { Content } = await render(tour);
 const related = tours.filter((t) => t.id !== tour.id && t.data.area === d.area).slice(0, 3);
 const price = d.fixedPricePerPerson ?? fromPrice(tour);
-const priceNote = d.fixedPricePerPerson ? 'per person' : 'per person in groups of 4+';
+const priceNote = d.fixedPricePerPerson ? 'per person' : 'per person, groups of 4+';
 
-// Timeline: size each itinerary step by the minutes written in its title, e.g. "Golden Gai (25 min)"
+// Timeline: minutes come from the itinerary titles, e.g. "Golden Gai (25 min)", shown as 00–25 style ranges
 const steps = d.itinerary.map((s) => {
   const m = s.title.match(/\((?:about |approx\.\s*)?(\d+)\s*min/i);
   return { label: s.title.replace(/\s*\((?:about |approx\.\s*)?\d+\s*min[^)]*\)/i, ''), minutes: m ? Number(m[1]) : 0 };
 });
-const known = steps.reduce((a, s) => a + s.minutes, 0);
-const unknown = steps.filter((s) => !s.minutes).length;
-const filler = unknown ? Math.max(3, Math.round(Math.max(0, d.durationMinutes - known) / unknown)) : 0;
-const timeline = steps.map((s) => ({ ...s, weight: s.minutes || filler }));
+let clock = 0;
+const timeline = steps.map((s) => {
+  const from = clock;
+  clock += s.minutes;
+  return { ...s, from, to: clock };
+});
+const pad = (n: number) => String(n).padStart(2, '0');
+const showRanges = clock > 0 && clock <= d.durationMinutes + 30;
+
+// Questions every guest asks, answered from the tour data, then the tour's own questions
+const tiers = priceTiers(tour);
+const priceAnswer = d.fixedPricePerPerson
+  ? `${yen(d.fixedPricePerPerson)} per person.`
+  : `${tiers.map((t) => `${t.label}: ${yen(t.pricePerPerson)} each`).join(' · ')}. ${pricing.childPolicy}`;
+const faq = [
+  ...(d.meetingPoint ? [{ q: 'Where do we meet?', a: [d.meetingPoint.name, d.meetingPoint.access, d.meetingPoint.lookFor].filter(Boolean).join(' '), map: d.meetingPoint.mapUrl }] : []),
+  ...(d.startTimes ? [{ q: 'When does it start?', a: `${d.startTimes}. The tour takes about ${d.durationMinutes} minutes.` }] : []),
+  { q: 'How much does it cost?', a: priceAnswer },
+  ...(d.privateTour ? [{ q: 'Will strangers join our group?', a: 'No. The tour is private: your guide is just for your group.' }] : []),
+  { q: 'What language is the tour in?', a: `${d.language}.` },
+  { q: 'How do I book?', a: `Tap “Check availability”, pick a date and time and pay online. You get an instant confirmation email.${d.bookingDeadline ? ` ${d.bookingDeadline}.` : ''}` },
+  ...d.faq,
+];
 
 const tourReviews = reviews.items.filter((r) => r.tours.includes(tour.id));
 const heroThumbs = d.gallery.slice(0, 3);
@@ -37,37 +56,33 @@ const tallIdx = new Set(Array.from({ length: extraTall }, (_, k) => 3 + k * 2).f
 const galClass = (i: number) => (i === 0 ? 'gal__item gal__item--big' : tallIdx.has(i) ? 'gal__item gal__item--tall' : 'gal__item');
 const finale = d.story.at(-1)?.image ?? d.heroImage;
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'TouristTrip',
-  name: d.title,
-  description: d.summary,
-  ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
-  offers: {
-    '@type': 'Offer',
-    price,
-    priceCurrency: 'JPY',
-    availability: 'https://schema.org/InStock',
-    url: new URL(`/tour/${tour.id}`, Astro.site).toString(),
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TouristTrip',
+    name: d.title,
+    description: d.summary,
+    ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
+    offers: { '@type': 'Offer', price, priceCurrency: 'JPY', availability: 'https://schema.org/InStock', url: new URL(`/tour/${tour.id}`, Astro.site).toString() },
+    provider: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
   },
-  provider: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
-};
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
 ---
 <Base title={d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd} overlayHeader>
-  <!-- 1. Hero: the promise -->
+  <!-- 1. Hero: one big promise -->
   <section class="th">
     {d.heroImage && <img class="th__img" src={d.heroImage} srcset={srcset(d.heroImage, 1600)} sizes="100vw" alt={d.heroAlt ?? ''} width="1600" height="1000" fetchpriority="high" />}
     <p class="th__kanji outline" aria-hidden="true">{AREA_JP[d.area]}</p>
     <div class="wrap th__in">
-      <nav class="th__crumbs" aria-label="Breadcrumb"><a href="/tours">Tours</a> / <a href={`/area/${d.area}`}>{d.area}</a> <span class="th__jp" aria-hidden="true">{AREA_JP[d.area]}</span></nav>
       {d.draft && <span class="badge badge--draft">DRAFT – not shown on the live site</span>}
-      <Split as="h1" class="th__title" text={d.title} delay={100} />
-      {d.hook && <p class="th__hook">{d.hook}</p>}
-      <ul class="th__facts">
-        <li>⏱ {d.durationMinutes} min</li>
-        {d.privateTour && <li>👥 Private – just your group</li>}
-        <li>🗣 {d.language}</li>
-        {d.ageNote && <li>🎟 {d.ageNote}</li>}
+      <h1 class="th__title">{d.title}</h1>
+      <Split as="p" class="th__tag" text={d.tagline ?? d.shortTitle} delay={150} />
+      <ul class="th__meta">
+        <li><Icon name="clock" size={18} /> {d.durationMinutes} min</li>
+        {d.privateTour && <li><Icon name="group" size={18} /> Just your group</li>}
+        <li><Icon name="chat" size={18} /> {d.language}</li>
+        {d.ageNote && <li><Icon name="kid" size={18} /> {d.ageNote}</li>}
       </ul>
       <div class="th__cta">
         <a class="btn btn--primary btn--lg" href="#book" data-track="click_hero_book" data-tour={tour.id}>Check availability</a>
@@ -77,26 +92,25 @@ const jsonLd = {
         <div class="th__thumbs">
           {heroThumbs.map((g, i) => (
             <button type="button" class="th__thumb" data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
-              <img src={g.src} alt="" width="160" height="110" loading="lazy" />
+              <img src={g.src} srcset={srcset(g.src, 1400)} sizes="160px" alt="" width="160" height="110" loading="lazy" />
             </button>
           ))}
-          <button type="button" class="th__more" data-open-gallery="0">+{d.gallery.length} photos</button>
+          <button type="button" class="th__more" data-open-gallery="0">+{d.gallery.length}</button>
         </div>
       )}
     </div>
   </section>
 
-  <!-- 2. Why you will love it -->
-  {d.highlights.length > 0 && (
-    <section class="section section--dark hl">
+  <!-- 2. What you will do, at a glance -->
+  {d.features.length > 0 && (
+    <section class="feat">
       <div class="wrap">
-        <p class="eyebrow"><span class="jp">見どころ</span> Why you will love it</p>
-        <ul class="hl__list">
-          {d.highlights.map((h, i) => (
-            <li data-reveal style={`--d:${i * 80}ms`}>
-              {h.icon && <span class="hl__icon" aria-hidden="true">{h.icon}</span>}
-              <strong>{h.title}</strong>
-              <p>{h.text}</p>
+        <p class="eyebrow">What you’ll do</p>
+        <ul class="feat__list">
+          {d.features.map((f, i) => (
+            <li data-reveal style={`--d:${i * 90}ms`}>
+              <span class="feat__icon"><Icon name={f.icon} size={40} /></span>
+              <strong>{f.label}</strong>
             </li>
           ))}
         </ul>
@@ -104,26 +118,18 @@ const jsonLd = {
     </section>
   )}
 
-  {d.highlights.length > 0 && (
-    <div class="band marquee" aria-hidden="true" style="--speed:36s">
-      <div class="marquee__track">
-        {[0, 1].map(() => d.highlights.map((h) => <span class="band__item">{h.icon} {h.title} <b>✦</b></span>))}
-      </div>
-    </div>
-  )}
-
-  <!-- 3. The story, chapter by chapter -->
+  <!-- 3. The 60 minutes, as a story -->
   {d.story.length > 0 && (
     <section class="section story">
       <div class="wrap">
-        <p class="eyebrow"><span class="jp">体験</span> Your adventure, step by step</p>
-        <h2>Here’s how your {d.durationMinutes} minutes unfold</h2>
+        <Split text={`Your ${d.durationMinutes} minutes`} />
         {timeline.length > 1 && (
-          <ol class="tl-bar" aria-label="Tour timeline" data-reveal>
+          <ol class="tl" aria-label="Tour timeline" data-reveal>
             {timeline.map((s, k) => (
-              <li style={`flex:${s.weight}; --k:${k}`}>
-                <span class="tl-bar__seg"></span>
-                <span class="tl-bar__label">{s.label}{s.minutes ? <em> {s.minutes} min</em> : null}</span>
+              <li style={`flex:${Math.max(s.minutes, 4)}; --k:${k}`}>
+                <span class="tl__seg"></span>
+                <span class="tl__time">{showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} min` : s.minutes ? `${s.minutes} min` : 'Start'}</span>
+                <span class="tl__label">{s.label}</span>
               </li>
             ))}
           </ol>
@@ -134,30 +140,26 @@ const jsonLd = {
               {c.image && (
                 <figure class="ch__media" data-wipe>
                   <img src={c.image} srcset={srcset(c.image, 1400)} sizes="(max-width: 900px) 100vw, 55vw" alt={c.imageAlt ?? ''} width="1400" height="1050" loading="lazy" />
-                  <span class="ch__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                 </figure>
               )}
               <div class="ch__text">
-                <p class="ch__big outline" aria-hidden="true">{String(i + 1).padStart(2, '0')}</p>
-                <p class="ch__kicker">Chapter {i + 1}</p>
+                <p class="ch__num outline" aria-hidden="true">{pad(i + 1)}</p>
                 <h3>{c.title}</h3>
-                {c.text.split(/\n\n+/).map((para) => <p set:html={para.replace(/\*(.+?)\*/g, '<em>$1</em>')} />)}
+                <p>{c.text}</p>
               </div>
             </article>
           ))}
         </div>
-        {d.itineraryNote && <p class="story__end">🏁 {d.itineraryNote}</p>}
-        <div class="prose"><Content /></div>
       </div>
     </section>
   )}
 
-  <!-- 4. Photos from past tours -->
+  <!-- 4. Photos -->
   {d.gallery.length > 0 && (
     <section class="section section--dark gal">
       <div class="wrap">
-        <p class="eyebrow"><span class="jp">写真</span> Moments from our tours</p>
-        <h2>See it before you go</h2>
+        <p class="eyebrow">From our tours</p>
+        <Split text="See it before you go" />
         <div class="gal__grid">
           {d.gallery.map((g, i) => (
             <button type="button" class={galClass(i)} data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
@@ -176,14 +178,14 @@ const jsonLd = {
     </section>
   )}
 
-  <!-- 5. Guest voices for this tour -->
+  <!-- 5. Guests -->
   {tourReviews.length > 0 && (
     <section class="section tr">
       <div class="wrap">
-        <p class="eyebrow"><span class="jp">お客様の声</span> From our guests</p>
+        <p class="eyebrow">From our guests</p>
         <div class="tr__list">
           {tourReviews.map((r) => (
-            <figure class="tr__item">
+            <figure class="tr__item" data-reveal>
               <span class="tr__stars" aria-label={`${r.stars} out of 5 stars`}>{'★'.repeat(r.stars)}</span>
               <blockquote>“{r.text}”</blockquote>
               <figcaption>{r.author} — {r.source} review</figcaption>
@@ -194,50 +196,27 @@ const jsonLd = {
     </section>
   )}
 
-  <!-- 6. Plan & book -->
+  <!-- 6. Questions answered + booking -->
   <section class="section section--paper2 plan" id="plan">
     <div class="wrap plan__grid">
       <div class="plan__main">
-        <p class="eyebrow"><span class="jp">詳細</span> Plan your tour</p>
-        <h2>Everything you need to know</h2>
-
-        <div class="card facts">
-          <dl>
-            {d.startTimes && <><dt>Start times</dt><dd>{d.startTimes}</dd></>}
-            {d.bookingDeadline && <><dt>Booking</dt><dd>{d.bookingDeadline}</dd></>}
-            <dt>Duration</dt><dd>{d.durationMinutes} minutes</dd>
-            <dt>Language</dt><dd>{d.language}</dd>
-          </dl>
+        <p class="eyebrow">Good to know</p>
+        <Split text="Questions? Answered." />
+        {d.meetingPoint?.image && (
+          <figure class="mp">
+            <img src={d.meetingPoint.image} alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />
+            <figcaption><Icon name="pin" size={18} /> Meeting point: {d.meetingPoint.name}</figcaption>
+          </figure>
+        )}
+        <div class="faq">
+          {faq.map((f, i) => (
+            <details open={i === 0}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+              {'map' in f && f.map && <a class="faq__map" href={f.map} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}><Icon name="pin" size={16} /> Open in Google Maps</a>}
+            </details>
+          ))}
         </div>
-
-        {d.meetingPoint && (
-          <div class="card mp">
-            {d.meetingPoint.image && <img class="mp__img" src={d.meetingPoint.image} alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />}
-            <div class="mp__body">
-              <h3>📍 Meeting point</h3>
-              <p class="mp__name"><strong>{d.meetingPoint.name}</strong></p>
-              {d.meetingPoint.access && <p>{d.meetingPoint.access}</p>}
-              {d.meetingPoint.lookFor && <p class="mp__look">👀 {d.meetingPoint.lookFor}</p>}
-              {d.meetingPoint.mapUrl && <a class="btn btn--ghost" href={d.meetingPoint.mapUrl} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}>Open in Google Maps</a>}
-            </div>
-          </div>
-        )}
-
-        {d.notes.length > 0 && (
-          <div class="notes">
-            <h3>Important notes</h3>
-            {d.notes.map((n) => (
-              <details>
-                <summary>{n.title}</summary>
-                <p>{n.text}</p>
-              </details>
-            ))}
-          </div>
-        )}
-
-        {d.themes.length > 0 && (
-          <p class="tags">{d.themes.map((t) => <a class="badge" href={`/theme/${t}`}>{THEME_LABELS[t]}</a>)}</p>
-        )}
       </div>
       <div class="plan__side">
         <BookingBox tour={tour} />
@@ -255,11 +234,10 @@ const jsonLd = {
 
   <!-- 7. Last push -->
   <section class="fin">
-    {finale && <img class="fin__img" src={finale} alt="" width="1400" height="1050" loading="lazy" />}
+    {finale && <img class="fin__img" src={finale} srcset={srcset(finale, 1400)} sizes="100vw" alt="" width="1400" height="1050" loading="lazy" />}
     <div class="wrap fin__in">
-      <p class="fin__jp" aria-hidden="true">いざ、出発！</p>
-      <h2>Your Ninja is ready. Are you?</h2>
-      <p class="fin__price">{yen(price)} {priceNote}</p>
+      <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" />
+      <Split text="Your Ninja is ready." />
       <a class="btn btn--primary btn--lg" href="#book" data-track="click_final_book" data-tour={tour.id}>Check availability</a>
     </div>
   </section>
@@ -267,8 +245,8 @@ const jsonLd = {
   {related.length > 0 && (
     <section class="section">
       <div class="wrap">
-        <p class="eyebrow"><span class="jp">他のツアー</span> More adventures</p>
-        <h2>More tours in {d.area}</h2>
+        <p class="eyebrow">More missions</p>
+        <h2 class="more__h">More in {d.area}</h2>
         <div class="grid grid--3">{related.map((t) => <TourCard tour={t} />)}</div>
       </div>
     </section>
@@ -319,64 +297,65 @@ const jsonLd = {
 
 <style>
   /* Hero */
-  .th { position: relative; min-height: min(88svh, 860px); display: flex; align-items: flex-end; background: var(--night); color: #fff; overflow: hidden; }
+  .th { position: relative; min-height: 100svh; display: flex; align-items: flex-end; background: var(--night); color: #fff; overflow: hidden; }
   .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: th-zoom 20s ease-out both; }
-  .th::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse 80% 70% at 0% 100%, rgb(8 8 18 / 0.9) 0%, rgb(8 8 18 / 0.55) 50%, rgb(8 8 18 / 0) 85%), linear-gradient(0deg, rgb(8 8 18 / 0.6), rgb(8 8 18 / 0) 40%); }
-  .th__in { position: relative; z-index: 2; width: 100%; padding: 120px 16px 40px; }
-  .th__crumbs { font-size: 0.85rem; color: rgb(255 255 255 / 0.75); margin-bottom: 12px; }
-  .th__crumbs a { text-decoration: none; color: var(--lantern); }
-  .th__jp { margin-left: 6px; font-weight: 800; }
-  .th h1 { font-size: clamp(2rem, 4.6vw, 3.6rem); max-width: 18em; text-shadow: 0 2px 20px rgb(0 0 0 / 0.4); }
-  .th :global(.th__title) { font-size: clamp(2.2rem, 5.2vw, 4.6rem); line-height: 1.02; max-width: 15em; text-shadow: 0 4px 30px rgb(0 0 0 / 0.4); }
-  .th__kanji { position: absolute; z-index: 1; right: 2vw; top: 10vh; margin: 0; writing-mode: vertical-rl; font-family: var(--display); font-size: clamp(5rem, 16vw, 15rem); line-height: 1; color: rgb(255 255 255 / 0.5); animation: kanji-in 1.6s cubic-bezier(.2,.8,.2,1) 0.3s both; }
-  @keyframes kanji-in { from { opacity: 0; transform: translateY(-40px); } }
-  .th__hook { font-weight: 800; font-size: clamp(1.1rem, 2vw, 1.5rem); line-height: 1.4; text-shadow: 0 2px 12px rgb(0 0 0 / 0.6); color: var(--lantern); max-width: 28em; margin: 0.2em 0 0.8em; animation: kanji-in 1s ease 0.7s both; }
-  .th__facts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 0.9rem; }
-  .th__facts li { background: rgb(255 255 255 / 0.14); border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.35em 0.9em; }
-  .th__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
-  .btn--lg { padding: 1em 1.8em; font-size: 1.08rem; }
+  .th::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse 80% 70% at 0% 100%, rgb(8 8 18 / 0.92) 0%, rgb(8 8 18 / 0.55) 50%, rgb(8 8 18 / 0) 85%), linear-gradient(0deg, rgb(8 8 18 / 0.6), rgb(8 8 18 / 0) 40%), linear-gradient(180deg, rgb(8 8 18 / 0.5), rgb(8 8 18 / 0) 22%); }
+  .th__in { position: relative; z-index: 2; width: 100%; padding: 120px 16px 48px; }
+  .th__kanji { position: absolute; z-index: 1; right: 2vw; top: 12vh; margin: 0; writing-mode: vertical-rl; font-family: var(--display); font-size: clamp(5rem, 16vw, 15rem); line-height: 1; color: rgb(255 255 255 / 0.5); animation: rise 1.6s cubic-bezier(.2,.8,.2,1) 0.3s both; }
+  .th__title { font-family: var(--body); font-weight: 800; font-size: clamp(0.85rem, 1.3vw, 1rem); letter-spacing: 0.14em; text-transform: uppercase; color: var(--lantern); margin: 0 0 0.6em; max-width: 40em; }
+  .th :global(.th__tag) { font-family: var(--display); font-size: clamp(2.6rem, 7.4vw, 6.6rem); line-height: 1; margin: 0 0 0.35em; max-width: 11em; text-shadow: 0 4px 40px rgb(0 0 0 / 0.4); }
+  .th__meta { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 700; font-size: 0.9rem; animation: rise 0.9s ease 0.7s both; }
+  .th__meta li { display: inline-flex; align-items: center; gap: 6px; background: rgb(255 255 255 / 0.14); border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.4em 0.95em; }
+  .th__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 22px; animation: rise 0.9s ease 0.9s both; }
+  .btn--lg { padding: 1.05em 1.9em; font-size: 1.1rem; }
   .th__price { margin: 0; color: rgb(255 255 255 / 0.85); }
-  .th__price strong { font-family: var(--display); font-size: 1.6rem; color: #fff; }
-  .th__thumbs { position: absolute; right: 16px; bottom: 40px; display: flex; gap: 8px; align-items: stretch; }
+  .th__price strong { font-family: var(--display); font-weight: 400; font-size: 1.7rem; color: #fff; }
+  .th__thumbs { position: absolute; right: 16px; bottom: 48px; display: flex; gap: 8px; align-items: stretch; animation: rise 0.9s ease 1.1s both; }
   .th__thumb, .th__more { border: 2px solid rgb(255 255 255 / 0.8); border-radius: 12px; overflow: hidden; padding: 0; cursor: pointer; background: rgb(0 0 0 / 0.4); }
-  .th__thumb img { width: 110px; height: 76px; object-fit: cover; display: block; transition: transform 0.4s; }
+  .th__thumb img { width: 104px; height: 72px; object-fit: cover; display: block; transition: transform 0.4s; }
   .th__thumb:hover img { transform: scale(1.08); }
-  .th__more { color: #fff; font-weight: 700; padding: 0 14px; font-size: 0.85rem; }
+  .th__more { color: #fff; font-family: var(--display); padding: 0 14px; font-size: 1rem; }
   @keyframes th-zoom { from { transform: scale(1.12); } to { transform: scale(1); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+  @supports (animation-timeline: scroll()) {
+    .th__img { animation: th-zoom 20s ease-out both, th-drift linear both; animation-timeline: auto, scroll(root); animation-range: normal, 0 100vh; }
+    @keyframes th-drift { to { translate: 0 20%; } }
+  }
 
-  /* Highlights */
-  .hl__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-  .hl__list li { background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.1); border-radius: var(--radius); padding: 22px 20px; }
-  .hl__icon { display: block; font-size: 2.2rem; margin-bottom: 10px; }
-  .hl__list strong { font-family: var(--display); font-size: 1.1rem; color: var(--lantern); }
-  .hl__list p { margin: 0.4em 0 0; color: #d8d0c2; font-size: 0.95rem; }
+  /* What you'll do */
+  .feat { background: var(--night); color: var(--cream); padding: 44px 0 56px; }
+  .feat .eyebrow { color: var(--lantern); }
+  .feat__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .feat__list li { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 22px; border-radius: var(--radius); background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.1); transition: transform 0.3s, background 0.3s; }
+  .feat__list li:hover { transform: translateY(-4px); background: rgb(255 255 255 / 0.09); }
+  .feat__icon { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: var(--shu); color: #fff; }
+  .feat__list strong { font-family: var(--display); font-weight: 400; font-size: 1.15rem; line-height: 1.25; }
 
-  /* Timeline bar */
-  .tl-bar { list-style: none; padding: 0; margin: 12px 0 48px; display: flex; gap: 4px; }
-  .tl-bar li { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .tl-bar__seg { height: 10px; border-radius: 999px; background: var(--shu); transform-origin: left; }
-  .js .tl-bar[data-reveal] { opacity: 1; transform: none; }
-  .js .tl-bar .tl-bar__seg { transform: scaleX(0); transition: transform 0.7s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--k) * 180ms); }
-  .js .tl-bar.is-in .tl-bar__seg { transform: none; }
-  .tl-bar li:nth-child(2n) .tl-bar__seg { background: var(--lantern); }
-  .tl-bar__label { font-size: 0.8rem; font-weight: 700; line-height: 1.3; color: var(--ink-2); }
-  .tl-bar__label em { display: block; font-style: normal; font-weight: 400; color: var(--muted); }
+  /* Timeline */
+  .story :global(h2) { font-size: clamp(2.2rem, 5vw, 4rem); }
+  .tl { list-style: none; padding: 0; margin: 18px 0 56px; display: flex; gap: 6px; }
+  .tl li { min-width: 96px; display: flex; flex-direction: column; gap: 6px; }
+  .tl__seg { height: 12px; border-radius: 999px; background: var(--shu); transform-origin: left; }
+  .tl li:nth-child(2n) .tl__seg { background: var(--lantern); }
+  .tl__time { font-family: var(--display); font-size: 0.95rem; color: var(--ink); white-space: nowrap; }
+  .tl__label { font-size: 0.85rem; font-weight: 600; line-height: 1.3; color: var(--muted); }
+  .js .tl[data-reveal] { opacity: 1; transform: none; }
+  .js .tl .tl__seg { transform: scaleX(0); transition: transform 0.7s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--k) * 180ms); }
+  .js .tl.is-in .tl__seg { transform: none; }
 
-  /* Story chapters */
-  .chapters { display: grid; gap: 64px; }
-  .ch { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; }
+  /* Chapters */
+  .chapters { display: grid; gap: 72px; }
+  .ch { display: grid; grid-template-columns: 1.25fr 1fr; gap: 56px; align-items: center; }
   .ch:nth-child(even) .ch__media { order: 2; }
-  .ch__media { position: relative; margin: 0; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 4 / 3; }
+  .ch__media { margin: 0; border-radius: 26px; overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 4 / 3; }
   .ch__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
   .ch:hover .ch__media img { transform: scale(1.05); }
-  .ch__num { display: none; position: absolute; left: 18px; bottom: 6px; font-family: var(--display); font-size: 4.5rem; line-height: 1; color: #fff; text-shadow: 0 4px 24px rgb(0 0 0 / 0.5); }
-  .ch__big { margin: 0 0 -0.1em; font-family: var(--display); font-size: clamp(4rem, 9vw, 7.5rem); line-height: 1; color: var(--shu); opacity: 0.9; }
-  .ch__kicker { margin: 0 0 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shu); }
-  .ch__text h3 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
-  .ch__text p { color: var(--ink-2); font-size: 1.02rem; }
-  .story__end { margin-top: 48px; padding: 18px 22px; border-radius: 14px; background: var(--card); border: 1px dashed var(--line); font-weight: 600; }
+  .ch__num { margin: 0; font-family: var(--display); font-size: clamp(4rem, 9vw, 7.5rem); line-height: 0.9; color: var(--shu); }
+  .ch__text h3 { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: 0.2em 0 0.35em; }
+  .ch__text p { color: var(--ink-2); font-size: 1.12rem; line-height: 1.6; margin: 0; max-width: 26em; }
 
   /* Gallery */
+  .gal :global(h2) { font-size: clamp(2rem, 4.4vw, 3.4rem); }
   .gal__grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 180px; grid-auto-flow: dense; gap: 10px; }
   .gal__item { position: relative; padding: 0; border: 0; border-radius: 14px; overflow: hidden; cursor: zoom-in; background: var(--night-3); }
   .gal__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
@@ -395,37 +374,26 @@ const jsonLd = {
 
   /* Reviews */
   .tr__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
-  .tr__item { margin: 0; padding: 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .tr__item { margin: 0; padding: 26px; border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
   .tr__stars { color: var(--lantern); letter-spacing: 2px; }
-  .tr__item blockquote { margin: 10px 0; font-family: var(--display); font-size: 1.1rem; line-height: 1.5; }
+  .tr__item blockquote { margin: 10px 0; font-size: 1.1rem; line-height: 1.5; font-weight: 600; }
   .tr__item figcaption { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
 
-  /* Plan & book */
+  /* FAQ + booking */
+  .plan :global(h2) { font-size: clamp(2rem, 4.4vw, 3.4rem); }
   .plan__grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
-  .plan__main { display: grid; gap: 20px; }
-  .facts { padding: 20px 22px; }
-  .facts dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; }
-  .facts dt { font-weight: 700; }
-  .facts dd { margin: 0; color: var(--ink-2); }
-  .mp { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
-  .mp__img { width: 100%; height: 100%; object-fit: cover; min-height: 220px; }
-  .mp__body { padding: 20px 22px; }
-  .mp__body h3 { font-size: 1.2rem; }
-  .mp__look { color: var(--muted); }
-  .mp:not(:has(.mp__img)) { grid-template-columns: 1fr; }
-  .notes h3 { font-size: 1.2rem; }
-  .notes details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
-  .notes summary { font-weight: 700; cursor: pointer; }
-  .notes details p { margin: 0.5em 0 0; color: var(--ink-2); }
-  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .tags a { text-decoration: none; }
+  .mp { margin: 0 0 18px; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 16 / 7; }
+  .mp img { width: 100%; height: 100%; object-fit: cover; }
+  .mp figcaption { position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; align-items: center; gap: 6px; background: rgb(13 15 28 / 0.85); color: #fff; font-weight: 700; font-size: 0.9rem; padding: 8px 12px; border-radius: 10px; }
+  .faq details { background: var(--card); border-radius: 14px; margin-bottom: 10px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04); overflow: hidden; }
+  .faq summary { list-style: none; cursor: pointer; padding: 16px 52px 16px 18px; font-weight: 800; position: relative; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; position: absolute; right: 16px; top: 50%; translate: 0 -50%; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--shu); color: #fff; font-weight: 700; transition: rotate 0.3s; }
+  .faq details[open] summary::after { rotate: 45deg; }
+  .faq details p { margin: 0; padding: 0 18px 16px; color: var(--ink-2); }
+  .faq__map { display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 16px; font-weight: 700; color: var(--shu-dark); }
 
-  /* Marquee band of highlights */
-  .band { background: var(--shu); color: #fff; padding: 16px 0; transform: rotate(-1deg); margin: -12px -2vw 0; position: relative; z-index: 2; }
-  .band__item { font-family: var(--display); font-size: clamp(1.6rem, 2.4vw, 1.9rem); padding-right: 1em; }
-  .band__item b { font-weight: 400; color: var(--lantern); margin-left: 1em; }
-
-  /* Desktop booking bar */
+  /* Sticky booking bar (desktop) */
   .sbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 55; background: rgb(13 15 28 / 0.94); backdrop-filter: blur(10px); color: #fff; transform: translateY(110%); transition: transform 0.4s cubic-bezier(.2,.8,.2,1); }
   .sbar.is-on { transform: none; }
   .sbar__in { display: flex; align-items: center; gap: 24px; padding-top: 12px; padding-bottom: 12px; }
@@ -434,31 +402,35 @@ const jsonLd = {
   .sbar__p strong { font-family: var(--display); font-weight: 400; font-size: 1.4rem; color: var(--lantern); }
 
   /* Final CTA */
-  .fin { position: relative; min-height: 420px; display: grid; place-items: center; text-align: center; color: #fff; overflow: hidden; background: var(--night); }
+  .fin { position: relative; min-height: 70svh; display: grid; place-items: center; text-align: center; color: #fff; overflow: hidden; background: var(--night); }
   .fin__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
   .fin__in { position: relative; padding: 72px 16px; }
-  .fin__jp { font-family: var(--display); color: var(--lantern); font-size: 1.3rem; letter-spacing: 0.2em; margin: 0; }
-  .fin h2 { font-size: clamp(1.8rem, 4vw, 3rem); margin: 0.2em 0; }
-  .fin__price { color: rgb(255 255 255 / 0.85); margin-bottom: 1.2em; }
+  .fin__seal { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 18px; filter: drop-shadow(0 8px 24px rgb(0 0 0 / 0.5)); }
+  .fin :global(h2) { font-size: clamp(2.4rem, 6vw, 5rem); margin: 0.2em 0 0.6em; }
+  .more__h { font-size: clamp(1.8rem, 3.6vw, 2.6rem); }
 
   @media (max-width: 900px) {
     .th__thumbs { position: static; margin-top: 22px; }
-    .th__thumb img { width: 84px; height: 60px; }
-    .ch { grid-template-columns: 1fr; gap: 18px; }
-    .ch:nth-child(even) .ch__media { order: 0; }
-    .ch__num { display: block; font-size: 3.2rem; }
-    .th::before { background: linear-gradient(0deg, rgb(8 8 18 / 0.95) 0%, rgb(8 8 18 / 0.7) 45%, rgb(8 8 18 / 0.2) 75%, rgb(8 8 18 / 0.4) 100%); }
-    .ch__big { display: none; }
-    .sbar { display: none; }
+    .th__thumb img { width: 80px; height: 58px; }
     .th__kanji { font-size: 4.2rem; top: 76px; right: 10px; color: rgb(255 255 255 / 0.4); }
-    .chapters { gap: 44px; }
-    .tl-bar { flex-direction: column; gap: 10px; }
-    .tl-bar li { flex: none !important; flex-direction: row; align-items: center; gap: 12px; }
-    .tl-bar__seg { width: 10px; height: 28px; flex: none; }
+    .th::before { background: linear-gradient(0deg, rgb(8 8 18 / 0.95) 0%, rgb(8 8 18 / 0.7) 45%, rgb(8 8 18 / 0.2) 75%, rgb(8 8 18 / 0.45) 100%); }
+    .feat__list { grid-template-columns: repeat(2, 1fr); }
+    .feat__list li { padding: 16px; }
+    .feat__icon { width: 54px; height: 54px; }
+    .ch { grid-template-columns: 1fr; gap: 14px; }
+    .ch:nth-child(even) .ch__media { order: 0; }
+    .ch__num { font-size: 3.6rem; }
+    .chapters { gap: 48px; }
+    .tl { flex-direction: column; gap: 12px; }
+    .tl li { flex: none !important; min-width: 0; display: grid; grid-template-columns: 12px 104px 1fr; align-items: center; gap: 10px; }
+    .tl__seg { width: 12px; height: 30px; }
     .gal__grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
     .plan__grid { grid-template-columns: 1fr; }
-    .mp { grid-template-columns: 1fr; }
+    .sbar { display: none; }
     :global(body) { padding-bottom: 76px; }
   }
-  @media (prefers-reduced-motion: reduce) { .th__img, .th__kanji, .th__hook { animation: none; } .js .tl-bar .tl-bar__seg { transform: none; transition: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .th__img, .th__kanji, .th__meta, .th__cta, .th__thumbs { animation: none; }
+    .js .tl .tl__seg { transform: none; transition: none; }
+  }
 </style>

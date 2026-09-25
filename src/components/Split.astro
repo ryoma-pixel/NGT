@@ -17,7 +17,8 @@ const lines = text.split('|').map((l) =>
 );
 let i = 0;
 ---
-<Tag class:list={['split', cls]} aria-label={text.replace(/\|/g, ' ')} style={`--d0:${delay}ms`}>
+<Tag class:list={['split', cls]} style={`--d0:${delay}ms`}>
+  <span class="visually-hidden">{text.replace(/\|/g, ' ').replace(/\*/g, '')}</span>
   {lines.map((words, li) => (
     <>
       {li > 0 && <br />}

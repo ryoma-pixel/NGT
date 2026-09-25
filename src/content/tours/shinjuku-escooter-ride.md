@@ -1,47 +1,44 @@
 ---
-title: "E-Scooter & Walking Tour with a Ninja Guide"
-shortTitle: "E-Scooter & Walking Tour"
-hook: "Glide between Shinjuku’s skyscrapers with a Ninja leading the way."
-summary: "Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then explore Kabukicho on foot with photos and videos included."
+title: E-Scooter & Walking Tour with a Ninja Guide
+shortTitle: E-Scooter & Walking Tour
+hook: Glide between Shinjuku’s skyscrapers with a Ninja leading the way.
+summary: Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then explore Kabukicho on foot with photos and videos included.
 area: Shinjuku
-themes: [E-Scooter, Entertainment]
+themes:
+- E-Scooter
+- Entertainment
 durationMinutes: 120
-startTimes: "Day course: meet 3:05 PM (3:30–5:30 PM) / Night course: meet 6:05 PM (6:30–8:30 PM)"
-bookingDeadline: "Free cancellation up to 24 hours before"
-ageNote: "Ages 16 and up"
+startTimes: 'Day course: meet 3:05 PM (3:30–5:30 PM) / Night course: meet 6:05 PM (6:30–8:30 PM)'
+bookingDeadline: Free cancellation up to 24 hours before
+ageNote: Ages 16 and up
 fixedPricePerPerson: 5000
 privateTour: false
-heroImage: "/images/tours/shinjuku-escooter-ride.webp"
-heroAlt: "Two guests and a Ninja guide posing with e-scooters in front of Shinjuku skyscrapers"
+heroImage: /images/tours/shinjuku-escooter-ride.webp
+heroAlt: Two guests and a Ninja guide posing with e-scooters in front of Shinjuku skyscrapers
 meetingPoint:
-  name: "Shinjuku Toho Building 1F (look for the Godzilla Head), next to the Maruhan Pachinko entrance"
-  access: "3-minute walk from Seibu Shinjuku Station; 9-minute walk from JR Shinjuku Station."
-  lookFor: "Your Ninja-themed guide with the e-scooters."
-  mapUrl: "https://www.google.com/maps/search/?api=1&query=35.694631,139.700337"
-highlights:
-  - { icon: "🥷", title: "Ride with a Ninja", text: "Explore Shinjuku with a guide dressed as a Ninja, your navigator for a safe and exciting urban adventure." }
-  - { icon: "🛴", title: "Feel the breeze on e-scooters", text: "No license required. Ride between Kabukicho and the Tokyo Metropolitan Government Building." }
-  - { icon: "📷", title: "Memories captured for you", text: "Strike a Ninja pose at top spots. Your guide takes photos and videos and shares them after the tour, included in the price." }
+  name: Shinjuku Toho Building 1F (look for the Godzilla Head), next to the Maruhan Pachinko entrance
+  access: 3-minute walk from Seibu Shinjuku Station; 9-minute walk from JR Shinjuku Station.
+  lookFor: Your Ninja-themed guide with the e-scooters.
+  mapUrl: https://www.google.com/maps/search/?api=1&query=35.694631,139.700337
 itinerary:
-  - { title: "Meet up & safety briefing (25 min before start)", text: "Please arrive exactly at the meeting time (3:05 PM or 6:05 PM) for check-in and safety instructions." }
-  - { title: "E-scooter ride (about 40 min)", text: "Ride from Kabukicho to the Tokyo Metropolitan Government Building along wide streets lined with skyscrapers." }
-  - { title: "Flexible walking tour (about 60 min)", text: "A semi-flexible walk in Kabukicho, adjusted to your interests." }
-  - { title: "Goal & wrap-up (about 20 min)", text: "Return to Kabukicho. Your photos and videos are shared afterwards via a download link." }
-notes:
-  - { title: "Price", text: "5,000 JPY per person, including guide, e-scooter rental, photos and insurance." }
-  - { title: "Requirements", text: "Must be 16 or older and not under the influence of alcohol or drugs. Not suitable during pregnancy or for people with chronic illnesses such as heart disease." }
-  - { title: "Shoes", text: "Shoes that securely support the heel (such as sneakers) are mandatory." }
-  - { title: "Weather", text: "For weather cancellations, check our official X account for updates. Full refund if we cancel due to weather." }
-bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-7QR5Z"
+- title: Meet up & safety briefing (25 min before start)
+  text: Please arrive exactly at the meeting time (3:05 PM or 6:05 PM) for check-in and safety instructions.
+- title: E-scooter ride (about 40 min)
+  text: Ride from Kabukicho to the Tokyo Metropolitan Government Building along wide streets lined with skyscrapers.
+- title: Flexible walking tour (about 60 min)
+  text: A semi-flexible walk in Kabukicho, adjusted to your interests.
+- title: Goal & wrap-up (about 20 min)
+  text: Return to Kabukicho. Your photos and videos are shared afterwards via a download link.
+bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-7QR5Z
 order: 8
 draft: false
 story:
-- title: 'Night course: Tokyo’s giant projection mapping'
-  text: The highlight of the night is “TOKYO Night & Light,” the projection mapping on the Tokyo Metropolitan Government Building recognized by Guinness World Records™ as the world’s largest. Ride up on your e-scooter and experience the light and sound up close.
+- title: Ride into the light show
+  text: 'Night: ride to the world’s largest projection mapping at the Tokyo Government Building.'
   image: /images/tours/shinjuku-escooter-ride/story-1.webp
   imageAlt: E-scooter riders on a Shinjuku street at night
-- title: 'Day course: breeze & architecture'
-  text: Riding under the sun feels wonderfully free. Capture crisp, vibrant photos with the Tokyo Metropolitan Government Building and blue sky behind you. A perfect active sightseeing experience.
+- title: Skyscrapers by day
+  text: 'Day: sun, wind and skyscrapers for your best photos.'
   image: /images/tours/shinjuku-escooter-ride/story-2.webp
   imageAlt: Guests with e-scooters in front of the Tokyo Metropolitan Government Building
 gallery:
@@ -57,4 +54,23 @@ gallery:
   alt: Guests with the Ninja guide at a torii gate
 - src: /images/tours/shinjuku-escooter-ride/gallery-6.webp
   alt: A group riding e-scooters at night
+tagline: Glide past skyscrapers.
+features:
+- icon: scooter
+  label: E-scooter ride
+- icon: city
+  label: Tokyo Gov. building
+- icon: camera
+  label: Photos & video included
+- icon: mask
+  label: Ninja walking tour
+faq:
+- q: What’s included in the price?
+  a: 5,000 JPY per person, including guide, e-scooter rental, photos and insurance.
+- q: Who can join?
+  a: Must be 16 or older and not under the influence of alcohol or drugs. Not suitable during pregnancy or for people with chronic illnesses such as heart disease.
+- q: What shoes do I need?
+  a: Shoes that securely support the heel (such as sneakers) are mandatory.
+- q: What if it rains?
+  a: For weather cancellations, check our official X account for updates. Full refund if we cancel due to weather.
 ---

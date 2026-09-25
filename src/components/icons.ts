@@ -1,0 +1,28 @@
+// Line icons drawn for NINJA GO TOURS (24x24, stroke-based so they inherit the text color).
+export const ICONS = {
+  torii: '<path d="M2.5 5.5c3.5 1.3 15.5 1.3 19 0"/><path d="M4.5 9h15"/><path d="M7 6.6V21M17 6.6V21"/><path d="M12 6.9V9"/>',
+  lantern: '<path d="M9 3h6M9 21h6M12 3v2M12 19v2"/><rect x="6" y="5" width="12" height="14" rx="6"/><path d="M6.4 9.5h11.2M6.4 14.5h11.2"/>',
+  sake: '<path d="M10 3h3v3l2 3v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l2-3z"/><path d="M8 13h7"/><path d="M17.5 14h3l-.6 4.5h-1.8z"/>',
+  camera: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 7l1.6-3h4.8L16 7"/><circle cx="12" cy="13.5" r="3.5"/>',
+  stamp: '<rect x="9" y="2.5" width="6" height="10" rx="2"/><path d="M6.5 12.5h11l1 3h-13z"/><path d="M5 20.5h14"/>',
+  brush: '<path d="M14.5 3.5l6 6-7.5 7.5-6-6z"/><path d="M7 11c-2.5.5-4 2.5-4 5 0 1.8-.6 3.2-1.5 4 4 .8 8.2-.3 9.5-3.8"/>',
+  bag: '<path d="M5 8h14l-1.2 13H6.2z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/>',
+  knife: '<path d="M20.5 3.5c-5.5 1.2-10 5-13.5 9.5l2.5 2.5c4.5-3.5 8.3-8 11-12z"/><path d="M7 13l-3.8 3.8a1.4 1.4 0 0 0 2 2L9 15"/>',
+  bowl: '<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8.5 20.5h7"/><path d="M9 7.5c0-1.8 1.6-1.8 1.6-3.6M13.4 7.5c0-1.8 1.6-1.8 1.6-3.6"/>',
+  glass: '<path d="M5.5 4h13l-2 16.5h-9z"/><path d="M6.5 9.5l10.6 6M17.4 9.5L6.9 15.5"/>',
+  sakura: '<g transform="translate(12 12)"><path d="M0-1.8c-2.6-2.4-2-6.2 0-8 2 1.8 2.6 5.6 0 8z"/><path d="M0-1.8c-2.6-2.4-2-6.2 0-8 2 1.8 2.6 5.6 0 8z" transform="rotate(72)"/><path d="M0-1.8c-2.6-2.4-2-6.2 0-8 2 1.8 2.6 5.6 0 8z" transform="rotate(144)"/><path d="M0-1.8c-2.6-2.4-2-6.2 0-8 2 1.8 2.6 5.6 0 8z" transform="rotate(216)"/><path d="M0-1.8c-2.6-2.4-2-6.2 0-8 2 1.8 2.6 5.6 0 8z" transform="rotate(288)"/></g>',
+  dango: '<path d="M4 20L20 4"/><circle cx="8.5" cy="15.5" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="15.5" cy="8.5" r="2.6"/>',
+  rainbow: '<path d="M2.5 18a9.5 9.5 0 0 1 19 0"/><path d="M6 18a6 6 0 0 1 12 0"/><path d="M9.5 18a2.5 2.5 0 0 1 5 0"/>',
+  scooter: '<circle cx="5.5" cy="18" r="2.5"/><circle cx="18.5" cy="18" r="2.5"/><path d="M8 18h8"/><path d="M18.5 15.5L15.5 4H12"/>',
+  yen: '<circle cx="12" cy="12" r="9"/><path d="M8.5 7l3.5 5 3.5-5M12 12v5.5M9 13h6M9 15.8h6"/>',
+  city: '<path d="M3 21V10h5v11M8 21V4h7.5v17M15.5 21v-8.5H21V21"/><path d="M10.5 8h2.5M10.5 11.5h2.5M10.5 15h2.5"/><path d="M2 21h20"/>',
+  chat: '<path d="M4 4.5h16v11H10l-5 4v-4H4z"/><path d="M8 9h8M8 12h5"/>',
+  cup: '<path d="M4 8h13v4.5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 9.5h1.8a2.3 2.3 0 0 1 0 4.6H17"/><path d="M8 3.5v2M11.5 3.5v2"/>',
+  pin: '<path d="M12 21s7-6.4 7-12a7 7 0 0 0-14 0c0 5.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
+  group: '<circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15.5 14.4c3 0 5.5 2.1 5.5 5.1"/>',
+  kid: '<circle cx="12" cy="5.5" r="2.5"/><path d="M7.5 10.5h9M12 8.5v6.5M12 15l-3 5.5M12 15l3 5.5"/>',
+  mask: '<path d="M3 12c0-5 4-8.5 9-8.5s9 3.5 9 8.5-4 8.5-9 8.5-9-3.5-9-8.5z"/><path d="M3.3 10.2h17.4v4H3.3z"/><path d="M8 12.2h2.2M13.8 12.2H16"/>',
+  shuriken: '<path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/><circle cx="12" cy="12" r="1.6"/>',
+} as const;
+export type IconName = keyof typeof ICONS;

@@ -9,6 +9,11 @@ durationMinutes: 60
 order: 9
 heroImage: "/images/tours/asakusa-night-photo-walk.webp"
 heroAlt: "The giant red lantern of Kaminarimon gate lit up at night in Asakusa"
+tagline: "Asakusa after dark."
+features:
+  - { icon: lantern, label: "Kaminarimon lit up" }
+  - { icon: camera, label: "Night photo spots" }
+  - { icon: torii, label: "Senso-ji at night" }
 draft: true
 ---
 TODO: tour description (see Drive: 02_ツアー / 2609｜浅草ナイトツアー)

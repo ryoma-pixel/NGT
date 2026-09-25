@@ -51,7 +51,7 @@ const { steps } = Astro.props;
   .ns__steps { list-style: none; margin: 0; padding: 18vh 0; display: grid; gap: 34vh; }
   .ns__step { opacity: 0.28; transition: opacity 0.5s; }
   .ns__step.is-active { opacity: 1; }
-  .ns__kicker { font-weight: 800; color: var(--lantern); letter-spacing: 0.12em; margin: 0 0 8px; }
+  .ns__step .ns__kicker { display: inline-block; font-family: var(--display); font-size: 1.1rem; color: var(--night); background: var(--lantern); padding: 4px 12px; border-radius: 6px; transform: rotate(-3deg); margin: 0 0 14px; }
   .ns__step h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
   .ns__step p { color: #d6cebf; font-size: 1.05rem; }
   .ns__mimg { display: none; }
