@@ -1,0 +1,11 @@
+---
+// Round crest filled with the tour's traditional pattern
+import { patternBg } from '../lib/patterns';
+interface Props { pattern?: string; size?: number; class?: string }
+const { pattern, size = 40, class: cls } = Astro.props;
+---
+<span class:list={['crest', cls]} aria-hidden="true" style={`--s:${size}px; background-image:${patternBg(pattern, '#f7f0e3', size / 70)}`}></span>
+
+<style>
+  .crest { display: inline-block; flex: none; width: var(--s); height: var(--s); border-radius: 50%; background-color: var(--ai); box-shadow: 0 0 0 2px var(--cream), 0 0 0 3.5px var(--ai); }
+</style>

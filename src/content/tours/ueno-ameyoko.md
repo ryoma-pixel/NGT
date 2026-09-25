@@ -62,6 +62,7 @@ gallery:
 - src: /images/tours/ueno-ameyoko/gallery-8.webp
   alt: The golden gate of Ueno Toshogu
 tagline: Your first 60 minutes in Tokyo.
+pattern: asanoha
 features:
 - icon: chat
   label: Ask us anything

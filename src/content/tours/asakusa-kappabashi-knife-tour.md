@@ -66,6 +66,7 @@ gallery:
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-8.webp
   alt: The modern Kama-Asa knife store
 tagline: The street where chefs shop.
+pattern: yagasuri
 features:
 - icon: knife
   label: Your Japanese knife

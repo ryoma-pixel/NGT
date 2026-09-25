@@ -64,6 +64,7 @@ gallery:
 - src: /images/tours/shinjuku-hanko/gallery-8.webp
   alt: A narrow shopping lane in Shinjuku 3-chome
 tagline: Your name, carved in kanji.
+pattern: kikko
 features:
 - icon: brush
   label: Your own kanji name

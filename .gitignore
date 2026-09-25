@@ -8,3 +8,4 @@ dist/
 
 # Preview videos (large, shared outside git)
 docs/preview/
+.cache/

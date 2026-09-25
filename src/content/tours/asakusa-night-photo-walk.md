@@ -10,6 +10,7 @@ order: 9
 heroImage: "/images/tours/asakusa-night-photo-walk.webp"
 heroAlt: "The giant red lantern of Kaminarimon gate lit up at night in Asakusa"
 tagline: "Asakusa after dark."
+pattern: seigaiha
 features:
   - { icon: lantern, label: "Kaminarimon lit up" }
   - { icon: camera, label: "Night photo spots" }

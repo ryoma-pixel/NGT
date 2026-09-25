@@ -1,0 +1,17 @@
+---
+// A strip of traditional patterns, one segment per tour, like a row of book spines.
+import { patternBg } from '../lib/patterns';
+interface Props { patterns: (string | undefined)[]; height?: number }
+const { patterns, height = 56 } = Astro.props;
+---
+<div class="pb" aria-hidden="true" style={`--h:${height}px`}>
+  {patterns.map((p, i) => <span class:list={['pb__seg', { 'pb__seg--alt': i % 2 === 1 }]} style={`background-image:${patternBg(p, i % 2 ? '#1f2d52' : '#f7f0e3', 0.9)}`}></span>)}
+</div>
+
+<style>
+  .pb { display: flex; height: var(--h); background: var(--ai); border-top: 3px solid var(--ai); border-bottom: 3px solid var(--ai); }
+  .pb__seg { flex: 1; background-color: var(--ai); border-right: 3px solid var(--ai); }
+  .pb__seg--alt { background-color: var(--cream); }
+  .pb__seg:last-child { border-right: 0; }
+  @media (max-width: 700px) { .pb__seg:nth-child(n + 6) { display: none; } }
+</style>

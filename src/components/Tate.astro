@@ -1,0 +1,8 @@
+---
+// Small vertical Japanese label in Edo-style Mincho, as decoration next to a heading.
+// Screen readers skip it; the English heading carries the meaning.
+// After adding new characters, run: python3 scripts/subset-jp.py
+interface Props { text: string; class?: string }
+const { text, class: cls } = Astro.props;
+---
+<span class:list={['tate', cls]} aria-hidden="true">{text}</span>

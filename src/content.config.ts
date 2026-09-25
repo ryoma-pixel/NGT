@@ -1,6 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { ICONS } from './components/icons';
+import { PATTERNS } from './lib/patterns';
 
 const tours = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/tours' }),
@@ -23,6 +24,8 @@ const tours = defineCollection({
     hook: z.string().optional(),
     // Short catch (max ~6 words) shown on cards and as the big hero line
     tagline: z.string().optional(),
+    // Traditional pattern the tour wears like a crest (src/lib/patterns.ts)
+    pattern: z.enum(PATTERNS).optional(),
     // What you will do, as icon + 2-4 word label (icons: see src/components/icons.ts)
     features: z.array(z.object({ icon: z.enum(Object.keys(ICONS) as [keyof typeof ICONS, ...(keyof typeof ICONS)[]]), label: z.string() })).default([]),
     // Tour-specific questions; general ones (meeting point, times, price, booking) are added automatically

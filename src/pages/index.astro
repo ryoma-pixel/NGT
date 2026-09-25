@@ -1,10 +1,12 @@
 ---
+import Tate from '../components/Tate.astro';
 import Base from '../layouts/Base.astro';
 import HeroSlideshow from '../components/HeroSlideshow.astro';
 import Split from '../components/Split.astro';
 import MissionRail from '../components/MissionRail.astro';
 import Emaki from '../components/Emaki.astro';
 import NinjaQuiz from '../components/NinjaQuiz.astro';
+import PatternBand from '../components/PatternBand.astro';
 import Reviews from '../components/Reviews.astro';
 import Icon from '../components/Icon.astro';
 import faq from '../data/faq.json';
@@ -73,8 +75,11 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 
 
+  <PatternBand patterns={tours.map((t) => t.data.pattern)} />
+
   <section class="section missions" id="missions">
-    <div class="wrap missions__head">
+    <div class="has-tate wrap missions__head">
+      <Tate text="任務" />
       <div>
         <p class="eyebrow">Choose your mission</p>
         <Split text="Pick your | adventure." />
@@ -111,7 +116,8 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   <Reviews />
 
   <section class="section price" id="pricing">
-    <div class="wrap">
+    <div class="has-tate wrap">
+      <Tate text="料金" />
       <p class="eyebrow">Group pricing</p>
       <Split text="Bring friends. | Pay less each." />
       <p class="lead">One private guide. More friends, lower price.</p>
@@ -129,7 +135,8 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 
   <section class="section section--paper2 how">
-    <div class="wrap">
+    <div class="has-tate wrap">
+      <Tate text="手順" />
       <p class="eyebrow">How it works</p>
       <Split text="Three steps. | Zero stress." />
       <ol class="how__steps">
@@ -141,7 +148,8 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 
   <section class="section faq" id="faq">
-    <div class="wrap">
+    <div class="has-tate wrap">
+      <Tate text="問答" />
       <p class="eyebrow">FAQ</p>
       <h2>Questions? Answered.</h2>
       <div class="faq__list">

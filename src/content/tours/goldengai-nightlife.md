@@ -63,6 +63,7 @@ gallery:
 - src: /images/tours/goldengai-nightlife/gallery-8.webp
   alt: Guests and the Ninja guide near the Godzilla Head
 tagline: 280 tiny doors. Pick yours.
+pattern: shippo
 features:
 - icon: sake
   label: 280+ tiny bars

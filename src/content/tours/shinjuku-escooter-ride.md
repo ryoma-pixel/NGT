@@ -55,6 +55,7 @@ gallery:
 - src: /images/tours/shinjuku-escooter-ride/gallery-6.webp
   alt: A group riding e-scooters at night
 tagline: Glide past skyscrapers.
+pattern: tatewaku
 features:
 - icon: scooter
   label: E-scooter ride

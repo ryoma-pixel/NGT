@@ -60,6 +60,7 @@ gallery:
 - src: /images/tours/shinjuku-secret-shrine/gallery-6.webp
   alt: Shinjuku crossing at dusk
 tagline: The neon hides a shrine.
+pattern: uroko
 features:
 - icon: torii
   label: A secret shrine

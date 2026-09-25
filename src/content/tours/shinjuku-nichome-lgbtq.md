@@ -56,6 +56,7 @@ gallery:
 - src: /images/tours/shinjuku-nichome-lgbtq/gallery-4.webp
   alt: Kabukicho neon at night
 tagline: Tokyo’s rainbow district, decoded.
+pattern: ichimatsu
 features:
 - icon: rainbow
   label: LGBTQ+ history
