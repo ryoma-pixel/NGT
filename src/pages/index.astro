@@ -127,13 +127,17 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       <p class="eyebrow">Group pricing</p>
       <Split text="Bring friends. | Pay less each." />
       <p class="lead">Priced by your booking: more friends, lower price each.</p>
-      <ul class="stamps">
+      <!-- Edo gold coins (koban): gozame ridges, stamped numeral seal on top, 両 seal below -->
+      <ul class="coins" data-reveal>
         {pricing.tiers.map((t, i) => (
-          <li class="stamp" data-stamp style={`--d:${i * 140}ms; --r:${[-8, 5, -4, 7][i]}deg`}>
-            <span class="stamp__who">{t.label}</span>
+          <li class:list={['koban', { 'koban--best': i === pricing.tiers.length - 1 }]} style={`--k:${i}`}>
+            {i === pricing.tiers.length - 1 && <span class="koban__best">Best value</span>}
+            <span class="koban__seal" aria-hidden="true">{['壹', '弐', '参', '肆'][i]}</span>
+            <span class="koban__who">{t.label}</span>
             <strong>{yen(t.pricePerPerson)}</strong>
-            <Usd jpy={t.pricePerPerson} class="stamp__usd" />
-            <span class="stamp__per">per adult</span>
+            <Usd jpy={t.pricePerPerson} class="koban__usd" />
+            <span class="koban__per">per adult</span>
+            <span class="koban__ryo" aria-hidden="true">両</span>
           </li>
         ))}
       </ul>
@@ -258,14 +262,33 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .stats__grid span { color: #cfc6b6; font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
 
-  /* Price stamps */
-  .stamps { list-style: none; padding: 0; margin: 32px 0 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
-  .stamp { aspect-ratio: 1; border-radius: 50%; border: 5px double var(--shu); color: var(--shu); display: grid; place-content: center; text-align: center; gap: 4px; background: radial-gradient(circle, rgb(31 45 82 / 0.06), rgb(31 45 82 / 0.02)); }
-  .stamp strong { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3.2vw, 2.6rem); line-height: 1; }
-  .stamp__who { font-family: var(--mono); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
-  .stamp__per { font-size: 0.8rem; opacity: 0.8; }
-  .stamp :global(.stamp__usd) { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; }
-  .stamp:last-child { background: var(--shu); color: #fff; }
+  /* Price coins: Edo koban (oval gold coins) */
+  .coins { list-style: none; padding: 0; margin: 40px auto 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 3vw, 40px); max-width: 980px; perspective: 900px; }
+  .koban { --ink: #3b2708; position: relative; aspect-ratio: 5 / 7.4; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--ink); overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 40% at 32% 18%, rgb(255 250 220 / 0.75), transparent 70%),
+      repeating-linear-gradient(0deg, rgb(110 70 5 / 0.16) 0 1.5px, transparent 1.5px 6px),
+      linear-gradient(160deg, #f8e59a 0%, #dcae45 38%, #f2d472 58%, #b98424 100%);
+    box-shadow: inset 0 0 0 3px rgb(255 244 196 / 0.55), inset 0 0 0 9px rgb(140 92 18 / 0.28), inset 0 -14px 26px rgb(110 70 5 / 0.3), 0 16px 30px -8px rgb(70 45 0 / 0.45); }
+  /* sheen that sweeps across on hover */
+  .koban::after { content: ''; position: absolute; inset: -20%; background: linear-gradient(105deg, transparent 40%, rgb(255 255 240 / 0.7) 50%, transparent 60%); transform: translateX(-80%); transition: transform 0.9s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+  .koban:hover::after { transform: translateX(80%); }
+  .koban__seal, .koban__ryo { font-family: var(--mincho); font-weight: 800; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; line-height: 1; opacity: 0.85; }
+  .koban__seal { width: clamp(34px, 4vw, 46px); height: clamp(34px, 4vw, 46px); font-size: clamp(1.05rem, 1.6vw, 1.45rem); margin-bottom: 8px; box-shadow: inset 0 0 0 3px rgb(255 240 190 / 0.35); }
+  .koban__ryo { width: 26px; height: 26px; font-size: 0.85rem; margin-top: 8px; border-radius: 6px; }
+  .koban strong { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3.1vw, 2.7rem); line-height: 1; text-shadow: 0 1px 0 rgb(255 245 205 / 0.6); }
+  .koban__who { font-family: var(--mono); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.78rem; }
+  .koban__per { font-size: 0.8rem; font-weight: 600; opacity: 0.85; }
+  .koban :global(.koban__usd) { font-family: var(--mono); font-weight: 700; font-size: 0.78rem; }
+  .koban--best { transform: scale(1.06); }
+  .koban--best::after { animation: koban-shine 3.6s ease-in-out 1.6s infinite; }
+  @keyframes koban-shine { 0%, 60% { transform: translateX(-80%); } 85%, 100% { transform: translateX(80%); } }
+  .koban__best { position: absolute; top: 9%; font-family: var(--mono); font-weight: 700; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; background: var(--ai); color: var(--cream); padding: 3px 8px; border-radius: 999px; }
+  .koban--best .koban__seal { margin-top: 18px; }
+  /* coins flip in, one after another, when the section scrolls into view (.js is on <html>, hence :global) */
+  :global(.js) .coins[data-reveal] { opacity: 1; transform: none; }
+  .coins .koban { transition: transform 0.8s cubic-bezier(.3,1.4,.5,1), opacity 0.4s; transition-delay: calc(var(--k) * 0.15s); }
+  :global(.js) .coins:not(.is-in) .koban { opacity: 0; transform: translateY(-40px) rotateY(100deg); }
   .price__note { color: var(--muted); font-size: 0.9rem; }
 
   /* How */
@@ -297,7 +320,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     .hero__talk { display: none; }
     .missions__head { grid-template-columns: 1fr; }
     .stats__grid { grid-template-columns: repeat(2, 1fr); }
-    .stamps { grid-template-columns: repeat(2, 1fr); }
+    .coins { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
     .how__steps { grid-template-columns: 1fr; }
   }
   @media (max-width: 700px) {
@@ -315,5 +338,8 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   :global(html:not(.intro)) .hero__kicker { animation-delay: 0.1s; }
   @media (prefers-reduced-motion: reduce) {
     .hero__kicker, .hero__lead, .hero__cta, .dlg, .dlg__next, .hero__scroll span { animation: none; }
+    :global(.js) .coins:not(.is-in) .koban { opacity: 1; transform: none; }
+    .coins .koban { transition: none; }
+    .koban--best::after { animation: none; }
   }
 </style>

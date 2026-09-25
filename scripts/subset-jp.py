@@ -19,6 +19,7 @@ for path in glob.glob('src/**/*.astro', recursive=True) + glob.glob('src/**/*.ts
         block = text.split('AREA_JP', 1)[1]
         chars.update(re.findall(r"[぀-ヿ一-鿿]", block))
 chars.update('の一夜刻')  # emaki titles on tour pages: <area>の一夜 / <area>の一刻
+chars.update('壹弐参肆両')  # koban price coins on the home page
 chars = sorted(c for c in chars if not c.isascii())
 print(len(chars), 'characters:', ''.join(chars))
 
