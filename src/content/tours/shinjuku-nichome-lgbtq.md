@@ -7,6 +7,8 @@ area: Shinjuku
 themes: [Nightlife, Culture]
 durationMinutes: 60
 order: 4
+heroImage: "/images/tours/shinjuku-nichome-lgbtq.webp"
+heroAlt: "Two smiling guests in happi coats on a neon-lit Shinjuku street"
 draft: true
 ---
 TODO(migration): tour description from https://ninjagotours.com/tour/shinjuku-nichome-lgbtq

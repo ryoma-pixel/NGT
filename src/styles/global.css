@@ -1,25 +1,26 @@
 :root {
-  --paper: #fbf7f0;
-  --paper-2: #f4ecdf;
+  --night: #0d0f1c;
+  --night-2: #171a2d;
+  --night-3: #23273f;
+  --paper: #f8f3ea;
+  --paper-2: #efe6d6;
   --card: #ffffff;
-  --ink: #2b2622;
-  --ink-2: #4a423b;
-  --muted: #6e655c;
-  --line: #eadfce;
-  --shu: #d9573c;
-  --shu-dark: #b8442b;
-  --ai: #2f4b7c;
-  --ai-dark: #22375c;
-  --sakura: #f7d9dc;
-  --sakura-2: #fcefef;
-  --matcha: #6f8f52;
-  --radius: 20px;
-  --shadow: 0 2px 6px rgb(60 40 20 / 0.05), 0 12px 32px rgb(60 40 20 / 0.07);
+  --ink: #1d1a17;
+  --ink-2: #3d3731;
+  --muted: #6b6259;
+  --line: #e4d9c6;
+  --shu: #e2462b;
+  --shu-dark: #b8341c;
+  --lantern: #f3b33d;
+  --cream: #f7f0e3;
+  --ai: #1f2d52;
+  --ai-dark: #151f3b;
+  --radius: 18px;
+  --shadow: 0 2px 6px rgb(20 10 0 / 0.06), 0 14px 36px rgb(20 10 0 / 0.10);
   --display: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
   --body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --max: 1120px;
-  /* Seigaiha (wave) pattern used as a quiet Japanese texture */
-  --seigaiha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23e6d8c3' stroke-width='1.2'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0M8 24a16 16 0 0 1 32 0M16 24a8 8 0 0 1 16 0M-24 12a24 24 0 0 1 48 0M24 12a24 24 0 0 1 48 0'/%3E%3C/g%3E%3C/svg%3E");
+  --max: 1160px;
+  --seigaiha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1.2'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0M8 24a16 16 0 0 1 32 0M16 24a8 8 0 0 1 16 0M-24 12a24 24 0 0 1 48 0M24 12a24 24 0 0 1 48 0'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -40,14 +41,14 @@ p { margin: 0 0 1em; }
 
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
 .section { padding: 56px 0; }
-.section--dark { background: var(--ai-dark); color: #f3efe7; }
-.section--sakura { background: var(--sakura-2); }
-.section--pattern { background: var(--paper-2) var(--seigaiha); }
+.section--dark { background: var(--night) var(--seigaiha); color: var(--cream); }
+.section--paper2 { background: var(--paper-2); }
 .eyebrow { display: inline-flex; align-items: baseline; gap: 0.6em; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shu); margin-bottom: 0.6em; }
-.eyebrow .jp { font-family: var(--display); letter-spacing: 0.2em; color: var(--ai); font-size: 0.95rem; }
-.section--dark .eyebrow, .section--dark .eyebrow .jp { color: #f6c1b3; }
+.eyebrow .jp { font-family: var(--display); letter-spacing: 0.2em; color: var(--ink-2); font-size: 0.95rem; }
+.section--dark .eyebrow { color: var(--lantern); }
+.section--dark .eyebrow .jp { color: var(--cream); }
 .lead { font-size: 1.1rem; color: var(--muted); max-width: 46em; }
-.section--dark .lead { color: #c9c4ba; }
+.section--dark .lead { color: #cfc6b6; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
@@ -62,7 +63,7 @@ p { margin: 0 0 1em; }
 .btn--block { width: 100%; }
 
 .grid { display: grid; gap: 20px; }
-.grid--3 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.grid--3 { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 
 .badge { display: inline-block; padding: 0.2em 0.7em; border-radius: 999px; background: var(--paper-2); font-size: 0.8rem; font-weight: 600; color: var(--ink-2); }
 .badge--draft { background: #ffe58a; }

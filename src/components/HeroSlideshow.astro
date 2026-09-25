@@ -1,0 +1,35 @@
+---
+// Full-screen, slowly zooming photo slideshow of real tour moments.
+interface Slide { src: string; mobile: string; alt: string; caption: string }
+interface Props { slides: Slide[] }
+const { slides } = Astro.props;
+const n = slides.length;
+---
+<div class="hs" style={`--n:${n}`}>
+  {slides.map((s, i) => (
+    <figure class="hs__slide" style={`--i:${i}`}>
+      <picture>
+        <source media="(max-width: 700px)" srcset={s.mobile} />
+        <img src={s.src} alt={s.alt} width="2000" height="1125" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} />
+      </picture>
+      <figcaption>{s.caption}</figcaption>
+    </figure>
+  ))}
+</div>
+
+<style>
+  .hs { position: absolute; inset: 0; overflow: hidden; background: var(--night); }
+  .hs__slide { position: absolute; inset: 0; margin: 0; opacity: 0; animation: hs-fade calc(var(--n) * 7s) infinite; animation-delay: calc(var(--i) * 7s); }
+  .hs__slide:first-child { opacity: 1; }
+  .hs__slide img { width: 100%; height: 100%; object-fit: cover; animation: hs-zoom calc(var(--n) * 7s) infinite; animation-delay: calc(var(--i) * 7s); }
+  .hs__slide figcaption { position: absolute; right: 20px; bottom: 18px; font-size: 0.75rem; letter-spacing: 0.08em; color: rgb(255 255 255 / 0.75); text-shadow: 0 1px 4px rgb(0 0 0 / 0.6); }
+  @keyframes hs-fade {
+    0% { opacity: 0; } 5% { opacity: 1; }
+    33% { opacity: 1; } 40% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes hs-zoom { from { transform: scale(1.02); } to { transform: scale(1.14); } }
+  @media (prefers-reduced-motion: reduce) {
+    .hs__slide, .hs__slide img { animation: none; }
+    .hs__slide:not(:first-child) { display: none; }
+  }
+</style>

@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import TourList from '../components/TourList.astro';
 import PriceTable from '../components/PriceTable.astro';
-import Dialogue from '../components/Dialogue.astro';
+import HeroSlideshow from '../components/HeroSlideshow.astro';
 import faq from '../data/faq.json';
 import site from '../data/site.json';
 import { getTours } from '../lib/tours';
@@ -13,50 +13,55 @@ const jsonLd = [
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
 ];
 
+const slides = [
+  { src: '/images/hero/secret-torii.webp', mobile: '/images/hero/secret-torii-m.webp', alt: 'A Ninja guide holding a paper lantern in a tunnel of red torii gates', caption: 'A hidden shrine · Shinjuku' },
+  { src: '/images/hero/gyoen-smiles.webp', mobile: '/images/hero/gyoen-smiles-m.webp', alt: 'Three smiling guests with their Ninja guide at the gate of Shinjuku Gyoen', caption: 'Shinjuku Gyoen' },
+  { src: '/images/hero/goldengai-night.webp', mobile: '/images/hero/goldengai-night-m.webp', alt: 'Two guests and their Ninja guide smiling under the neon of Kabukicho at night', caption: 'Kabukicho · Shinjuku' },
+];
+
 // Each "surprise" is a real stop on one of our tours
 const surprises = [
-  { kanji: '驚', title: 'A shrine hidden in the neon', text: 'Just steps from the lights of Kabukicho, find a quiet shrine most visitors walk right past.', href: '/tour/shinjuku-secret-shrine' },
-  { kanji: '楽', title: '280+ tiny bars in one maze', text: 'Wander the narrow lanes of Golden Gai with a guide who knows its stories.', href: '/tour/goldengai-nightlife' },
-  { kanji: '印', title: 'Your own Japanese name stamp', text: 'Find a personal hanko — the souvenir Japanese people use for life.', href: '/tour/shinjuku-hanko' },
+  { kanji: '驚', img: '/images/tours/surprise-shrine.webp', title: 'A shrine hidden in the neon', text: 'Just steps from the lights of Kabukicho, walk through a tunnel of red gates most visitors never find.', href: '/tour/shinjuku-secret-shrine' },
+  { kanji: '楽', img: '/images/tours/surprise-goldengai.webp', title: '280+ tiny bars in one maze', text: 'Wander the narrow lanes of Golden Gai with a guide who knows its stories.', href: '/tour/goldengai-nightlife' },
+  { kanji: '印', img: '/images/tours/surprise-hanko.webp', title: 'Your own name stamp', text: 'Find a personal hanko — the Japanese souvenir you will keep for life.', href: '/tour/shinjuku-hanko' },
 ];
 ---
-<Base jsonLd={jsonLd}>
+<Base jsonLd={jsonLd} image="/images/og.jpg">
   <section class="hero">
+    <HeroSlideshow slides={slides} />
+    <div class="hero__shade" aria-hidden="true"></div>
     <div class="wrap hero__in">
-      <div class="hero__text">
-        <p class="eyebrow"><span class="jp">ようこそ</span> Welcome to Tokyo</p>
-        <h1>Make a Ninja friend.<br /><span class="hero__accent">Discover Tokyo's secrets.</span></h1>
-        <p class="hero__lead">Walk hidden alleys, tiny bars and quiet shrines with a warm local guide who loves to share, laugh and surprise you. 60 minutes, just your group.</p>
-        <div class="hero__cta">
-          <a class="btn btn--primary" href="#tours" data-track="click_hero_cta">Find your tour</a>
-          <a class="btn btn--ghost" href="#how">How it works</a>
-        </div>
-        <ul class="hero__chips">
-          <li>⏱ 60 min</li>
-          <li>👥 Private group</li>
-          <li>👧 Kids free</li>
-          <li>💴 Best price here</li>
+      <p class="hero__kicker"><span class="jp">ようこそ</span> Private walking tours in Tokyo</p>
+      <h1>Step into the Tokyo<br />only locals know.</h1>
+      <p class="hero__lead">Follow your Ninja guide through glowing alleys, hidden shrines and tiny bars.<span class="hide-m"> Laugh, ask anything, and discover a side of Tokyo you would never find alone.</span></p>
+      <div class="hero__cta">
+        <a class="btn btn--primary btn--lg" href="#tours" data-track="click_hero_cta">Find your adventure</a>
+        <ul class="hero__facts">
+          <li><strong>60</strong><span>minutes</span></li>
+          <li><strong>100%</strong><span>private</span></li>
+          <li><strong>Kids</strong><span>join free</span></li>
         </ul>
       </div>
-      <Dialogue lines={[
-        { who: 'guest', text: 'Where do locals actually go around here?' },
-        { who: 'ninja', text: 'Follow me! There is a shrine hidden right behind the neon. ⛩️' },
-        { who: 'guest', text: 'No way… we would never have found this!' },
-        { who: 'ninja', text: 'Ninja secret: Golden Gai is next. 280 tiny bars! 🏮' },
-      ]} />
+      <div class="hero__talk" aria-hidden="true">
+        <p class="bubble bubble--guest">Where do locals actually go?</p>
+        <p class="bubble bubble--ninja">Follow me — there's a shrine hidden behind the neon! ⛩️</p>
+      </div>
     </div>
   </section>
 
-  <section class="section section--pattern">
+  <section class="section section--dark" id="surprises">
     <div class="wrap">
-      <p class="eyebrow"><span class="jp">驚き</span> Little surprises</p>
-      <h2>Moments you won't find in a guidebook</h2>
+      <p class="eyebrow"><span class="jp">驚き</span> Moments of surprise</p>
+      <h2>Not in any guidebook</h2>
       <div class="sur">
         {surprises.map((s) => (
-          <a class="card sur__item" href={s.href} data-track="click_surprise">
+          <a class="sur__item" href={s.href} data-track="click_surprise">
+            <img src={s.img} alt="" loading="lazy" width="800" height="1000" />
             <span class="sur__kanji" aria-hidden="true">{s.kanji}</span>
-            <h3>{s.title}</h3>
-            <p>{s.text}</p>
+            <div class="sur__txt">
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </div>
           </a>
         ))}
       </div>
@@ -66,17 +71,18 @@ const surprises = [
   <section class="section" id="tours">
     <div class="wrap">
       <p class="eyebrow"><span class="jp">ツアー</span> Tours</p>
-      <h2>Choose your neighborhood</h2>
+      <h2>Choose your adventure</h2>
+      <p class="lead">Every tour is about 60 minutes, private for your group, and led by an English-speaking Ninja guide.</p>
       <TourList tours={tours} />
     </div>
   </section>
 
-  <section class="section section--sakura">
+  <section class="section section--dark">
     <div class="wrap split">
       <div>
         <p class="eyebrow"><span class="jp">料金</span> Group pricing</p>
         <h2>Bring friends, pay less each</h2>
-        <p class="lead">Your guide is yours alone, so the price per person gets lower as your group grows. Kids 12 and under join free with an adult.</p>
+        <p class="lead">Your guide is yours alone, so the price per person drops as your group grows. Kids 12 and under join free with an adult.</p>
       </div>
       <div class="card pbox"><PriceTable /></div>
     </div>
@@ -94,7 +100,7 @@ const surprises = [
     </div>
   </section>
 
-  <section class="section section--pattern faq" id="faq">
+  <section class="section section--paper2 faq" id="faq">
     <div class="wrap">
       <p class="eyebrow"><span class="jp">よくある質問</span> FAQ</p>
       <h2>Good to know</h2>
@@ -112,33 +118,61 @@ const surprises = [
 </Base>
 
 <style>
-  .hero { background: linear-gradient(180deg, var(--sakura-2) 0%, var(--paper) 100%); overflow: hidden; }
-  .hero__in { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding: 64px 16px 72px; }
-  .hero h1 { font-size: clamp(2.1rem, 5.4vw, 3.6rem); color: var(--ai-dark); }
-  .hero__accent { color: var(--shu); }
-  .hero__lead { font-size: 1.12rem; max-width: 34em; color: var(--ink-2); }
-  .hero__cta { display: flex; flex-wrap: wrap; gap: 14px; margin: 26px 0 26px; }
-  .hero__cta .btn--ghost { color: var(--ai); }
-  .hero__chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-  .hero__chips li { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 0.35em 0.9em; font-size: 0.9rem; font-weight: 600; }
-  .sur { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 8px; }
-  .sur__item { padding: 24px; text-decoration: none; position: relative; transition: transform 0.2s; }
-  .sur__item:hover { transform: translateY(-4px) rotate(-0.5deg); }
-  .sur__kanji { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--shu); color: #fff; font-family: var(--display); font-weight: 700; font-size: 1.6rem; transform: rotate(-6deg); margin-bottom: 14px; box-shadow: 0 3px 0 var(--shu-dark); }
-  .sur__item h3 { color: var(--ai-dark); }
-  .sur__item p { color: var(--muted); margin: 0; }
+  .hero { position: relative; min-height: min(92svh, 900px); display: flex; align-items: flex-end; color: #fff; overflow: hidden; }
+  .hero__shade { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 65% at 0% 100%, rgb(8 8 18 / 0.88) 0%, rgb(8 8 18 / 0.55) 45%, rgb(8 8 18 / 0) 80%), linear-gradient(0deg, rgb(8 8 18 / 0.55) 0%, rgb(8 8 18 / 0) 35%); }
+  .hero__in { position: relative; width: 100%; padding-top: 120px; padding-bottom: 48px; }
+  .hero__kicker { display: flex; flex-wrap: wrap; gap: 0.2em 0.7em; align-items: baseline; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lantern); margin-bottom: 0.8em; }
+  .hero__kicker .jp { font-family: var(--display); color: #fff; letter-spacing: 0.25em; font-size: 1rem; white-space: nowrap; }
+  .hero h1 { font-size: clamp(2.3rem, 5.2vw, 4.2rem); line-height: 1.08; max-width: 12em; text-shadow: 0 2px 24px rgb(0 0 0 / 0.35); }
+  .hero__lead { font-size: clamp(1rem, 1.5vw, 1.15rem); max-width: 31em; color: rgb(255 255 255 / 0.88); }
+  .hero__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 36px; margin: 24px 0 0; }
+  .btn--lg { padding: 1em 1.8em; font-size: 1.08rem; }
+  .hero__facts { list-style: none; padding: 0; margin: 0; display: flex; gap: 26px; }
+  .hero__facts li { display: flex; flex-direction: column; }
+  .hero__facts strong { font-family: var(--display); font-size: 1.6rem; color: var(--lantern); line-height: 1.1; }
+  .hero__facts span { font-size: 0.8rem; color: rgb(255 255 255 / 0.75); }
+  .hero__talk { position: absolute; right: 16px; bottom: 56px; width: min(340px, 34vw); display: flex; flex-direction: column; gap: 10px; }
+  .bubble { margin: 0; padding: 12px 16px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; box-shadow: 0 8px 24px rgb(0 0 0 / 0.3); animation: pop 0.6s both; }
+  .bubble--guest { background: rgb(255 255 255 / 0.95); color: var(--ink); border-bottom-left-radius: 4px; margin-right: 40px; animation-delay: 1.2s; }
+  .bubble--ninja { background: var(--shu); color: #fff; border-bottom-right-radius: 4px; margin-left: 40px; animation-delay: 2.4s; }
+  @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: none; } }
+
+  .sur { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 12px; }
+  .sur__item { position: relative; aspect-ratio: 4 / 5; border-radius: var(--radius); overflow: hidden; color: #fff; text-decoration: none; }
+  .sur__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(.2,.7,.2,1); }
+  .sur__item:hover img { transform: scale(1.06); }
+  .sur__item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / 0) 40%, rgb(8 8 18 / 0.9) 100%); }
+  .sur__kanji { position: absolute; z-index: 1; top: 16px; left: 16px; width: 52px; height: 52px; border-radius: 12px; background: var(--shu); display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 1.5rem; transform: rotate(-6deg); }
+  .sur__txt { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px; }
+  .sur__txt h3 { margin-bottom: 0.3em; }
+  .sur__txt p { margin: 0; color: rgb(255 255 255 / 0.85); font-size: 0.95rem; }
+
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-  .pbox { padding: 22px; }
+  .pbox { padding: 22px; color: var(--ink); }
   .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .steps li { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
   .steps__n { display: block; font-family: var(--display); font-weight: 700; font-size: 2rem; color: var(--shu); line-height: 1; margin-bottom: 10px; }
   .steps p { margin: 0.3em 0 0; color: var(--muted); }
   .faq__list { max-width: 760px; margin-bottom: 24px; }
   .faq details { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
-  .faq summary { font-weight: 700; cursor: pointer; color: var(--ai-dark); }
+  .faq summary { font-weight: 700; cursor: pointer; }
   .faq details p { margin: 0.6em 0 0; color: var(--muted); }
-  @media (max-width: 860px) {
-    .hero__in { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; }
-    .split, .steps, .sur { grid-template-columns: 1fr; }
+  @media (max-width: 900px) {
+    .hero__talk { display: none; }
+    .split, .steps { grid-template-columns: 1fr; }
+    .sur { grid-template-columns: 1fr; }
+    .sur__item { aspect-ratio: 16 / 11; }
+  }
+  @media (max-width: 700px) {
+    .hero { min-height: 86svh; }
+    .hero__shade { background: linear-gradient(0deg, rgb(8 8 18 / 0.95) 0%, rgb(8 8 18 / 0.7) 38%, rgb(8 8 18 / 0) 62%); }
+    .hero__in { padding-bottom: 28px; }
+    .hero h1 { font-size: 2.1rem; }
+    .hero__lead { font-size: 1rem; }
+    .hide-m { display: none; }
+    .hero__cta { gap: 16px; }
+    .hero__cta .btn { width: 100%; }
+    .hero__facts { gap: 22px; }
+    .hero__facts strong { font-size: 1.3rem; }
   }
 </style>

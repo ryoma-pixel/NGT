@@ -104,15 +104,18 @@ const jsonLd = {
 </Base>
 
 <style>
-  .th { position: relative; background: linear-gradient(180deg, var(--sakura-2), var(--paper)); overflow: hidden; }
-  .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.18; }
-  .th__in { position: relative; padding: 44px 16px 36px; }
-  .th__crumbs { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
-  .th__crumbs a { text-decoration: none; color: var(--ai); }
-  .th h1 { color: var(--ai-dark); max-width: 22em; }
-  .th__sum { font-size: 1.1rem; max-width: 40em; color: var(--ink-2); }
+  .th { position: relative; min-height: min(70svh, 640px); display: flex; align-items: flex-end; background: var(--night); color: #fff; overflow: hidden; }
+  .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: th-zoom 18s ease-out both; }
+  .th::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(0deg, rgb(8 8 18 / 0.92) 0%, rgb(8 8 18 / 0.5) 45%, rgb(8 8 18 / 0.05) 80%); }
+  .th__in { position: relative; z-index: 2; width: 100%; padding: 120px 16px 36px; }
+  .th__crumbs { font-size: 0.85rem; color: rgb(255 255 255 / 0.75); margin-bottom: 12px; }
+  .th__crumbs a { text-decoration: none; color: var(--lantern); }
+  .th h1 { max-width: 20em; text-shadow: 0 2px 20px rgb(0 0 0 / 0.4); }
+  .th__sum { font-size: 1.1rem; max-width: 40em; color: rgb(255 255 255 / 0.88); }
   .th__facts { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 0.9rem; }
-  .th__facts li { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 0.35em 0.9em; }
+  .th__facts li { background: rgb(255 255 255 / 0.14); border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.35em 0.9em; }
+  @keyframes th-zoom { from { transform: scale(1.1); } to { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .th__img { animation: none; } }
   .tl { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; padding-top: 40px; padding-bottom: 40px; }
   .tl__main > section { margin-bottom: 36px; }
   .hl { list-style: none; padding: 0; display: grid; gap: 10px; }

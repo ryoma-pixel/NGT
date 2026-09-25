@@ -8,6 +8,8 @@ themes: [FourSeasons, Food]
 durationMinutes: 60
 seasonal: "Cherry blossom season only"
 order: 5
+heroImage: "/images/tours/shinjuku-gyoen-sakura.webp"
+heroAlt: "Three smiling guests with their Ninja guide at the Shinjuku Gyoen gate"
 draft: true
 ---
 TODO(migration): tour description from https://ninjagotours.com/tour/shinjuku-gyoen-sakura

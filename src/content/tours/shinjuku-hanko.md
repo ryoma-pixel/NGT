@@ -8,6 +8,8 @@ themes: [Shopping, Culture]
 durationMinutes: 60
 materialCostPerPerson: 0
 order: 3
+heroImage: "/images/tours/shinjuku-hanko.webp"
+heroAlt: "Traditional Japanese hanko name stamps with red ink"
 draft: true
 ---
 TODO(migration): tour description from https://ninjagotours.com/tour/shinjuku-hanko

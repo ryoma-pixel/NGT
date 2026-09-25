@@ -7,6 +7,8 @@ area: Shinjuku
 themes: [Entertainment, Culture, Nightlife]
 durationMinutes: 60
 order: 1
+heroImage: "/images/tours/shinjuku-secret-shrine.webp"
+heroAlt: "A Ninja guide standing in a tunnel of red torii gates at a hidden Shinjuku shrine"
 draft: true
 ---
 TODO(migration): tour description from https://ninjagotours.com/tour/shinjuku-secret-shrine

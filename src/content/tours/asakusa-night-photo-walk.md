@@ -7,6 +7,8 @@ area: Asakusa
 themes: [Culture, Nightlife]
 durationMinutes: 60
 order: 7
+heroImage: "/images/tours/asakusa-night-photo-walk.webp"
+heroAlt: "The giant red lantern of Kaminarimon gate lit up at night in Asakusa"
 draft: true
 ---
 TODO(migration): tour description from the current site

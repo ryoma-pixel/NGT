@@ -17,6 +17,8 @@ included:
 notIncluded:
   - "Food and drinks"
 order: 2
+heroImage: "/images/tours/goldengai-nightlife.webp"
+heroAlt: "Guests laughing with their Ninja guide under the neon lights of Kabukicho"
 draft: true
 ---
 About 1.5 km (1 mile) of easy walking. TODO(migration): full description from https://ninjagotours.com/tour/goldengai-nightlife

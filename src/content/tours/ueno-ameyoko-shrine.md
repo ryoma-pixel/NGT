@@ -7,6 +7,8 @@ area: Ueno
 themes: [Food, Culture]
 durationMinutes: 60
 order: 6
+heroImage: "/images/tours/ueno-ameyoko-shrine.webp"
+heroAlt: "Fresh fruit stalls along the Ameyoko market street in Ueno"
 draft: true
 ---
 TODO(migration): tour description from the current site
