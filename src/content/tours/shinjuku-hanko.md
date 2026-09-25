@@ -48,8 +48,8 @@ story:
   imageAlt: Colorful daruma dolls in a Shinjuku shop
 - title: Coffee & the big reveal
   text: Relax at a retro café with our hand-drawn map, then pick up your seal.
-  image: /images/tours/shinjuku-hanko/story-4.webp
-  imageAlt: A retro coffee shop on a Shinjuku side street
+  image: /images/tours/shinjuku-hanko/gallery-1.webp
+  imageAlt: Hanko cases in many colors
 gallery:
 - src: /images/tours/shinjuku-hanko/gallery-1.webp
   alt: Hanko cases in many colors
@@ -67,6 +67,8 @@ gallery:
   alt: A Shinjuku shopping street
 - src: /images/tours/shinjuku-hanko/gallery-8.webp
   alt: A narrow shopping lane in Shinjuku 3-chome
+- src: /images/tours/shinjuku-hanko/story-4.webp
+  alt: A retro coffee shop on a Shinjuku side street
 tagline: Your name, carved in kanji.
 cardBack: /images/tours/shinjuku-hanko/story-2.webp
 pattern: kikko

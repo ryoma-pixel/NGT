@@ -37,12 +37,12 @@ story:
   imageAlt: A rainbow flag outside a bar in Shinjuku Nichome
 - title: Real talk, real life
   text: Get the real picture of LGBTQ+ life in Japan today.
-  image: /images/tours/shinjuku-nichome-lgbtq/story-2.webp
-  imageAlt: A colorful cafe entrance in Shinjuku 2-chome
+  image: /images/tours/shinjuku-nichome-lgbtq/gallery-5.webp
+  imageAlt: The local guide chatting with guests outside an izakaya in Nichome
 - title: Through Golden Gai
   text: Through Golden Gai to Kabukicho Tower, talking diversity in modern Tokyo.
-  image: /images/tours/shinjuku-nichome-lgbtq/story-3.webp
-  imageAlt: The Golden Gai sign lit up at night
+  image: /images/tours/shinjuku-nichome-lgbtq/gallery-3.webp
+  imageAlt: Warm lights in a narrow Shinjuku alley
 - title: Your passport to the night
   text: Leave with a curated list of welcoming bars and drag venues.
   image: /images/tours/shinjuku-nichome-lgbtq/story-4.webp
@@ -64,6 +64,10 @@ gallery:
   alt: A guest taking in the streets of Shinjuku Nichome
 - src: /images/tours/shinjuku-nichome-lgbtq/gallery-8.webp
   alt: Bar signs stacked along a Nichome building
+- src: /images/tours/shinjuku-nichome-lgbtq/story-2.webp
+  alt: A colorful cafe entrance in Shinjuku 2-chome
+- src: /images/tours/shinjuku-nichome-lgbtq/story-3.webp
+  alt: The Golden Gai sign lit up at night
 tagline: Tokyo’s rainbow district, decoded.
 pattern: ichimatsu
 kamon: rainbow

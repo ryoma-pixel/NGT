@@ -40,8 +40,8 @@ story:
   imageAlt: E-scooter riders on a Shinjuku street at night
 - title: Skyscrapers by day
   text: 'Day: sun, wind and skyscrapers for your best photos.'
-  image: /images/tours/shinjuku-escooter-ride/story-2.webp
-  imageAlt: Guests with e-scooters in front of the Tokyo Metropolitan Government Building
+  image: /images/tours/shinjuku-escooter-ride/gallery-1.webp
+  imageAlt: Guests posing with their e-scooters and Ninja guide
 gallery:
 - src: /images/tours/shinjuku-escooter-ride/gallery-1.webp
   alt: Guests posing with their e-scooters and Ninja guide
@@ -55,6 +55,8 @@ gallery:
   alt: Guests with the Ninja guide at a torii gate
 - src: /images/tours/shinjuku-escooter-ride/gallery-6.webp
   alt: A group riding e-scooters at night
+- src: /images/tours/shinjuku-escooter-ride/story-2.webp
+  alt: Guests with e-scooters in front of the Tokyo Metropolitan Government Building
 tagline: Glide past skyscrapers.
 pattern: tatewaku
 kamon: wheel

@@ -33,8 +33,8 @@ draft: false
 story:
 - title: Meet under Godzilla
   text: Meet under the Godzilla Head, then step through the red arch of Kabukicho.
-  image: /images/tours/shinjuku-secret-shrine/story-1.webp
-  imageAlt: The red Kabukicho Ichibangai arch above a busy street
+  image: /images/tours/shinjuku-secret-shrine/gallery-2.webp
+  imageAlt: A guest photographing the Ninja guide on a Shinjuku street
 - title: A shrine behind the neon
   text: Slip behind the neon to a hidden shrine. Pour water on the Frog Stone for luck.
   image: /images/tours/shinjuku-secret-shrine/story-2.webp
@@ -72,6 +72,8 @@ gallery:
   alt: Shinjuku skyline glowing at night
 - src: /images/tours/shinjuku-secret-shrine/gallery-6.webp
   alt: Shinjuku crossing at dusk
+- src: /images/tours/shinjuku-secret-shrine/story-1.webp
+  alt: The red Kabukicho Ichibangai arch above a busy street
 tagline: The neon hides a shrine.
 pattern: uroko
 kamon: torii

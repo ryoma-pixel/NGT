@@ -40,11 +40,11 @@ story:
   imageAlt: The golden Kappa statue in Kappabashi
 - title: Treasure for one coin
   text: Dig through Dengama’s ceramics. Beautiful plates from a few dollars.
-  image: /images/tours/asakusa-kappabashi-knife-tour/story-2.webp
-  imageAlt: Bargain ceramics piled up outside Dengama
+  image: /images/tours/asakusa-kappabashi-knife-tour/gallery-5.webp
+  imageAlt: A guest browsing ceramic bowls
 - title: Glass that sparkles
   text: See Kiriko glass up close and spot the three styles.
-  image: /images/tours/asakusa-kappabashi-knife-tour/story-3.webp
+  image: /images/tours/asakusa-kappabashi-knife-tour/story-3-glass.webp
   imageAlt: Colorful Kiriko cut-glass cups
 - title: Your knife. Your name.
   text: Choose your knife and get your name engraved in katakana.
@@ -69,6 +69,8 @@ gallery:
   alt: The modern Kama-Asa knife store
 - src: /images/tours/asakusa-kappabashi-knife-tour/gallery-9.webp
   alt: A quiet Kiriko cut-glass gallery with glassware on white shelves
+- src: /images/tours/asakusa-kappabashi-knife-tour/story-2.webp
+  alt: Bargain ceramics piled up outside Dengama
 tagline: The street where chefs shop.
 pattern: yagasuri
 kamon: knives

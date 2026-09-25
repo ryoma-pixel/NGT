@@ -35,16 +35,16 @@ draft: false
 story:
 - title: Bow, clap, wish
   text: Wash, bow, clap and wish at Hanazono Shrine. Nothing to memorize.
-  image: /images/tours/goldengai-nightlife/story-3.webp
-  imageAlt: Hanazono Shrine lit up at night
+  image: /images/tours/goldengai-nightlife/gallery-3.webp
+  imageAlt: Guests praying at Hanazono Shrine
 - title: Enter the golden maze
   text: Step into a wooden maze of 280+ bars that survived post-war Tokyo.
-  image: /images/tours/goldengai-nightlife/story-1.webp
-  imageAlt: The glowing Golden Gai sign at the entrance to the alleys at night
+  image: /images/tours/goldengai-nightlife/gallery-1.webp
+  imageAlt: Guests in happi coats with their Ninja guide in Golden Gai
 - title: Crack the bar code
   text: Crack the signboards together and learn which doors welcome you.
-  image: /images/tours/goldengai-nightlife/story-2.webp
-  imageAlt: Colorful bar signboards crowding a narrow Golden Gai alley
+  image: /images/tours/goldengai-nightlife/gallery-4.webp
+  imageAlt: A neon-lit alley in Golden Gai
 - title: Neon & Godzilla
   text: Neon, Godzilla, and your guide’s picks for the rest of the night.
   image: /images/tours/goldengai-nightlife/story-4.webp
@@ -66,6 +66,12 @@ gallery:
   alt: A tiny bar entrance with a red lantern
 - src: /images/tours/goldengai-nightlife/gallery-8.webp
   alt: Guests and the Ninja guide near the Godzilla Head
+- src: /images/tours/goldengai-nightlife/story-3.webp
+  alt: Hanazono Shrine lit up at night
+- src: /images/tours/goldengai-nightlife/story-1.webp
+  alt: The glowing Golden Gai sign at the entrance to the alleys at night
+- src: /images/tours/goldengai-nightlife/story-2.webp
+  alt: Colorful bar signboards crowding a narrow Golden Gai alley
 tagline: 280 tiny doors. Pick yours.
 pattern: shippo
 kamon: noren

@@ -32,8 +32,8 @@ comingSoon: true
 story:
 - title: Tokyo lights up
   text: Meet your guide and see Senso-ji and the Skytree glow from above.
-  image: /images/tours/asakusa-night-photo-walk/story-1.webp
-  imageAlt: Asakusa at night from above, with the five-story pagoda and Nakamise lit up
+  image: /images/tours/asakusa-night-photo-walk/gallery-6.webp
+  imageAlt: Tokyo Skytree and the Sumida River at dusk
 - title: Shutters with secrets
   text: After closing time, Nakamise's shutters show painted scenes of old Edo.
   image: /images/tours/asakusa-night-photo-walk/story-2.webp
@@ -63,6 +63,8 @@ gallery:
   alt: A wall of paper lanterns in an Asakusa street
 - src: /images/tours/asakusa-night-photo-walk/gallery-6.webp
   alt: Tokyo Skytree and the Sumida River at dusk
+- src: /images/tours/asakusa-night-photo-walk/story-1.webp
+  alt: Asakusa at night from above, with the five-story pagoda and Nakamise lit up
 features:
   - { icon: lantern, label: "Kaminarimon, no crowds" }
   - { icon: camera, label: "Your own photographer" }

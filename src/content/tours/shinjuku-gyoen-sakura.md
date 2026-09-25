@@ -33,16 +33,16 @@ draft: false
 story:
 - title: Sweets first
   text: Pick dango or sakura mochi at a classic sweet shop.
-  image: /images/tours/shinjuku-gyoen-sakura/story-1.webp
-  imageAlt: Sakura mochi on a glass plate with cherry blossoms
+  image: /images/tours/shinjuku-gyoen-sakura/gallery-1.webp
+  imageAlt: Guests laughing while eating dango
 - title: The shogun’s garden
   text: Enter the garden where samurai lords once lived.
   image: /images/tours/shinjuku-gyoen-sakura/story-2.webp
   imageAlt: A pond in Shinjuku Gyoen framed by cherry trees
 - title: The perfect shot
   text: Pose on the red bridge. Your guide knows every angle.
-  image: /images/tours/shinjuku-gyoen-sakura/story-3.webp
-  imageAlt: Guests crossing the red-railed bridge in the Japanese garden
+  image: /images/tours/shinjuku-gyoen-sakura/gallery-4.webp
+  imageAlt: Guests and the Ninja guide under cherry blossoms
 - title: Slow down, look up
   text: Slow down under the blossoms and stay as long as you like.
   image: /images/tours/shinjuku-gyoen-sakura/story-4.webp
@@ -64,6 +64,10 @@ gallery:
   alt: A group photo under the cherry trees
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-8.webp
   alt: Shinjuku skyline over the garden pond
+- src: /images/tours/shinjuku-gyoen-sakura/story-1.webp
+  alt: Sakura mochi on a glass plate with cherry blossoms
+- src: /images/tours/shinjuku-gyoen-sakura/story-3.webp
+  alt: Guests crossing the red-railed bridge in the Japanese garden
 tagline: Sweets first, then sakura.
 seasonal: Spring only
 pattern: seigaiha

@@ -95,6 +95,15 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
     let scenes: HTMLElement[] = [], imgs: (HTMLElement | null)[] = [];
     const collect = () => { scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')]; imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]')); };
     collect();
+    // The scene photos sit off to the side until the paper slides them in, so the browser's lazy loading would only
+    // start fetching them at the last moment (they popped in). Load and decode them all once the scroll is near.
+    const warm = () => imgs.forEach((im) => {
+      if (!(im instanceof HTMLImageElement)) return;
+      im.loading = 'eager';
+      im.decode?.().catch(() => {});
+    });
+    const near = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { warm(); near.disconnect(); } }, { rootMargin: '150% 0px' });
+    near.observe(sec);
     let startX = 0, dist = 0, ticking = false, lastLit = -2;
 
     // Rolled up: only the silk cover and the roller, centred, until someone taps "Tap to unroll"
@@ -212,6 +221,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
           paper.insertBefore(li, endLi);
         });
         collect();
+        warm();
         if (closedMode) close(); else measure();
       });
     }
