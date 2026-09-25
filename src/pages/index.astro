@@ -141,15 +141,6 @@ const firstScroll = scrollTours[firstTour.id];
     {tours.map((t) => <template data-emk-kamon-tpl={t.id}><Kamon name={t.data.kamon} size={54} class="emk__kamon" /></template>)}
   </div>
 
-  <section class="stats" aria-label="NINJA GO TOURS in numbers">
-    <div class="wrap stats__grid">
-      <div data-reveal><strong><span data-count="280">0</span>+</strong><span>tiny bars, one Ninja</span></div>
-      <div data-reveal style="--d:100ms"><strong><span data-count="60">0</span></strong><span>minutes of Tokyo magic</span></div>
-      {google && <div data-reveal style="--d:200ms"><strong><span data-count={google.score.toFixed(1)}>0</span>★</strong><span>on Google ({google.count} reviews)</span></div>}
-      <div data-reveal style="--d:300ms"><strong><span data-count="1">0</span></strong><span>local guide leads the way</span></div>
-    </div>
-  </section>
-
   <Reviews />
 
   <section class="section price" id="pricing">
@@ -199,7 +190,7 @@ const firstScroll = scrollTours[firstTour.id];
     <img class="go__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="160" height="160" loading="lazy" />
     <div class="wrap go__in">
       <Split text="Your Ninja | is waiting." />
-      <a class="btn btn--primary btn--lg" href="#missions" data-track="click_final_cta">Choose your mission</a>
+      <a class="btn btn--primary btn--lg" href="/tours" data-track="click_final_cta">Choose your mission</a>
     </div>
   </section>
 
@@ -251,12 +242,6 @@ const firstScroll = scrollTours[firstTour.id];
   .facts li { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1.5px solid var(--ai); border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; }
   .facts :global(.icon) { color: var(--shu); }
 
-  /* Stats */
-  .stats { background: var(--night); color: var(--cream); padding: 48px 0; border-top: 1px solid var(--night-3); }
-  .stats__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-  .stats__grid div { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid rgb(247 240 227 / 0.5); padding-left: 16px; }
-  .stats__grid strong { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1; color: var(--lantern); }
-  .stats__grid span { color: #cfc6b6; font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
 
   /* Price coins: Edo koban (oval gold coins) */
@@ -313,7 +298,6 @@ const firstScroll = scrollTours[firstTour.id];
 
   @media (max-width: 900px) {
       .missions__head { grid-template-columns: 1fr; }
-    .stats__grid { grid-template-columns: repeat(2, 1fr); }
     .coins { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
     }
   @media (max-width: 700px) {

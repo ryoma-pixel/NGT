@@ -78,4 +78,6 @@ faq:
   a: Shoes that securely support the heel (such as sneakers) are mandatory.
 - q: What if it rains?
   a: For weather cancellations, check our official X account for updates. Full refund if we cancel due to weather.
+quizFor: [ride]
+quizAlso: [photos]
 ---

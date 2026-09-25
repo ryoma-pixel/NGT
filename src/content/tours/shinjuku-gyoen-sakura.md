@@ -94,4 +94,6 @@ faq:
   a: Sweets are not included (from about 200 JPY per item).
 - q: What if the cherry blossoms aren’t blooming?
   a: The tour runs regardless of blooming conditions.
+quizFor: [sakura]
+quizAlso: [food, photos]
 ---

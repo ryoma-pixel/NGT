@@ -86,4 +86,6 @@ faq:
   a: Rain or shine. When it rains, we use the Ameyoko arcades and covered areas under the tracks.
 - q: Is there anything to know about late start times?
   a: The last start time is 5:00 PM. Depending on your start time, the shrine’s closing hours (5:30 PM in summer, 4:30 PM in winter) or shop hours may mean you only see Toshogu from outside or cannot join the street auction.
+quizFor: [food]
+quizAlso: [shopping, shrines]
 ---

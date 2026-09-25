@@ -85,5 +85,7 @@ faq:
     a: Yes. Children 12 and under join free and must be with a guardian.
 order: 9
 draft: false
+quizFor: [photos]
+quizAlso: [shrines]
 ---
 Asakusa at night is a different place. The shops on Nakamise close, their shutters show painted scenes of old Edo, and Senso-ji and its five-story pagoda glow against the dark sky. Your guide walks with you as a local friend and photographer: where to crouch under the Kaminarimon lantern, how to read the shutter art, why a temple and a shrine stand side by side, and how to draw an omikuji fortune.

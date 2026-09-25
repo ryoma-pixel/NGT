@@ -6,6 +6,7 @@
 // picture scroll (the Emaki with `mission`), which lands with a DON! right there and unrolls the route. No page jump.
 // Coming-soon tours can be picked too; their scroll asks the guest to get in touch instead of booking.
 import Icon from './Icon.astro';
+import { INTERESTS } from '../lib/quiz';
 import type { Tour } from '../lib/tours';
 import type { IconName } from './icons';
 interface Props { tours: Tour[] }
@@ -19,7 +20,7 @@ const data = tours.map((t) => {
   const hour = m ? (Number(m[1]) % 12) + (/pm/i.test(m[2]) ? 12 : 0) : 12;
   return {
     id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', area: d.area,
-    themes: d.themes, icons: d.features.map((f) => f.icon),
+    quizFor: d.quizFor, quizAlso: d.quizAlso,
     night: /\bnight\b/i.test(times) || hour >= 17,
     day: /\bday\b/i.test(times) || hour < 17,
     seasonal: d.themes.includes('FourSeasons'), soon: d.comingSoon || !d.bookingUrl,
@@ -38,12 +39,8 @@ const questions: { key: string; step: string; q: string; opts: Opt[] }[] = [
     { v: 'day', icon: 'sun', label: 'Daytime' },
     { v: 'night', icon: 'moon', label: 'After dark' },
   ] },
-  { key: 'into', step: 'What', q: 'What are you into?', opts: [
-    { v: 'culture', icon: 'torii', label: 'Shrines & old Tokyo' },
-    { v: 'food', icon: 'sake', label: 'Local food & drinks' },
-    { v: 'craft', icon: 'stamp', label: 'Crafts & souvenirs' },
-    { v: 'ride', icon: 'scooter', label: 'Riding an e-scooter' },
-  ] },
+  // only the answers that some fitting walk is really about are shown (see src/lib/quiz.ts)
+  { key: 'into', step: 'What', q: 'What are you into?', opts: INTERESTS.map((i) => ({ v: i.v, icon: i.icon, label: i.label })) },
 ];
 
 // Smoke: a dense core, a ring of billows and a few wisps that drift up. [angle, distance, scale, delay ms, size px]
@@ -141,14 +138,7 @@ const puffs: [number, number, number, number, number][] = [
 </section>
 
 <script>
-  type T = { id: string; title: string; tagline: string; area: string; themes: string[]; icons: string[]; night: boolean; day: boolean; seasonal: boolean; soon: boolean };
-  // Each answer scores tours by their themes and by the icons on their "What you'll do" list
-  const INTO: Record<string, { themes: Record<string, number>; icons: string[] }> = {
-    culture: { themes: { History: 2, Entertainment: 2, Culture: 1 }, icons: ['torii', 'lantern'] },
-    food: { themes: { Food: 3, Nightlife: 2 }, icons: ['sake', 'glass', 'dango', 'cup'] },
-    craft: { themes: { JapaneseCustoms: 2, Shopping: 2 }, icons: ['stamp', 'knife', 'brush', 'bag'] },
-    ride: { themes: { 'E-Scooter': 6 }, icons: ['scooter'] },
-  };
+  type T = { id: string; title: string; tagline: string; area: string; quizFor: string[]; quizAlso: string[]; night: boolean; day: boolean; seasonal: boolean; soon: boolean };
   // What your Ninja says after each answer
   const NOD: Record<string, (label: string) => string> = {
     area: (l) => (l === 'Anywhere is fine' ? 'Umu, umu. Anywhere suits you. Noted.' : `Umu, umu. ${l}. Noted.`),
@@ -208,13 +198,8 @@ const puffs: [number, number, number, number, number][] = [
       const now = all.filter((t) => !t.seasonal || inSeason);
       return now.length ? now : all;
     };
-    const intoScore = (t: T, v: string) => {
-      const want = INTO[v];
-      if (!want) return 0;
-      return t.themes.reduce((s, th) => s + (want.themes[th] ?? 0), 0) + t.icons.filter((ic) => want.icons.includes(ic)).length * 2;
-    };
     const viable = (key: string, v: string) =>
-      key === 'into' ? cands().some((t) => intoScore(t, v) > 0) : cands({ ...answers, [key]: v }).length > 0;
+      key === 'into' ? cands().some((t) => t.quizFor.includes(v)) : cands({ ...answers, [key]: v }).length > 0;
     // Find the next question worth asking after question i (hiding answers that fit no walk); -1 = the scroll is decided
     const advance = (i: number): number => {
       for (let k = i + 1; k < qs.length; k++) {
@@ -244,16 +229,15 @@ const puffs: [number, number, number, number, number][] = [
       qs[i]?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
     };
 
+    // The walk whose main thing is the answer; if several, a bookable one first; then the list order.
+    // Without an interest (decided by area and time alone) the one walk left is taken.
     const pick = () => {
       const list = cands();
-      let best = list[0]; let bestScore = -Infinity;
-      list.forEach((t) => {
-        let sc = answers.into ? intoScore(t, answers.into) : 0;
-        if (answers.into !== 'ride' && t.themes.includes('E-Scooter')) sc -= 3;
-        if (t.soon) sc -= 1; // a walk that is not bookable yet only wins a clear match
-        if (sc > bestScore) { bestScore = sc; best = t; }
-      });
-      return best ?? tours[0];
+      const v = answers.into;
+      const main = v ? list.filter((t) => t.quizFor.includes(v)) : [];
+      const pool = main.length ? main : v ? list.filter((t) => t.quizAlso.includes(v)) : [];
+      const from = pool.length ? pool : list;
+      return from.find((t) => !t.soon) ?? from[0] ?? tours[0];
     };
 
     // Your Ninja nods: "Umu, umu."

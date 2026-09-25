@@ -91,4 +91,6 @@ faq:
   a: There is no strict age limit, but parental discretion is advised as the tour covers nightlife areas and adult themes.
 - q: What if it rains?
   a: The tour runs rain or shine.
+quizFor: [lgbtq]
+quizAlso: [nightlife]
 ---

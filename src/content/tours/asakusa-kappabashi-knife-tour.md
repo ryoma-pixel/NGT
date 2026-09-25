@@ -92,4 +92,6 @@ faq:
   a: The tour runs in light rain and is cancelled only in stormy weather. Many covered arcades and indoor shops keep you comfortable.
 - q: Can I bring my kids?
   a: Children 12 and under are free. Families are very welcome; children must be accompanied by a guardian.
+quizFor: [shopping]
+quizAlso: [craft]
 ---

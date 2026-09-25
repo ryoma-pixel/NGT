@@ -189,6 +189,11 @@
 
 - Produced by Ninja + Kabuki Tokyo（2026-09-25 ご本人指示）：上下に定式幕の帯（フッターとの境が分かるように下にも）。欄をコンパクトに（PCで高さ約240px：小さいロゴ｜見出しと1文｜評価の札2枚とボタン）。評価は **NKTのGoogle（優先・先頭）4.8・2,000+件**と Tripadvisor 4.7・400+件。数字は NKT 公式サイトの表記（2026年1月時点：Google 4.8・2,042件／Tripadvisor 4.7・416件）を検索結果経由で確認したもの。`reviews.json` の `producer.ratings`（Pages CMS で編集、先頭から表示）。
 
+## 2026-09-25 第18回フィードバック
+- **忍術診断の判定を作り直し**（ご本人指摘「該当しないツアーに紹介される」）：テーマ・アイコンからの推測をやめ、各ツアーに「主役」を明示的に登録（`quizFor`、補助は `quizAlso`、`src/lib/quiz.ts` の9つ：Hidden shrines／Tiny bars & nightlife／Street food & snacks／Make your own souvenir／Knives & kitchenware／Night photo spots／LGBTQ+ culture／Cherry blossoms／Riding an e-scooter）。Pages CMS のツアー編集で選べる。興味の選択肢は「残ったツアーのどれかの主役」だけを出し、おすすめは主役が一致するツアー（同点は予約できるもの優先）。全ルートの結果：新宿×昼→工芸＝ハンコ／Eスクーター、新宿×夜→神社＝秘境神社・バー＝ゴールデン街・LGBTQ＝二丁目・Eスクーター、上野→アメ横、浅草×昼→合羽橋・夜→浅草ナイト、どこでも×昼→食＝アメ横・工芸＝ハンコ・包丁＝合羽橋・Eスクーター（春は桜＝新宿御苑も）、どこでも×夜→神社・バー・夜景写真＝浅草ナイト・LGBTQ・Eスクーター。新しいツアーを足すときは `quizFor` を必ず入れる。
+- 数字の帯（280+ tiny bars／60 min／Google 5.0／1 guide）は削除（ヒーローと重複・翻訳で崩れる）。
+- 締めのCTA「Choose your mission」の遷移先をツアー一覧（`/tours`）に変更。
+
 ## 旧サイトから見つかった問題（要対応）
 - ~~利用規約・プライバシーポリシーが NINJA GO RIDE 専用~~ → 2026-09-25 ウォークツアー向けに書き直し（法務確認待ち）。ウォークツアー（子ども・キャンセル規定など）を対象にした規約がない。改訂は法務確認のうえ行う（文面は勝手に書き換えない）。
 - 特商法表記のサービスURL・メールアドレスが旧ドメイン（ninja-kabukitokyo.com / info_ninja-go-ride@…）のまま。

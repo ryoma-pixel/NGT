@@ -91,4 +91,6 @@ faq:
   a: Children 12 and under are free and very welcome (must be accompanied by a guardian). If a child wants their own hanko, the shop fee applies.
 - q: What if it rains?
   a: Rain or shine. If it rains, we use covered streets and arcades as much as possible.
+quizFor: [craft]
+quizAlso: [shopping]
 ---

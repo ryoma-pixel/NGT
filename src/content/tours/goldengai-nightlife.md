@@ -93,4 +93,6 @@ faq:
   a: Children are welcome and must be accompanied by a guardian. A safe way to experience Tokyo’s nightlife area.
 - q: What if it rains?
   a: Rain or shine. The neon lights look even better in the rain.
+quizFor: [nightlife]
+quizAlso: [shrines]
 ---

@@ -95,4 +95,6 @@ faq:
   a: The tour runs in light rain and is cancelled only in stormy weather.
 - q: Can I bring my kids?
   a: Children 12 and under are free. Children must be accompanied by a guardian.
+quizFor: [shrines]
+quizAlso: [nightlife, photos]
 ---

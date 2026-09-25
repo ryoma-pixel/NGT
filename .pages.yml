@@ -23,6 +23,16 @@ content:
         type: select
         list: true
         options: { values: [Entertainment, Culture, Food, Shopping, Nightlife, FourSeasons, E-Scooter, History, JapaneseCustoms, Walk] }
+      - name: quizFor
+        label: Quiz — what this tour is really about (home page quiz recommends it for these)
+        type: select
+        list: true
+        options: { values: [shrines, nightlife, food, craft, shopping, photos, lgbtq, sakura, ride] }
+      - name: quizAlso
+        label: Quiz — what it also touches on (only used to break ties)
+        type: select
+        list: true
+        options: { values: [shrines, nightlife, food, craft, shopping, photos, lgbtq, sakura, ride] }
       - { name: durationMinutes, label: Duration (minutes), type: number, default: 60 }
       - { name: language, label: Language, type: string, default: English }
       - { name: startTimes, label: Start times (free text), type: string }

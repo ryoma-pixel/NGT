@@ -3,6 +3,7 @@ import { glob } from 'astro/loaders';
 import { ICONS } from './components/icons';
 import { PATTERNS } from './lib/patterns';
 import { KAMON_NAMES } from './lib/kamon';
+import { INTEREST_IDS } from './lib/quiz';
 
 const tours = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/tours' }),
@@ -29,6 +30,9 @@ const tours = defineCollection({
     pattern: z.enum(PATTERNS).optional(),
     // Family crest shown on cards and the tour page (src/lib/kamon.ts)
     kamon: z.enum(KAMON_NAMES).optional(),
+    // Home page quiz (src/lib/quiz.ts): what this tour is really about, and what it also touches on
+    quizFor: z.array(z.enum(INTEREST_IDS)).default([]),
+    quizAlso: z.array(z.enum(INTEREST_IDS)).default([]),
     // What you will do, as icon + 2-4 word label (icons: see src/components/icons.ts)
     features: z.array(z.object({ icon: z.enum(Object.keys(ICONS) as [keyof typeof ICONS, ...(keyof typeof ICONS)[]]), label: z.string() })).default([]),
     // Tour-specific questions; general ones (meeting point, times, price, booking) are added automatically
