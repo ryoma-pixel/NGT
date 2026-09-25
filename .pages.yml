@@ -114,6 +114,8 @@ content:
           - { name: name, label: Site name, type: string }
           - { name: url, label: URL, type: string }
       - { name: seasonal, label: Seasonal note, type: string }
+      - { name: noCostume, label: Guide does not wear the Ninja costume, type: boolean, default: false }
+      - { name: outfit, label: What the guide wears instead (optional), type: string }
       - { name: order, label: Display order (small = first), type: number, default: 100 }
       - { name: draft, label: Draft (hidden on live site), type: boolean, default: true }
       - { name: body, label: Description, type: rich-text }

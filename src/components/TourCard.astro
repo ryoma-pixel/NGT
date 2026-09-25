@@ -25,6 +25,7 @@ const price = priceLabel(tour);
     <div class="tc__body">
       {d.draft && <span class="badge badge--draft">DRAFT</span>}
       {(d.comingSoon || d.seasonal) && <p class="tc__flag">{d.comingSoon ? 'Coming soon' : d.seasonal}</p>}
+      {d.noCostume && <p class="tc__nc">No Ninja costume</p>}
       <p class="tc__area">{d.area} · {d.durationMinutes} min{d.privateTour ? ' · Private' : ''}</p>
       <h3>{d.shortTitle}</h3>
       {d.tagline ? <p class="tc__tag">{d.tagline}</p> : <p class="tc__sum">{d.summary}</p>}
@@ -87,6 +88,8 @@ const price = priceLabel(tour);
   .tc__flip :global(.icon) { transition: transform 0.8s cubic-bezier(.7,0,.2,1); }
   .tc.is-flipped .tc__flip :global(.icon) { transform: rotate(360deg); }
   .tc__flip:hover { background: #fff; }
+  .tc__nc { display: inline-block; margin: 0 0 8px; padding: 2px 7px; border: 1.5px solid var(--cream); border-radius: 3px; font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tc__flag + .tc__nc { margin-left: 4px; }
   .tc__flag { display: inline-block; margin: 0 0 8px; padding: 3px 8px; border-radius: 3px; background: var(--cream); color: var(--night); font-family: var(--mono); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
   @media (prefers-reduced-motion: reduce) { .tc__inner, .tc__flip :global(.icon) { transition: none; } .tc__flip { animation: none; } }
   .tc__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(.2,.7,.2,1); }

@@ -13,6 +13,7 @@ const soon = d.comingSoon || !d.bookingUrl;
     ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> <Usd jpy={d.fixedPricePerPerson} /> per person</p>
     : <p class="bb__from"><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> per adult. The more adults in your booking, the less each pays.</p>}
   <PriceTable tour={tour} />
+  {d.noCostume && <p class="bb__nc"><strong>Please note:</strong> your guide does not wear a Ninja costume on this tour.</p>}
   {soon
     ? <><p class="bb__soon">Launching soon. Tell us your dates and we’ll let you know first.</p><a class="btn btn--primary btn--block" href={`/contact?tour=${tour.id}`} data-track="click_coming_soon" data-tour={tour.id}>Ask about dates</a></>
     : <a class="btn btn--primary btn--block btn--call" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>}
@@ -43,6 +44,7 @@ const soon = d.comingSoon || !d.bookingUrl;
 </div>
 
 <style>
+  .bb__nc { margin: 12px 0 0; padding: 8px 10px; border-left: 4px solid var(--ai); background: rgb(31 45 82 / 0.06); font-size: 0.85rem; line-height: 1.45; }
   .bb { padding: 20px; position: sticky; top: 76px; }
   .bb__from { margin-bottom: 0.6em; color: var(--muted); }
   .bb__from strong { font-family: var(--display); font-weight: 400; font-size: 1.8rem; color: var(--ink); }

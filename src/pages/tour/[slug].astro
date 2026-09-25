@@ -30,7 +30,11 @@ const pl = priceLabel(tour);
 // Coming-soon tours cannot be booked yet: every booking button asks guests to get in touch instead
 const soon = d.comingSoon || !d.bookingUrl;
 const ctaLabel = soon ? 'Ask about dates' : 'Check availability';
-const ctaHref = soon ? `/contact?tour=${tour.id}` : '#book';
+// Every booking button goes straight to the booking engine (no in-page jumps)
+const ctaHref = soon ? `/contact?tour=${tour.id}` : d.bookingUrl!;
+const ctaTrack = soon ? 'click_coming_soon' : 'click_book';
+// Guides on some tours do not wear the Ninja costume: say so up front so nobody is disappointed at the meeting point
+const costumeNote = d.noCostume ? `Your guide does not wear a Ninja costume on this tour.${d.outfit ? ` ${d.outfit}` : ''}` : '';
 
 // Timeline: minutes come from the itinerary titles, e.g. "Golden Gai (25 min)", shown as 00–25 style ranges
 const steps = d.itinerary.map((s) => {
@@ -102,13 +106,14 @@ const reels = getReels(await getTours(), tour.id);
       <Split as="p" class="th__tag" text={d.tagline ?? d.shortTitle} delay={150} />
       <ul class="th__meta">
         {(d.comingSoon || d.seasonal) && <li class="th__flag">{d.comingSoon ? 'Coming soon' : d.seasonal}</li>}
+        {d.noCostume && <li class="th__nc"><Icon name="mask" size={18} /> No Ninja costume</li>}
         <li><Icon name="clock" size={18} /> {d.durationMinutes} min</li>
         {d.privateTour && <li><Icon name="group" size={18} /> Just your group</li>}
         <li><Icon name="chat" size={18} /> {d.language}</li>
         {d.ageNote && <li><Icon name="kid" size={18} /> {d.ageNote}</li>}
       </ul>
       <div class="th__cta">
-        <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track="click_hero_book" data-tour={tour.id}>{ctaLabel}</a>
+        <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track={ctaTrack} data-location="hero" data-tour={tour.id}>{ctaLabel}</a>
         <p class="th__price">{soon ? <strong>Coming soon</strong> : <><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /><span class="th__pnote">{pl.note}</span></>}</p>
       </div>
       {heroThumbs.length > 0 && (
@@ -138,7 +143,7 @@ const reels = getReels(await getTours(), tour.id);
             </li>
           ))}
         </ul>
-        <NextStep dark lead="Sounds like your kind of night?" label="Check dates" href="#book" where="tour_features" tour={tour.id} />
+        <NextStep dark lead="Sounds like your kind of night?" label="Check dates" href={ctaHref} where="tour_features" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}
@@ -222,7 +227,7 @@ const reels = getReels(await getTours(), tour.id);
         <p class="eyebrow">Straight from Instagram</p>
         <h2>See it for real</h2>
         <ReelRail reels={reels} />
-        <NextStep lead="Your turn to film it." label="Check availability" href={soon ? ctaHref : d.bookingUrl!} where="tour_reels" tour={tour.id} external />
+        <NextStep lead="Your turn to film it." label="Check availability" href={ctaHref} where="tour_reels" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}
@@ -241,7 +246,7 @@ const reels = getReels(await getTours(), tour.id);
             </figure>
           ))}
         </div>
-        <NextStep lead="Join them." label="Book your date" href={soon ? ctaHref : d.bookingUrl!} where="tour_reviews" tour={tour.id} external />
+        <NextStep lead="Join them." label="Book your date" href={ctaHref} where="tour_reviews" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}
@@ -252,6 +257,7 @@ const reels = getReels(await getTours(), tour.id);
       <div class="plan__main">
         <p class="eyebrow">Good to know</p>
         <Split text="Questions? Answered." />
+        {costumeNote && <p class="note"><Icon name="mask" size={22} /><span><strong>Please note</strong> {costumeNote}</span></p>}
         {(d.meetingPoint?.image || d.meetingPoint?.mapEmbed) && (
           <div class:list={['mpw', { 'mpw--two': d.meetingPoint?.image && d.meetingPoint?.mapEmbed }]}>
             {d.meetingPoint?.image && (
@@ -288,7 +294,7 @@ const reels = getReels(await getTours(), tour.id);
     <div class="wrap sbar__in">
       <p class="sbar__t">{d.shortTitle}</p>
       <p class="sbar__p">{soon ? <strong>Coming soon</strong> : <><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> {pl.note}</>}</p>
-      <a class="btn btn--primary btn--call" href={ctaHref} tabindex="-1" data-track="click_sticky_book" data-tour={tour.id}>{ctaLabel}</a>
+      <a class="btn btn--primary btn--call" href={ctaHref} tabindex="-1" data-track={ctaTrack} data-location="sticky_bar" data-tour={tour.id}>{ctaLabel}</a>
     </div>
   </div>
 
@@ -299,8 +305,8 @@ const reels = getReels(await getTours(), tour.id);
     <div class="wrap fin__in">
       <Tate text="いざ出陣" class="tate--inline" />
       <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" />
-      <Split text="Your Ninja is ready." />
-      <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track="click_final_book" data-tour={tour.id}>{ctaLabel}</a>
+      <Split text={d.noCostume ? 'Your guide is ready.' : 'Your Ninja is ready.'} />
+      <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track={ctaTrack} data-location="final" data-tour={tour.id}>{ctaLabel}</a>
     </div>
   </section>
 
@@ -403,6 +409,10 @@ const reels = getReels(await getTours(), tour.id);
   .th__title { font-family: var(--mono); font-weight: 700; font-size: clamp(0.78rem, 1.2vw, 0.92rem); letter-spacing: 0.1em; text-transform: uppercase; color: var(--lantern); margin: 0; max-width: 40em; }
   .th :global(.th__tag) { font-family: var(--display); font-size: clamp(2.6rem, 7.4vw, 6.6rem); line-height: 1; margin: 0 0 0.35em; max-width: 11em; text-shadow: 0 4px 40px rgb(0 0 0 / 0.4); }
   .th__meta { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 700; font-size: 0.9rem; animation: rise 0.9s ease 0.7s both; }
+  .th__meta li.th__nc { border-color: var(--cream); font-weight: 700; }
+  .note { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 22px; padding: 14px 16px; border: 2px solid var(--ai); border-left-width: 8px; background: #fff; color: var(--ink, #1a1a1a); line-height: 1.5; }
+  .note :global(.icon) { flex: none; color: var(--ai); margin-top: 1px; }
+  .note strong { display: block; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ai); }
   .th__meta li.th__flag { background: var(--cream); color: var(--night); border-color: var(--cream); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.78rem; }
   .th__meta li { display: inline-flex; align-items: center; gap: 6px; background: rgb(255 255 255 / 0.14); border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.4em 0.95em; }
   .th__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 22px; animation: rise 0.9s ease 0.9s both; }

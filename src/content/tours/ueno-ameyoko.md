@@ -27,6 +27,7 @@ itinerary:
 - title: Wrap-up (10 min)
 itineraryNote: At the end, your guide recommends dinner spots for families and adults so you can keep enjoying Ueno at night.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-HPI5A
+noCostume: true
 order: 5
 draft: false
 story:

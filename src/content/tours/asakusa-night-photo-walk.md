@@ -29,6 +29,8 @@ tagline: "Asakusa after dark."
 pattern: seigaiha
 kamon: lantern
 comingSoon: true
+noCostume: true
+outfit: "Your guide dresses in black with a black mask or bandana."
 story:
 - title: Tokyo lights up
   text: Meet your guide and see Senso-ji and the Skytree glow from above.
@@ -71,8 +73,6 @@ features:
   - { icon: torii, label: "Temple vs. shrine" }
   - { icon: brush, label: "Night-only shutter art" }
 faq:
-  - q: Does the guide wear a Ninja costume?
-    a: Not the full costume. On this tour your guide dresses in black with a black mask or bandana.
   - q: I’m not good at taking photos. Is that OK?
     a: Of course. Your guide suggests the angles and the timing so you get the best shot.
   - q: Can we go inside the Main Hall?

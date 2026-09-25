@@ -64,6 +64,10 @@ const tours = defineCollection({
     bookingUrl: z.string().url().optional(),
     otaLinks: z.array(z.object({ name: z.string(), url: z.string().url() })).default([]),
     seasonal: z.string().optional(),
+    // Guides on some tours (Ueno, Asakusa, Nichome) do not wear the Ninja costume: a notice then shows on the card, the tour page and the booking box
+    noCostume: z.boolean().default(false),
+    // What the guide wears instead, e.g. "Your guide wears smart-casual clothing." (optional, added to the notice)
+    outfit: z.string().optional(),
     // Shown on the site but not bookable yet (no bookingUrl): the card says "Coming soon" and the page asks guests to get in touch
     comingSoon: z.boolean().default(false),
     // Photo for the back of the tour card (defaults to the second gallery photo)

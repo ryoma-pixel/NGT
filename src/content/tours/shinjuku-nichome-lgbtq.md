@@ -28,6 +28,8 @@ itinerary:
 - title: Wrap-up & nightlife tips (5 min)
 itineraryNote: The tour ends near WARP SHINJUKU, with personal recommendations for bars and restaurants you can visit right after.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-9THS7
+noCostume: true
+outfit: "Out of respect for the neighbourhood, your guide wears smart-casual clothing."
 order: 6
 draft: false
 story:
@@ -81,8 +83,6 @@ features:
 - icon: chat
   label: Night-out tips
 faq:
-- q: Will the guide wear a Ninja costume?
-  a: To respect the atmosphere of the district, the guide wears casual clothing, not a Ninja costume.
 - q: Can I take photos?
   a: Privacy is extremely important in Nichome. Photographing people or the inside of bars without permission is strictly prohibited. Please follow your guide’s instructions.
 - q: What’s not included?

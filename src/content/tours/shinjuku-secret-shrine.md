@@ -18,8 +18,8 @@ meetingPoint:
   name: Shinjuku Toho Building 1F (next to the entrance of “Maruhan” Pachinko)
   access: 5-minute walk from JR Shinjuku Station East Exit; 3-minute walk from Seibu Shinjuku Station.
   lookFor: Look for the guide wearing a Ninja costume.
-  mapUrl: https://www.google.com/maps?cid=2311272050053509278
-  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.262268735693!2d139.69947897604285!3d35.695163129208076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd8225192f9%3A0x201349af12ba709e!2z44Oe44Or44OP44Oz5paw5a6_5p2x5a6d44OT44Or5bqX!5e0!3m2!1sen!2sjp!4v1771226581240!5m2!1sen!2sjp
+  mapUrl: https://www.google.com/maps?q=35.695611,139.701750
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d810.0609458758662!2d139.70111592852027!3d35.69561808742833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzXCsDQxJzQ0LjIiTiAxMznCsDQyJzA2LjMiRQ!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp
 itinerary:
 - title: Meeting & introduction (5 min)
 - title: Kabukicho Ichibangai & Sakura-dori (10 min)

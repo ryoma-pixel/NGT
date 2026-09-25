@@ -31,6 +31,7 @@ itinerary:
 - title: Dismissal (5 min)
 itineraryNote: The tour ends near the knife shops, so you can keep shopping right away.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-1IM0D
+noCostume: true
 order: 4
 draft: false
 story:
