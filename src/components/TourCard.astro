@@ -28,11 +28,6 @@ const price = priceLabel(tour);
       <p class="tc__area">{d.area} · {d.durationMinutes} min{d.privateTour ? ' · Private' : ''}</p>
       <h3>{d.shortTitle}</h3>
       {d.tagline ? <p class="tc__tag">{d.tagline}</p> : <p class="tc__sum">{d.summary}</p>}
-      {d.features.length > 0 && (
-        <ul class="tc__feat">
-          {d.features.slice(0, 3).map((f) => <li><Icon name={f.icon} size={16} />{f.label}</li>)}
-        </ul>
-      )}
       <p class="tc__price">{d.comingSoon ? <strong>Launching soon</strong> : <><strong>{price.amount}</strong> <Usd jpy={price.jpy} class="tc__usd" /> <small>{price.note}</small></>}<span class="tc__go" aria-hidden="true">→</span></p>
     </div>
   </a>
@@ -44,6 +39,11 @@ const price = priceLabel(tour);
       <div class="tc__body">
         <p class="tc__secret">Secret passage</p>
         <p class="tc__hook">{d.hook ?? d.summary}</p>
+        {d.features.length > 0 && (
+          <ul class="tc__feat">
+            {d.features.slice(0, 3).map((f) => <li><Icon name={f.icon} size={16} />{f.label}</li>)}
+          </ul>
+        )}
         <a class="tc__enter" href={`/tour/${tour.id}`} tabindex="-1" data-track="click_card_secret" data-tour={tour.id}>Enter the mission →</a>
       </div>
     </div>

@@ -1,6 +1,7 @@
 ---
-// "Let the scroll decide": the Lord asks three questions (where, day or night, what you're into) and your Ninja
-// nods along ("Umu, umu"). The answer is not shown right away: a puff of smoke, a sealed mission scroll drops in,
+// "Let the scroll decide": the Lord asks up to three questions (where, day or night, what you're into) and your Ninja
+// nods along ("Umu, umu"). Questions that cannot change the answer are skipped: Ueno has one walk, so it ends there;
+// day-or-night is only asked when the area has both; only interests that match a walk are offered. The answer is not shown right away: a puff of smoke, a sealed mission scroll drops in,
 // and when the guest unties it a smoke bomb fills the screen; when it clears, the quiz has turned into that tour's
 // picture scroll (the Emaki with `mission`), which lands with a DON! right there and unrolls the route. No page jump.
 // Coming-soon tours can be picked too; their scroll asks the guest to get in touch instead of booking.
@@ -13,11 +14,14 @@ const { tours } = Astro.props;
 const data = tours.map((t) => {
   const d = t.data;
   const times = d.startTimes ?? '';
+  // day or night from the first start time (5 PM or later = after dark); "Day course / Night course" counts as both
+  const m = times.match(/(\d{1,2}):\d{2}\s*(AM|PM)/i);
+  const hour = m ? (Number(m[1]) % 12) + (/pm/i.test(m[2]) ? 12 : 0) : 12;
   return {
     id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', area: d.area,
     themes: d.themes, icons: d.features.map((f) => f.icon),
-    night: d.themes.includes('Nightlife') || /night/i.test(times),
-    day: !d.themes.includes('Nightlife') || /day/i.test(times),
+    night: /\bnight\b/i.test(times) || hour >= 17,
+    day: /\bday\b/i.test(times) || hour < 17,
     seasonal: d.themes.includes('FourSeasons'), soon: d.comingSoon || !d.bookingUrl,
   };
 });
@@ -54,15 +58,6 @@ const puffs: [number, number, number, number, number][] = [
     <div class="qz__head">
       <p class="eyebrow">Can’t choose?</p>
       <h2>Let the scroll <span class="qz__o">decide.</span></h2>
-      <p class="qz__lead">Three quick taps. Your Ninja seals the answer in a scroll.</p>
-      <ol class="qz__trail" aria-label="Your answers">
-        {questions.map((q, i) => (
-          <li class:list={['qz__trail-i', { 'is-now': i === 0 }]} data-qz-trail={q.key}>
-            <span class="qz__trail-k">{String(i + 1).padStart(2, '0')} · {q.step}</span>
-            <span class="qz__trail-v" data-qz-trail-v>—</span>
-          </li>
-        ))}
-      </ol>
     </div>
 
     <div class="qz__box" data-qz-box>
@@ -72,7 +67,7 @@ const puffs: [number, number, number, number, number][] = [
           {questions.map((q, i) => (
             <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
               <legend class="qz__q">
-                <span class="qz__say"><small><b>殿</b>The Lord asks · 0{i + 1}</small><span class="visually-hidden">{q.q}</span><span class="qz__line" aria-hidden="true" data-type>{q.q}</span></span>
+                <span class="qz__say"><small><b>殿</b>The Lord asks</small><span class="visually-hidden">{q.q}</span><span class="qz__line" aria-hidden="true" data-type>{q.q}</span></span>
               </legend>
               <div class:list={['qz__opts', { 'qz__opts--two': q.opts.length === 2 }]}>
                 {q.opts.map((o) => (
@@ -180,7 +175,6 @@ const puffs: [number, number, number, number, number][] = [
     const result = root.querySelector<HTMLElement>('[data-qz-result]')!;
     const openBtn = root.querySelector<HTMLButtonElement>('[data-qz-open]')!;
     const status = root.querySelector<HTMLElement>('[data-qz-status]')!;
-    const trail = [...root.querySelectorAll<HTMLElement>('[data-qz-trail]')];
     const lord = root.querySelector<HTMLElement>('[data-qz-lord]')!;
     const ninja = root.querySelector<HTMLElement>('[data-qz-ninja]')!;
     // who is talking: the other one steps back (phones show both, face to face)
@@ -203,20 +197,47 @@ const puffs: [number, number, number, number, number][] = [
     const answers: Record<string, string> = {};
     const labels: Record<string, string> = {};
     let current = 0, picked: T | null = null, busy = false;
+    const hist: number[] = [];
 
-    const paintTrail = () => trail.forEach((li, k) => {
-      const key = li.dataset.qzTrail!;
-      li.querySelector('[data-qz-trail-v]')!.textContent = labels[key] ?? '—';
-      li.classList.toggle('is-done', key in labels);
-      li.classList.toggle('is-now', k === current && result.hidden);
+    // Which walks still fit the answers so far (the spring-only walk counts only in March–April)
+    const inSeason = [2, 3].includes(new Date().getMonth());
+    const fits = (t: T, a: Record<string, string>) =>
+      (!a.area || a.area === 'any' || t.area === a.area) && (!a.time || (a.time === 'night' ? t.night : t.day));
+    const cands = (a: Record<string, string> = answers) => {
+      const all = tours.filter((t) => fits(t, a));
+      const now = all.filter((t) => !t.seasonal || inSeason);
+      return now.length ? now : all;
+    };
+    const intoScore = (t: T, v: string) => {
+      const want = INTO[v];
+      if (!want) return 0;
+      return t.themes.reduce((s, th) => s + (want.themes[th] ?? 0), 0) + t.icons.filter((ic) => want.icons.includes(ic)).length * 2;
+    };
+    const viable = (key: string, v: string) =>
+      key === 'into' ? cands().some((t) => intoScore(t, v) > 0) : cands({ ...answers, [key]: v }).length > 0;
+    // Find the next question worth asking after question i (hiding answers that fit no walk); -1 = the scroll is decided
+    const advance = (i: number): number => {
+      for (let k = i + 1; k < qs.length; k++) {
+        if (cands().length <= 1) return -1;
+        const key = qs[k].dataset.qzQ!;
+        const opts = [...qs[k].querySelectorAll<HTMLButtonElement>('.qz__opt')];
+        const ok = opts.filter((o) => viable(key, o.dataset.v!));
+        opts.forEach((o) => { o.hidden = !ok.includes(o); });
+        if (ok.length >= 2) return k;
+        if (ok.length === 1 && key !== 'into') answers[key] = ok[0].dataset.v!; // only one way to go: take it quietly
+      }
+      return -1;
+    };
+    const clearFrom = (j: number) => qs.slice(j).forEach((q) => {
+      delete answers[q.dataset.qzQ!]; delete labels[q.dataset.qzQ!];
+      q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked'));
     });
 
     const go = (i: number) => {
       current = i;
       steps.style.transform = `translateX(${-100 * i}%)`;
       qs.forEach((q, k) => { q.disabled = k !== i; q.toggleAttribute('aria-hidden', k !== i); });
-      back.hidden = i === 0;
-      paintTrail();
+      back.hidden = hist.length === 0;
       cue(lord, 'is-speak');
       speak('lord');
       type(qs[i]?.querySelector<HTMLElement>('[data-type]'));
@@ -224,29 +245,26 @@ const puffs: [number, number, number, number, number][] = [
     };
 
     const pick = () => {
-      const want = INTO[answers.into] ?? { themes: {}, icons: [] };
-      let best: T | undefined; let bestScore = -Infinity;
-      tours.forEach((t) => {
-        let s = 0;
-        if (answers.area !== 'any') s += t.area === answers.area ? 6 : -6;
-        s += (answers.time === 'night' ? t.night : t.day) ? 4 : -4;
-        t.themes.forEach((th) => { s += want.themes[th] ?? 0; });
-        s += t.icons.filter((ic) => want.icons.includes(ic)).length * 2;
-        if (answers.into !== 'ride' && t.themes.includes('E-Scooter')) s -= 3;
-        // Seasonal tours (the spring cherry blossom walk) only win in March–April
-        if (t.seasonal) s -= [2, 3].includes(new Date().getMonth()) ? 1 : 8;
-        // a tour that is not bookable yet only wins a clear match
-        if (t.soon) s -= 1;
-        if (s > bestScore) { bestScore = s; best = t; }
+      const list = cands();
+      let best = list[0]; let bestScore = -Infinity;
+      list.forEach((t) => {
+        let sc = answers.into ? intoScore(t, answers.into) : 0;
+        if (answers.into !== 'ride' && t.themes.includes('E-Scooter')) sc -= 3;
+        if (t.soon) sc -= 1; // a walk that is not bookable yet only wins a clear match
+        if (sc > bestScore) { bestScore = sc; best = t; }
       });
-      return best!;
+      return best ?? tours[0];
     };
 
     // Your Ninja nods: "Umu, umu."
-    const sayNod = async (key: string) => {
+    const sayNod = async (key: string, decided = false) => {
       nod.hidden = false;
       speak('ninja');
-      const t = type(nodText, NOD[key]?.(labels[key]) ?? 'Umu.');
+      const l = labels[key];
+      const line = decided && key !== 'into'
+        ? (key === 'area' ? `Umu. In ${l}, one mission stands above the rest.` : `Umu. ${l}… then there is one mission for you.`)
+        : NOD[key]?.(l) ?? 'Umu.';
+      const t = type(nodText, line);
       nod.classList.remove('is-on'); void nod.offsetWidth; nod.classList.add('is-on');
       ninja.classList.add('is-in');
       cue(ninja, 'is-nod');
@@ -265,7 +283,6 @@ const puffs: [number, number, number, number, number][] = [
       result.classList.remove('is-poof', 'is-untie');
       void result.offsetWidth;
       result.classList.add('is-poof');
-      paintTrail();
       root.classList.add('is-sealed');
       cue(lord, 'is-speak');
       speak('lord');
@@ -323,8 +340,9 @@ const puffs: [number, number, number, number, number][] = [
       ask.classList.remove('is-leaving');
       nod.hidden = true;
       ninja.classList.remove('is-in', 'is-nod');
-      Object.keys(answers).forEach((k) => { delete answers[k]; delete labels[k]; });
-      qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
+      hist.length = 0;
+      clearFrom(0);
+      Object.keys(answers).forEach((k) => delete answers[k]);
       status.textContent = '';
       picked = null;
       busy = false;
@@ -351,13 +369,19 @@ const puffs: [number, number, number, number, number][] = [
       answers[key] = b.dataset.v!;
       labels[key] = b.dataset.label!;
       q.querySelectorAll('.qz__opt').forEach((o) => o.classList.toggle('is-picked', o === b));
-      paintTrail();
-      await sayNod(key);
-      if (i < qs.length - 1) { nod.hidden = true; go(i + 1); busy = false; }
+      const next = advance(i);
+      await sayNod(key, next < 0);
+      if (next >= 0) { nod.hidden = true; hist.push(i); go(next); busy = false; }
       else reveal();
     }));
 
-    back.addEventListener('click', () => { if (current > 0 && !busy) { nod.hidden = true; go(current - 1); } });
+    back.addEventListener('click', () => {
+      if (!hist.length || busy) return;
+      const j = hist.pop()!;
+      clearFrom(j);
+      nod.hidden = true;
+      go(j);
+    });
 
   });
 </script>
@@ -375,16 +399,7 @@ const puffs: [number, number, number, number, number][] = [
   .qz__box { grid-area: box; z-index: 2; }
   .qz__head h2 { font-size: clamp(2.6rem, 5.2vw, 4.4rem); line-height: 0.95; margin: 0 0 12px; }
   .qz__o { color: transparent; -webkit-text-stroke: 2px var(--ai); }
-  .qz__lead { margin: 0 0 16px; max-width: 40ch; color: #3e3527; }
 
-  /* The trail of answers: fills in as you go */
-  .qz__trail { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .qz__trail-i { background: rgb(255 250 238 / 0.35); }
-  .qz__trail-i { display: flex; flex-direction: column; gap: 4px; padding: 9px 12px; border: 1.5px dashed rgb(31 45 82 / 0.45); border-radius: 8px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
-  .qz__trail-k { font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
-  .qz__trail-v { font-family: var(--display); font-size: 1.05rem; text-transform: uppercase; }
-  .qz__trail-i.is-now { border-style: solid; border-color: var(--ai); background: #fff; }
-  .qz__trail-i.is-done { border-style: solid; border-color: var(--ai); background: var(--ai); color: var(--cream); }
 
   /* ---- The stage: the Lord and your Ninja, big, standing on the floor of the section ---- */
   .qz__fig { position: relative; margin: 0 0 calc(var(--floor) * -1); align-self: end; z-index: 1; pointer-events: none;
@@ -438,6 +453,7 @@ const puffs: [number, number, number, number, number][] = [
   .qz__opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .qz__opts--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* Answer cards: white on washi, navy frame and a filled icon disc, so they read as buttons */
+  .qz__opt[hidden] { display: none; }
   .qz__opt { position: relative; display: flex; flex-direction: row; align-items: center; gap: 14px; padding: 16px 18px; min-height: 84px; background: #fff; color: var(--ai); border: 2px solid var(--ai); border-radius: 10px; box-shadow: 0 5px 0 var(--ai); cursor: pointer; font-family: var(--display); font-size: 1.35rem; text-transform: uppercase; text-align: left; line-height: 1; transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.15s; }
   .qz__opt :global(svg) { width: 44px; height: 44px; padding: 8px; border-radius: 50%; background: var(--ai); color: var(--cream); flex: none; transition: background 0.2s, color 0.2s, transform 0.3s cubic-bezier(.3,1.6,.5,1); }
   .qz__opt:hover, .qz__opt:focus-visible { background: var(--ai); color: var(--cream); transform: translateY(-2px); box-shadow: 0 7px 0 #0f1730; outline: none; }
@@ -568,9 +584,7 @@ const puffs: [number, number, number, number, number][] = [
     .qz__nod .qz__say--ninja { min-height: 84px; font-size: 1.05rem; }
     .qz[data-speaker='ninja'] .qz__q .qz__say { visibility: hidden; }
     .qz__back { top: 2px; }
-    .qz__trail-i { flex-direction: column; gap: 4px; padding: 8px 10px; }
-    .qz__trail-v { text-align: left; font-size: 0.9rem; }
-    .qz__ask { min-height: 0; }
+        .qz__ask { min-height: 0; }
     .qz__opts { grid-template-columns: 1fr 1fr; }
     .qz__opt { flex-direction: column; align-items: flex-start; min-height: 100px; font-size: 1.15rem; padding: 14px; }
     .qz__q { padding-right: 0; padding-top: 34px; }

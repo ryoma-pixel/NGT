@@ -46,7 +46,6 @@ const km5 = map.km * 5;
     <div class="tmap__text">
       <p class="eyebrow">Where in Tokyo?</p>
       <h2 id="tmap-h">Tokyo, in <span class="tmap__o">one loop.</span></h2>
-      <p class="tmap__lead">Tokyo’s center is 23 wards. The green loop is the <b>JR Yamanote Line</b>: it circles the middle in about an hour. Our walks start in Shinjuku and Ueno, both on the loop, and in Asakusa, a short hop from Ueno.</p>
 
       <ul class="tmap__areas" role="list">
         {areas.map((a) => (
@@ -109,7 +108,7 @@ const km5 = map.km * 5;
                 <g class="tmap__plate-in">
                   <rect x="-78" y="-50" width="156" height="100" rx="10" />
                   <text class="tmap__plate-ja" x="0" y="-4" text-anchor="middle">{a.ja}</text>
-                  <text class="tmap__plate-en" x="0" y="32" text-anchor="middle">{a.id.toUpperCase()} · {a.tours.length}</text>
+                  <text class="tmap__plate-en" x="0" y="32" text-anchor="middle">{a.id.toUpperCase()}</text>
                 </g>
               </g>
             </g>
@@ -179,10 +178,8 @@ const km5 = map.km * 5;
   .tmap { background: var(--paper-2) var(--washi); color: var(--ai); border-top: 1px solid rgb(31 45 82 / 0.12); }
   .tmap .eyebrow { color: var(--ai); }
   .tmap__in { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr); gap: 32px 40px; align-items: center; }
-  .tmap h2 { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 0.95; margin: 0 0 14px; }
+  .tmap h2 { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 0.95; margin: 0 0 24px; }
   .tmap__o { color: transparent; -webkit-text-stroke: 2px var(--ai); }
-  .tmap__lead { margin: 0 0 22px; max-width: 44ch; color: #3e3527; }
-  .tmap__lead b { color: #4e6b1f; }
 
   /* area cards */
   .tmap__areas { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 10px; }
@@ -266,7 +263,7 @@ const km5 = map.km * 5;
     .tmap__in { grid-template-columns: minmax(0, 1fr); }
     .tmap__fig { order: -1; }
     .tmap__text { display: contents; }
-    .tmap__text > .eyebrow, .tmap__text > h2, .tmap__text > .tmap__lead { order: -2; }
+    .tmap__text > .eyebrow, .tmap__text > h2 { order: -2; }
     .tmap__hops { grid-template-columns: 1fr; }
   }
   @media (max-width: 760px) {
