@@ -16,6 +16,8 @@ export const GET: APIRoute = async ({ site: base }) => {
     '',
     `> ${site.description} Operated by ${site.legalName}; produced by Ninja + Kabuki Tokyo.`,
     '',
+    `Full details of every tour (route, meeting point, times, questions): ${url('/llms-full.txt')}`,
+    '',
     '## Key facts',
     `- Guided walking tours in Tokyo (Shinjuku, Ueno, Asakusa), most about 60 minutes, in English.`,
     `- Price per adult by the number of adults in one booking: ${tiers}. ${pricing.childPolicy} The E-Scooter tour is ¥5,000 per person, ages 16+.`,

@@ -10,7 +10,7 @@ import Kamon from '../../components/Kamon.astro';
 import Usd from '../../components/Usd.astro';
 import Mist from '../../components/Mist.astro';
 import ReelRail from '../../components/ReelRail.astro';
-import { getReels } from '../../lib/reels';
+import { getReels, reelUploadDate } from '../../lib/reels';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { stepIcon } from '../../lib/step-icon';
@@ -83,6 +83,7 @@ const galLayout = photos.map((_, i) => {
 const galFirst = photos.length >= 8 ? 5 : photos.length;
 const finale = d.story.at(-1)?.image ?? d.heroImage;
 
+const reels = getReels(await getTours(), tour.id);
 const jsonLd = [
   {
     '@context': 'https://schema.org',
@@ -101,8 +102,19 @@ const jsonLd = [
     provider: { '@id': new URL('/#org', Astro.site).toString() },
   },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  // Instagram reels shown on this page, as videos (can appear in video results with a thumbnail)
+  ...reels.map((r) => ({
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: `${r.title}: ${d.shortTitle}`,
+    description: `A short video from the ${d.shortTitle} tour by NINJA GO TOURS in ${d.area}, Tokyo.`,
+    thumbnailUrl: new URL(r.cover, Astro.site).toString(),
+    embedUrl: `${r.url.replace(/\/?$/, '/')}embed/`,
+    url: r.url,
+    ...(reelUploadDate(r.code) ? { uploadDate: reelUploadDate(r.code) } : {}),
+    publisher: { '@id': new URL('/#org', Astro.site).toString() },
+  })),
 ];
-const reels = getReels(await getTours(), tour.id);
 ---
 <Base title={d.seoTitle ?? d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd} overlayHeader>
   <!-- 1. Hero: one big promise -->
