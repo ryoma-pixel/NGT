@@ -14,6 +14,7 @@ import { getReels } from '../../lib/reels';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { stepIcon } from '../../lib/step-icon';
+import NinjaStage from '../../components/NinjaStage.astro';
 import { getTours, priceLabel, priceTiers, yen, AREA_JP } from '../../lib/tours';
 import pricing from '../../data/pricing.json';
 import reviews from '../../data/reviews.json';
@@ -148,21 +149,15 @@ const reels = getReels(await getTours(), tour.id);
       <div class="wrap">
         <Split text={`Your ${d.durationMinutes} minutes`} />
         {timeline.length > 1 && (
-          <div class="route" data-reveal>
-            <ol class="route__list" aria-label="Tour timeline" style={`grid-template-columns:${timeline.map((s) => `minmax(118px, ${Math.max(s.minutes, 6)}fr)`).join(' ')}`}>
-              {timeline.map((s, k) => (
-                <li class="route__stop" style={`--k:${k}`}>
-                  <span class="route__time">
-                    {showRanges && s.minutes ? <>{pad(s.from)}<i>–</i>{pad(s.to)}<small>min</small></> : s.minutes ? <>{s.minutes}<small>min</small></> : k === 0 ? 'Start' : 'End'}
-                  </span>
-                  <span class="route__pin"><Icon name={stepIcon(s.label)} size={28} /></span>
-                  <span class="route__no">{k === timeline.length - 1 ? 'Finish' : `Stop ${pad(k + 1)}`}</span>
-                  <span class="route__title">{s.label}</span>
-                </li>
-              ))}
-            </ol>
-            <span class="route__run" aria-hidden="true"><span class="route__fill"><svg class="route__star" viewBox="0 0 24 24" width="26" height="26"><path d="M12 1l2.6 7.4L22 11l-7.4 2.6L12 21l-2.6-7.4L2 11l7.4-2.6z" fill="currentColor" /><circle cx="12" cy="11" r="2.2" fill="var(--cream)" /></svg></span></span>
-          </div>
+          <NinjaStage
+            world={d.area.toUpperCase()}
+            total={showRanges ? clock : d.durationMinutes}
+            stops={timeline.map((s, k) => ({
+              label: s.label,
+              icon: stepIcon(s.label),
+              time: showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} MIN` : s.minutes ? `${s.minutes} MIN` : k === 0 ? 'START' : k === timeline.length - 1 ? 'GOAL' : '',
+            }))}
+          />
         )}
       </div>
     </section>
@@ -434,35 +429,6 @@ const reels = getReels(await getTours(), tour.id);
 
   /* Timeline */
   .story :global(h2) { font-size: clamp(2.2rem, 5vw, 4rem); }
-  .route { position: relative; margin: 26px 0 64px; padding: 34px 30px 30px; border-radius: 28px; background: var(--night); color: #fff; box-shadow: var(--shadow); overflow: hidden; }
-  .route::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 60% 90% at 100% 0%, rgb(247 240 227 / 0.08), transparent 70%); }
-  .route { --pin: 64px; --timeh: 50px; }
-  .route__list { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-rows: var(--timeh) var(--pin) auto auto; column-gap: 10px; }
-  /* dashed road behind the stops, from the first pin to the end */
-  .route__list::before { content: ''; position: absolute; left: calc(var(--pin) / 2); right: 0; top: calc(var(--timeh) + var(--pin) / 2 - 1.5px); border-top: 3px dashed rgb(247 240 227 / 0.28); }
-  .route__stop { position: relative; display: grid; grid-row: span 4; grid-template-rows: subgrid; justify-items: start; align-items: start; }
-  .route__time { align-self: end; }
-  .route__time { font-family: var(--display); font-size: clamp(1.7rem, 2.6vw, 2.4rem); line-height: 1; color: var(--cream); white-space: nowrap; padding-bottom: 10px; }
-  .route__time i { font-style: normal; opacity: 0.5; margin: 0 1px; }
-  .route__time small { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 5px; opacity: 0.75; }
-  .route__pin { position: relative; z-index: 2; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--cream); color: var(--ai); box-shadow: 0 0 0 6px var(--night), 0 10px 24px rgb(0 0 0 / 0.35); }
-  .route__stop:last-child .route__pin { background: var(--book); color: #fff; }
-  .route__no { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(247 240 227 / 0.6); margin-top: 16px; }
-  .route__title { font-weight: 700; font-size: 0.98rem; line-height: 1.35; margin-top: 4px; padding-right: 10px; max-width: 17ch; }
-  /* the path fills in and a shuriken runs to the finish when the section comes into view */
-  .route__run { position: absolute; left: calc(30px + var(--pin) / 2); right: 30px; top: calc(34px + var(--timeh) + var(--pin) / 2 - 13px); height: 26px; overflow: hidden; pointer-events: none; z-index: 1; }
-  .route__fill { position: absolute; inset: 0; color: var(--cream); }
-  .route__fill::before { content: ''; position: absolute; left: 0; right: 12px; top: 11px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, rgb(247 240 227 / 0), var(--cream)); }
-  .route__star { position: absolute; right: 0; top: 0; }
-  /* (.js is on <html>, outside this page's scope, hence :global) */
-  :global(.js) .route[data-reveal] { opacity: 1; transform: none; }
-  .route__pin { transition: transform 0.5s cubic-bezier(.3,1.6,.5,1), opacity 0.3s; transition-delay: calc(0.25s + var(--k) * 0.28s); }
-  :global(.js) .route:not(.is-in) .route__pin { transform: scale(0.4); opacity: 0; }
-  .route__fill { transition: transform 2.2s cubic-bezier(.45,.05,.2,1) 0.2s; }
-  :global(.js) .route:not(.is-in) .route__fill { transform: translateX(-100%); }
-  .route.is-in .route__star { animation: spin 0.6s linear 0.2s 4; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
   /* Chapters */
   .chapters { display: grid; gap: 72px; }
   .ch { display: grid; grid-template-columns: 1.25fr 1fr; gap: 56px; align-items: center; }
@@ -565,15 +531,6 @@ const reels = getReels(await getTours(), tour.id);
     .ch:nth-child(even) .ch__media { order: 0; }
     .ch__num { font-size: 3.6rem; }
     .chapters { gap: 48px; }
-    .route { padding: 24px 18px; }
-    .route__list { grid-template-columns: 1fr !important; grid-template-rows: none; row-gap: 18px; }
-    .route__list::before { left: 27px; right: auto; top: 8px; bottom: 8px; border-top: 0; border-left: 3px dashed rgb(247 240 227 / 0.28); }
-    .route__stop { grid-row: auto; grid-template-rows: auto auto auto; grid-template-columns: 56px 1fr; column-gap: 16px; align-items: center; }
-    .route__pin { grid-row: 1 / span 3; grid-column: 1; width: 56px; height: 56px; align-self: start; }
-    .route__time { grid-column: 2; font-size: 1.6rem; padding: 0; }
-    .route__no { grid-column: 2; margin: 2px 0 0; }
-    .route__title { grid-column: 2; max-width: none; }
-    .route__run { display: none; }
     .gal__grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
     .gal__item--w4 { grid-column: span 2; }
     .lb__slide { padding: 8px 0; }
@@ -585,9 +542,6 @@ const reels = getReels(await getTours(), tour.id);
   }
   @media (prefers-reduced-motion: reduce) {
     .th__img, .th__meta, .th__cta, .th__thumbs { animation: none; }
-    :global(.js) .route:not(.is-in) .route__pin, :global(.js) .route:not(.is-in) .route__fill { transform: none; opacity: 1; }
-    .route__pin, .route__fill { transition: none; }
-    .route.is-in .route__star { animation: none; }
     .lb[open] { animation: none; }
   }
 </style>

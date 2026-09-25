@@ -2,7 +2,6 @@
 layout: ../layouts/Page.astro
 title: "Privacy Policy"
 description: "How Kiranah Resort Co., Ltd. handles personal information for NINJA GO TOURS."
-reviewDraft: true
 ---
 Kiranah Resort Co., Ltd. (the “Company”) protects and manages the personal information of the users (“Customers”) of the tours offered under the name “NINJA GO TOURS” and of this website (together, the “Service”) according to this policy and the Act on the Protection of Personal Information of Japan.
 
@@ -64,4 +63,4 @@ Kiranah Resort Co., Ltd.
 1-11-1 Marunouchi, Chiyoda-ku, Tokyo 100-0005, Japan  
 Email: info_ninja-go-ride@ninja-kabukitokyo.com
 
-Effective Date: [to be set on publication]
+Effective Date: 25 September 2026

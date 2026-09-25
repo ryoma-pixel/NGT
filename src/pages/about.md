@@ -2,7 +2,6 @@
 layout: ../layouts/Page.astro
 title: "Legal Notice (Specified Commercial Transactions Act)"
 description: "Seller information for NINJA GO TOURS, operated by Kiranah Resort Co., Ltd."
-reviewDraft: true
 ---
 * Seller
 

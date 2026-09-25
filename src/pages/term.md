@@ -2,7 +2,6 @@
 layout: ../layouts/Page.astro
 title: "Terms of Use"
 description: "Terms of use for the walking tours and E-Scooter tour operated by Kiranah Resort Co., Ltd. under NINJA GO TOURS."
-reviewDraft: true
 ---
 These Terms of Use (the “Terms”) set out the conditions for joining the tours offered under the name “NINJA GO TOURS” (the “Tours”) by Kiranah Resort Co., Ltd. (the “Company”). By booking or joining a Tour, you agree to these Terms. Part B applies only to the E-Scooter tour (formerly “NINJA GO RIDE”).
 
@@ -53,7 +52,7 @@ The Company may refuse or end participation in the event of such acts. In that c
 
 ### 7. Insurance
 
-We recommend that you buy your own travel insurance.
+The walking tours are not covered by insurance arranged by the Company. Please buy your own travel insurance. (For the E-Scooter tour, see B4.)
 
 ### 8. Disclaimer
 
@@ -116,4 +115,4 @@ Dangerous riding and leaving the route without permission are prohibited.
 
 For accidents, injuries and damage to persons or property during the E-Scooter tour, the Company has liability insurance through Mitsui Sumitomo Insurance Co., Ltd., with unlimited coverage for personal injury and property damage. In addition, riders are covered up to 30,000,000 JPY as a lump-sum benefit. Coverage is limited to the scope of the policy; cases under the policy’s exclusions are not covered.
 
-Effective Date: [to be set on publication]
+Effective Date: 25 September 2026

@@ -1,0 +1,256 @@
+---
+// The tour's timeline as a retro side-scrolling stage: a pixel ninja runs through the tour as you scroll,
+// each stop is a 3D block that bumps and pops out its card (with a koban coin). Pinned while it plays.
+// Without JavaScript or with reduced motion it is a plain, swipeable strip with every card showing.
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Stop { label: string; time: string; icon: IconName }
+interface Props { stops: Stop[]; world: string; total: number }
+const { stops, world, total } = Astro.props;
+
+// 16×16 pixel sprites. k = outline/suit, s = skin, w = headband, e = eye glint, g = suit shade
+const FRAMES = [
+  [
+    '.....kkkkkk.....',
+    '....kkkkkkkk....',
+    '...kkkkkkkkkk.ww',
+    '...wwwwwwwwwwww.',
+    '...kkssssssskk..',
+    '...kksekksekk...',
+    '...kkkkkkkkkk...',
+    '....kkkkkkkk....',
+    '..kkkgggggggkk..',
+    '.kkk.kgwwwgk.kk.',
+    '.ss..kgggggk..ss',
+    '.....kgggggk....',
+    '....kkk...kkk...',
+    '...kkk.....kkk..',
+    '..kkk.......kkk.',
+    '.kkk.........kk.',
+  ],
+  [
+    '.....kkkkkk.....',
+    '....kkkkkkkk.ww.',
+    '...kkkkkkkkkkww.',
+    '...wwwwwwwwwww..',
+    '...kkssssssskk..',
+    '...kksekksekk...',
+    '...kkkkkkkkkk...',
+    '....kkkkkkkk....',
+    '...kkgggggggk...',
+    '...kk.gwwwgkk...',
+    '...ss.gggggss...',
+    '......ggggg.....',
+    '.....kkk.kk.....',
+    '.....kkk.kkk....',
+    '......kk..kk....',
+    '.....kkk.kkk....',
+  ],
+];
+const COLORS: Record<string, string> = { k: '#14151f', g: '#2c3150', s: '#f2c79b', w: '#f7f0e3', e: '#ffffff' };
+const sprite = FRAMES.map((rows, f) =>
+  rows.flatMap((row, y) => [...row].map((c, x) => (c === '.' ? '' : `<rect x="${x + f * 16}" y="${y}" width="1" height="1" fill="${COLORS[c]}"/>`))).join(''),
+).join('');
+
+// Far skyline: a fixed pattern of pixel buildings with lit windows
+const towers = [5, 9, 6, 12, 7, 10, 4, 8, 11, 6, 9, 5, 13, 7, 8, 6, 10, 5];
+let bx = 0;
+const skyline = towers
+  .map((h, i) => {
+    const w = 3 + (i % 3);
+    const x = bx;
+    bx += w + 1;
+    const wins = Array.from({ length: Math.floor(h / 2) }, (_, j) => ((i + j) % 3 === 0 ? `<rect x="${x + 1}" y="${16 - h + 1 + j * 2}" width="1" height="1" fill="#f3d27a"/>` : '')).join('');
+    return `<rect x="${x}" y="${16 - h}" width="${w}" height="${h}" fill="#262a55"/>${wins}`;
+  })
+  .join('');
+---
+<div class="stage" data-stage style={`--n:${stops.length}`}>
+  <div class="stage__pin">
+    <div class="stage__hud" aria-hidden="true">
+      <span>NINJA <b>×01</b></span>
+      <span>WORLD <b>{world}</b></span>
+      <span>TIME <b data-stage-time>00</b>/{String(total).padStart(2, '0')}</span>
+    </div>
+    <svg class="stage__city" viewBox={`0 0 ${bx} 16`} preserveAspectRatio="none" aria-hidden="true" set:html={skyline} />
+    <div class="stage__clouds" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+    <div class="stage__world" data-stage-world>
+      <div class="stage__ground" aria-hidden="true"><span class="stage__groundtop"></span></div>
+      <ol class="stage__stops" aria-label="Tour timeline">
+        {stops.map((s, k) => (
+          <li class="stop" style={`--k:${k}`} data-stop>
+            <div class="stop__card">
+              <span class="stop__time">{s.time}</span>
+              <span class="stop__title">{s.label}</span>
+            </div>
+            <span class="stop__coin" aria-hidden="true"></span>
+            <div class="cube" aria-hidden="true">
+              <span class="cube__f cube__front"><Icon name={s.icon} size={34} /></span>
+              <span class="cube__f cube__top"></span>
+              <span class="cube__f cube__side"></span>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div class="stage__goal" aria-hidden="true">
+        <span class="stage__pole"><span class="stage__flag"></span></span>
+        <span class="stage__gate"></span>
+        <span class="stage__clear">Mission clear!</span>
+      </div>
+    </div>
+
+    <div class="stage__ninja" data-stage-ninja aria-hidden="true">
+      <svg viewBox="0 0 32 16" width="128" height="64" shape-rendering="crispEdges" set:html={sprite} />
+    </div>
+    <p class="stage__hint" aria-hidden="true">Scroll to play ▶</p>
+  </div>
+</div>
+
+<script>
+  // Scroll-driven: the world slides left while the ninja runs in place; passing a block bumps it and opens its card.
+  document.querySelectorAll<HTMLElement>('[data-stage]').forEach((stage) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const world = stage.querySelector<HTMLElement>('[data-stage-world]')!;
+    const ninja = stage.querySelector<HTMLElement>('[data-stage-ninja]')!;
+    const time = stage.querySelector<HTMLElement>('[data-stage-time]')!;
+    const stops = [...stage.querySelectorAll<HTMLElement>('[data-stop]')];
+    const goal = stage.querySelector<HTMLElement>('.stage__goal')!;
+    const total = Number(time.parentElement?.textContent?.split('/')[1] ?? 60);
+    stage.classList.add('is-live');
+    let travel = 0, runner = 0, hitUpTo = -1, idle = 0;
+    const layout = () => {
+      stage.style.height = '';
+      const vw = stage.clientWidth;
+      runner = vw * (vw < 700 ? 0.18 : 0.22) + 40; // ninja's x inside the viewport
+      // stop when the goal (flag + gate) is in full view; the ground runs past it, so it can't be measured from scrollWidth
+      travel = Math.max(0, goal.offsetLeft + goal.offsetWidth + 24 - vw);
+      stage.style.height = `${innerHeight + travel * 0.9}px`;
+      update();
+    };
+    const update = () => {
+      const r = stage.getBoundingClientRect();
+      const span = stage.offsetHeight - innerHeight;
+      const p = span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
+      const x = p * travel;
+      world.style.transform = `translate3d(${-x}px,0,0)`;
+      stage.style.setProperty('--p', String(p));
+      time.textContent = String(Math.round(p * total)).padStart(2, '0');
+      // which blocks has the ninja passed?
+      let upTo = -1;
+      stops.forEach((s, k) => { if (s.offsetLeft + 36 <= x + runner) upTo = k; });
+      if (upTo > hitUpTo) {
+        ninja.classList.remove('is-jump'); void ninja.offsetWidth; ninja.classList.add('is-jump');
+      }
+      if (upTo !== hitUpTo) {
+        stops.forEach((s, k) => s.classList.toggle('is-hit', k <= upTo));
+        hitUpTo = upTo;
+      }
+      stage.classList.toggle('is-clear', p > 0.985);
+      stage.classList.toggle('is-started', p > 0.01);
+    };
+    let raf = 0;
+    addEventListener('scroll', () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+      ninja.classList.add('is-run');
+      clearTimeout(idle);
+      idle = window.setTimeout(() => ninja.classList.remove('is-run'), 160);
+    }, { passive: true });
+    addEventListener('resize', layout);
+    layout();
+  });
+</script>
+
+<style>
+  .stage { --cube: 76px; --ground: 22%; position: relative; margin: 20px 0 40px; font-family: 'Press Start 2P', var(--mono); }
+  .stage__pin { position: relative; height: min(640px, 92vh); overflow: hidden; border-radius: 22px; perspective: 900px; perspective-origin: 50% 30%;
+    background: linear-gradient(180deg, #151934 0%, #2d3170 45%, #7b5a8f 72%, #e59a72 100%); }
+  /* pixel stars */
+  .stage__pin::before { content: ''; position: absolute; inset: 0 0 45% 0; background-image: radial-gradient(#fff 1px, transparent 1.5px), radial-gradient(#f3d27a 1px, transparent 1.5px); background-size: 97px 61px, 143px 89px; background-position: 13px 7px, 60px 30px; opacity: 0.8; image-rendering: pixelated; }
+  .stage__hud { position: absolute; z-index: 5; top: 16px; left: 20px; right: 20px; display: flex; justify-content: space-between; gap: 12px; color: #fff; font-size: clamp(0.5rem, 1.2vw, 0.75rem); letter-spacing: 0.06em; text-shadow: 2px 2px 0 #000; }
+  .stage__hud b { font-weight: 400; color: #f3d27a; }
+  .stage__city { position: absolute; left: 0; bottom: var(--ground); width: 160%; height: 28%; transform: translateX(calc(var(--p, 0) * -25%)); image-rendering: pixelated; opacity: 0.9; }
+  .stage__clouds { position: absolute; inset: 70px 0 auto 0; height: 120px; transform: translateX(calc(var(--p, 0) * -12%)); }
+  .stage__clouds i { position: absolute; width: 96px; height: 24px; background: #fff; opacity: 0.85; box-shadow: 16px -16px 0 -0px #fff, 48px -16px 0 0 #fff; clip-path: polygon(0 40%, 16% 40%, 16% -100%, 84% -100%, 84% 40%, 100% 40%, 100% 100%, 0 100%); }
+  .stage__clouds i:nth-child(1) { left: 8%; top: 10px; }
+  .stage__clouds i:nth-child(2) { left: 46%; top: 50px; transform: scale(0.8); }
+  .stage__clouds i:nth-child(3) { left: 78%; top: 0; }
+  .stage__clouds i:nth-child(4) { left: 120%; top: 40px; }
+
+  .stage__world { position: absolute; inset: 0 auto 0 0; display: flex; align-items: flex-end; padding: 0 clamp(120px, 30vw, 360px) 0 clamp(200px, 32vw, 380px); transform-style: preserve-3d; will-change: transform; }
+  /* ground: brick front face plus a lit top face, tilted away for depth */
+  .stage__ground { position: absolute; left: -200px; right: -200px; bottom: 0; height: var(--ground); transform-style: preserve-3d;
+    background-color: #9a4a22;
+    background-image: linear-gradient(#5b2410 3px, transparent 3px), linear-gradient(90deg, #5b2410 3px, transparent 3px), linear-gradient(90deg, #5b2410 3px, transparent 3px);
+    background-size: 48px 24px, 48px 48px, 48px 48px; background-position: 0 0, 0 0, 24px 24px; image-rendering: pixelated; }
+  .stage__groundtop { position: absolute; left: 0; right: 0; top: 0; height: 90px; transform-origin: top; transform: rotateX(90deg); background: repeating-linear-gradient(90deg, #6fb04a 0 24px, #5a9a3a 24px 48px); }
+  .stage__stops { list-style: none; margin: 0; padding: 0; display: flex; gap: clamp(150px, 20vw, 260px); position: relative; bottom: calc(var(--ground) + 150px); transform-style: preserve-3d; }
+  .stop { position: relative; width: var(--cube); height: var(--cube); flex: none; transform-style: preserve-3d; }
+
+  /* the 3D block */
+  .cube { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateY(-18deg) rotateX(-8deg); }
+  .cube__f { position: absolute; inset: 0; display: grid; place-items: center; color: #3b2708; border: 4px solid #3b2708; box-shadow: inset 4px 4px 0 rgb(255 255 255 / 0.45), inset -4px -4px 0 rgb(0 0 0 / 0.25); }
+  .cube__front { background: #f0b93a; transform: translateZ(calc(var(--cube) / 2)); }
+  .cube__front::before, .cube__front::after { content: ''; position: absolute; width: 6px; height: 6px; background: #3b2708; top: 6px; left: 6px; box-shadow: calc(var(--cube) - 28px) 0 0 #3b2708, 0 calc(var(--cube) - 28px) 0 #3b2708, calc(var(--cube) - 28px) calc(var(--cube) - 28px) 0 #3b2708; }
+  .cube__front::after { display: none; }
+  .cube__top { background: #f8d26a; transform: rotateX(90deg) translateZ(calc(var(--cube) / 2)); }
+  .cube__side { background: #c98f22; transform: rotateY(90deg) translateZ(calc(var(--cube) / 2)); }
+  .stop.is-hit .cube { animation: bump 0.35s steps(4) both; }
+  .stop.is-hit .cube__front { background: #a86a2c; color: #f7f0e3; }
+  .stop.is-hit .cube__top { background: #c0843e; }
+  .stop.is-hit .cube__side { background: #8a5421; }
+  @keyframes bump { 50% { transform: rotateY(-18deg) rotateX(-8deg) translateY(-18px); } }
+
+  /* coin that jumps out of the block */
+  .stop__coin { position: absolute; left: 50%; top: 0; width: 22px; height: 32px; margin-left: -11px; border-radius: 50%; background: linear-gradient(160deg, #f8e59a, #d8a93b 50%, #b98424); box-shadow: inset 0 0 0 2px #3b2708; opacity: 0; }
+  .stop.is-hit .stop__coin { animation: coin 0.7s steps(7) both; }
+  @keyframes coin { 0% { opacity: 1; transform: translateY(0) scaleX(1); } 50% { opacity: 1; transform: translateY(-80px) scaleX(0.2); } 100% { opacity: 0; transform: translateY(-40px) scaleX(1); } }
+
+  /* the stop's card, above the block */
+  .stop__card { position: absolute; bottom: calc(100% + 26px); left: 50%; width: clamp(170px, 18vw, 220px); margin-left: calc(clamp(170px, 18vw, 220px) / -2); background: var(--cream); color: var(--ink); border: 4px solid #14151f; box-shadow: 6px 6px 0 #14151f; padding: 12px 12px 14px; display: grid; gap: 8px; transform-origin: bottom center; }
+  .stop__time { font-size: 0.72rem; color: var(--ai); }
+  .stop__title { font-family: var(--body, system-ui); font-weight: 800; font-size: 0.95rem; line-height: 1.3; }
+  .stage.is-live .stop:not(.is-hit) .stop__card { opacity: 0; transform: translateY(24px) scale(0.6); }
+  .stage.is-live .stop__card { transition: opacity 0.25s steps(3), transform 0.35s steps(5); }
+
+  /* goal */
+  .stage__goal { position: relative; flex: none; width: 250px; height: 100%; margin-left: clamp(150px, 20vw, 260px); }
+  .stage__pole { position: absolute; left: 30px; bottom: var(--ground); width: 8px; height: 58%; background: #e8e8e8; border: 2px solid #14151f; }
+  .stage__pole::before { content: ''; position: absolute; top: -18px; left: -8px; width: 20px; height: 20px; border-radius: 50%; background: #f3d27a; border: 2px solid #14151f; }
+  .stage__flag { position: absolute; top: 6px; left: 8px; width: 64px; height: 44px; background: var(--ai); border: 3px solid #14151f; transform-origin: left; transition: transform 0.6s steps(6); }
+  .stage__flag::after { content: ''; position: absolute; inset: 9px 19px; border-radius: 50%; border: 3px solid var(--cream); }
+  .stage__gate { position: absolute; left: 90px; bottom: var(--ground); width: 150px; height: 120px; background: linear-gradient(#b8412b 0 0) 18px 0 / 14px 100% no-repeat, linear-gradient(#b8412b 0 0) calc(100% - 18px) 0 / 14px 100% no-repeat, linear-gradient(#14151f 0 0) 0 0 / 100% 14px no-repeat, linear-gradient(#b8412b 0 0) 6px 30px / calc(100% - 12px) 12px no-repeat; }
+  .stage__clear { position: absolute; left: 60px; right: -20px; top: 14%; color: #fff; font-size: clamp(0.8rem, 1.8vw, 1.2rem); text-shadow: 3px 3px 0 #000; opacity: 0; transform: scale(0.6); transition: opacity 0.3s steps(3), transform 0.4s steps(4); }
+  .stage.is-clear .stage__clear, .stage:not(.is-live) .stage__clear { opacity: 1; transform: none; }
+  .stage.is-live:not(.is-clear) .stage__flag { transform: translateY(620%); }
+
+  /* the ninja */
+  .stage__ninja { position: absolute; z-index: 4; left: calc(22% - 24px); bottom: var(--ground); width: 64px; height: 64px; overflow: hidden; image-rendering: pixelated; }
+  .stage__ninja svg { display: block; width: 128px; height: 64px; }
+  .stage__ninja.is-run svg { animation: run 0.24s steps(2) infinite; }
+  @keyframes run { to { transform: translateX(-128px); } }
+  .stage__ninja.is-jump { animation: jump 0.5s cubic-bezier(.3,.7,.4,1); }
+  @keyframes jump { 45% { transform: translateY(-120px); } }
+  .stage__hint { position: absolute; z-index: 5; bottom: 12px; left: 0; right: 0; text-align: center; color: #fff; font-size: 0.6rem; text-shadow: 2px 2px 0 #000; animation: blink 1s steps(2) infinite; }
+  .stage.is-started .stage__hint, .stage:not(.is-live) .stage__hint { display: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* live mode: the stage is pinned while the page scrolls through it */
+  .stage.is-live .stage__pin { position: sticky; top: max(70px, calc((100vh - min(640px, 92vh)) / 2)); }
+
+  /* fallback (no JS / reduced motion): swipe the strip by hand */
+  .stage:not(.is-live) .stage__pin { overflow-x: auto; }
+  .stage:not(.is-live) .stage__world { position: relative; height: 100%; }
+
+  @media (max-width: 700px) {
+    .stage { --cube: 60px; --ground: 20%; }
+    .stage__pin { height: min(560px, 80vh); border-radius: 16px; }
+    .stage__ninja { left: calc(18% - 20px); width: 48px; height: 48px; }
+    .stage__ninja svg { width: 96px; height: 48px; }
+    @keyframes run { to { transform: translateX(-96px); } }
+    .stage__stops { bottom: calc(var(--ground) + 120px); }
+    .stage__hud span:nth-child(2) { display: none; }
+  }
+</style>
