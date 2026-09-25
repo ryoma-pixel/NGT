@@ -48,14 +48,17 @@ const org = {
   image: new URL('/images/og.jpg', Astro.site).toString(),
   description: site.description,
   areaServed: ['Shinjuku', 'Ueno', 'Asakusa'].map((n) => ({ '@type': 'Place', name: `${n}, Tokyo` })),
-  address: { '@type': 'PostalAddress', streetAddress: '1-11-1 Marunouchi', addressLocality: 'Chiyoda-ku', addressRegion: 'Tokyo', postalCode: '100-0005', addressCountry: 'JP' },
+  // same name, address and pin as the Google Business Profile, so Google ties the site and the Maps listing together
+  address: { '@type': 'PostalAddress', streetAddress: '1-21-1 Kabukicho', addressLocality: 'Shinjuku-ku', addressRegion: 'Tokyo', postalCode: '160-0021', addressCountry: 'JP' },
+  geo: { '@type': 'GeoCoordinates', latitude: 35.6953315, longitude: 139.7015031 },
+  ...(site.googleBusinessProfile ? { hasMap: site.googleBusinessProfile } : {}),
   email: 'info_ninja-go-ride@ninja-kabukitokyo.com',
   priceRange: '¥2,500–¥8,000',
   currenciesAccepted: 'JPY',
   knowsAbout: ['Shinjuku', 'Kabukicho', 'Golden Gai', 'Hanazono Shrine', 'Shinjuku Nichome', 'Shinjuku Gyoen', 'Ueno Ameyoko', 'Asakusa', 'Kappabashi', 'Japanese hanko seals', 'Shinto shrines', 'Tokyo nightlife'],
-  parentOrganization: { '@type': 'Organization', name: site.legalName, alternateName: '株式会社Kiranah Resort' },
+  parentOrganization: { '@type': 'Organization', name: site.legalName, alternateName: '株式会社Kiranah Resort', address: { '@type': 'PostalAddress', streetAddress: '1-11-1 Marunouchi', addressLocality: 'Chiyoda-ku', addressRegion: 'Tokyo', postalCode: '100-0005', addressCountry: 'JP' } },
   brand: { '@type': 'Brand', name: 'NINJA GO TOURS' },
-  sameAs: [site.instagram, site.tiktok, site.googleBusinessProfile, ...reviews.ratings.map((r) => r.url)].filter((u) => u && !u.includes('/maps/search/')),
+  sameAs: [site.instagram, site.tiktok, site.googleBusinessProfile, ...reviews.ratings.map((r) => r.url)].filter((u, i, a) => u && !u.includes('/maps/search/') && a.indexOf(u) === i),
 };
 const graph = [
   { '@type': 'WebSite', '@id': `${siteUrl}#website`, url: siteUrl, name: site.name, alternateName: ['NINJA GO TOURS Tokyo', 'Ninja Go Tours'], inLanguage: 'en', publisher: { '@id': `${siteUrl}#org` } },

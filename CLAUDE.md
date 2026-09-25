@@ -236,7 +236,7 @@
 - NKTのGoogle評価：4.8・4,939件（2026-09-25 ご本人の検索画面）→「4,900+」。
 - 実装：全ページに WebSite＋Organization（TravelAgency、ロゴ、sameAs）＋BreadcrumbList（`Base.astro` の `@graph`）。ツアーは TouristTrip に写真6枚・集合場所・行程・予約URL。og:image を全ページ（既定は `/images/og.jpg`）、本番のみ `max-image-preview:large`。ファビコン 48/96/192＋favicon.ico。`/llms.txt`（AI向けのサイト案内、ツアー・FAQ・料金のデータから自動生成）、`/image-sitemap.xml`、`robots.txt` でAIクローラーを明示的に許可（ご本人OK）、HTMLサイトマップ `/site-map`（フッター）。
 - 計測：`site.json` の `gtmId` を入れるとGTMが動く。**本番ドメインでのみ読み込み**、確認用URLではGTMのプレビュー（`?gtm_debug`）の時だけ。dataLayer に `page_type`・`tour_id`、クリックイベントに `link_url`・`link_domain`・`location`（`data-where` も `location` に統一）。予約完了は計測不可（LINKTIVITY側にタグ不可）→ 予約画面へのクリック（`click_book`／`click_quiz_book`／`click_emaki_book` → GTMで `booking_click`）をキーイベントに。GTMはご本人が管理、広告タグはIGLOOOから受け取りご本人が設置。
-- `site.json` の `googleBusinessProfile` にGBPのURLを入れると構造化データの sameAs に入る（未設定）。
+- Googleビジネスプロフィール（新宿の1件のみ）：https://maps.app.goo.gl/FgbL7MLQURUxWaZc6 → 登録住所は **新宿区歌舞伎町1-21-1**（NKTと同じ住所、座標 35.6953315, 139.7015031、cid 2527972710733817207）。`site.json` の `googleBusinessProfile` と口コミ（Google）のリンクを cid のURLに。構造化データの住所・座標をプロフィールに合わせ、丸の内（特商法の住所）は親会社の住所として持たせた。上野・浅草に別のプロフィールは作らない（常駐拠点がなく規約違反のリスク）。
 - NKT（ninja-kabukitokyo.com、LillyHoldings制作）のSEO・AIO施策を調べて取り入れた（2026-09-25）：robots.txt でAIクローラーを広く許可＋llms.txt への案内、`/llms-full.txt`（全ツアーの行程・集合場所・時刻・規定・FAQ）、会社情報の構造化データに住所（特商法の住所）・メール・価格帯・対応エリア・得意分野（knowsAbout）・親会社、リールを VideoObject（投稿日はInstagramの投稿番号から計算、`reelUploadDate`）。
   - 取り入れなかったもの：Googleの口コミ件数を自社の構造化データに入れる（Googleの指針に反する）、HowTo（Googleが表示を終了）、サイト内検索の SearchAction（同じく終了）、speakable（ニュース向けの試験機能）。
   - 検討事項（ご本人判断）：日本語版（NKTは英日＋hreflang）、中国語・韓国語版、Googleの「Things to do」（LINKTIVITYが連携しているか確認）。
