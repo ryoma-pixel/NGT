@@ -52,7 +52,7 @@ const { scenes, cover, end, kamon } = Astro.props;
       </div>
       <div class="emk__shade" aria-hidden="true"></div>
       <Mist class="emk__mist" strength={0.9} />
-      <Mist class="emk__mist emk__mist--top" strength={0.7} />
+      <Mist class="emk__mist emk__mist--top" strength={0.5} />
       <div class="emk__roller" aria-hidden="true"><span data-emk-grain></span></div>
     </div>
   </div>
@@ -137,7 +137,7 @@ const { scenes, cover, end, kamon } = Astro.props;
   .emk__stage :global(.emk__mist) { z-index: 2; height: 40%; }
   .emk__stage :global(.emk__mist--top) { top: 0; bottom: auto; height: 30%; transform: scaleY(-1); }
   /* Misty clouds on the paper (kasumi), drawn soft instead of hard-edged; they ride with the paper and breathe slowly */
-  .emk__haze { position: absolute; z-index: 1; left: -34%; width: 72%; height: 44%; pointer-events: none; animation: haze 11s ease-in-out var(--dl, 0s) infinite alternate;
+  .emk__haze { position: absolute; z-index: 1; left: -34%; width: 72%; height: 40%; opacity: 0.6; pointer-events: none; animation: haze 11s ease-in-out var(--dl, 0s) infinite alternate;
     background:
       radial-gradient(ellipse 34% 30% at 34% 46%, rgb(255 255 252 / 0.97), rgb(255 255 252 / 0) 70%),
       radial-gradient(ellipse 30% 26% at 60% 40%, rgb(255 254 249 / 0.95), rgb(255 254 249 / 0) 70%),
