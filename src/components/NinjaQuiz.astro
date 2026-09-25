@@ -1,5 +1,7 @@
 ---
-// "Which mission is yours?" Three quick picks (where, day or night, what you're into), then a scroll unrolls with the matching tour.
+// "Let the scroll decide": three quick picks (where, day or night, what you're into).
+// The answer is not shown right away: a puff of ninja smoke, a sealed mission scroll drops in, and the guest
+// unties it to see the tour. Opening it also switches the big picture scroll further down to that tour.
 // Tours marked comingSoon are left out because they cannot be booked yet.
 import Icon from './Icon.astro';
 import { priceTiers, type Tour } from '../lib/tours';
@@ -13,7 +15,7 @@ const data = tours.filter((t) => !t.data.comingSoon).map((t) => {
   const times = d.startTimes ?? '';
   const night = d.themes.includes('Nightlife') || /night/i.test(times);
   const day = !d.themes.includes('Nightlife') || /day/i.test(times);
-  const img = d.heroImage?.replace(/\.webp$/, '-640.webp');
+  const img = d.heroImage?.replace(/\.webp$/, '-1024.webp');
   return {
     id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', img, alt: d.heroAlt ?? '', area: d.area, booking: d.bookingUrl ?? '',
     themes: d.themes, icons: d.features.map((f) => f.icon), night, day, seasonal: d.themes.includes('FourSeasons'),
@@ -22,23 +24,30 @@ const data = tours.filter((t) => !t.data.comingSoon).map((t) => {
 });
 
 type Opt = { v: string; icon: IconName; label: string };
-const questions: { key: string; q: string; opts: Opt[] }[] = [
-  { key: 'area', q: 'Where are you staying?', opts: [
+const questions: { key: string; step: string; q: string; opts: Opt[] }[] = [
+  { key: 'area', step: 'Where', q: 'Where are you staying?', opts: [
     { v: 'Shinjuku', icon: 'pin', label: 'Shinjuku' },
     { v: 'Ueno', icon: 'pin', label: 'Ueno' },
     { v: 'Asakusa', icon: 'pin', label: 'Asakusa' },
     { v: 'any', icon: 'shuriken', label: 'Anywhere is fine' },
   ] },
-  { key: 'time', q: 'Day or night?', opts: [
+  { key: 'time', step: 'When', q: 'Day or night?', opts: [
     { v: 'day', icon: 'sun', label: 'Daytime' },
     { v: 'night', icon: 'moon', label: 'After dark' },
   ] },
-  { key: 'into', q: 'What are you into?', opts: [
+  { key: 'into', step: 'What', q: 'What are you into?', opts: [
     { v: 'culture', icon: 'torii', label: 'Shrines & old Tokyo' },
     { v: 'food', icon: 'sake', label: 'Local food & drinks' },
     { v: 'craft', icon: 'stamp', label: 'Crafts & souvenirs' },
     { v: 'ride', icon: 'scooter', label: 'Riding an e-scooter' },
   ] },
+];
+
+// Smoke: a dense core, a ring of billows and a few wisps that drift up. [angle, distance, scale, delay ms, size px]
+const puffs: [number, number, number, number, number][] = [
+  [0, 40, 2.2, 0, 150], [72, 46, 2.4, 20, 140], [144, 38, 2.1, 10, 160], [216, 44, 2.3, 30, 150], [288, 42, 2.0, 0, 140],
+  [20, 130, 1.6, 60, 110], [65, 150, 1.4, 90, 100], [110, 140, 1.7, 70, 120], [160, 160, 1.3, 110, 90], [200, 135, 1.5, 80, 110],
+  [245, 155, 1.4, 100, 100], [290, 145, 1.6, 60, 120], [335, 150, 1.3, 120, 90], [260, 210, 1.1, 180, 70], [300, 230, 1.0, 220, 60],
 ];
 ---
 <section class="qz" id="quiz" data-quiz data-usd-per-jpy={USD_PER_JPY}>
@@ -46,51 +55,92 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
     <div class="qz__head">
       <p class="eyebrow">Can’t choose?</p>
       <h2>Let the scroll <span class="qz__o">decide.</span></h2>
-      <p class="qz__progress" aria-hidden="true"><span data-qz-step>1</span> / 3</p>
+      <p class="qz__lead">Three quick taps. Your Ninja seals the answer in a scroll.</p>
+      <ol class="qz__trail" aria-label="Your answers">
+        {questions.map((q, i) => (
+          <li class:list={['qz__trail-i', { 'is-now': i === 0 }]} data-qz-trail={q.key}>
+            <span class="qz__trail-k">{String(i + 1).padStart(2, '0')} · {q.step}</span>
+            <span class="qz__trail-v" data-qz-trail-v>—</span>
+          </li>
+        ))}
+      </ol>
     </div>
 
-    <div class="qz__box">
-      <div class="qz__steps" data-qz-steps>
-        {questions.map((q, i) => (
-          <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
-            <legend class="qz__q"><span class="qz__n">0{i + 1}</span>{q.q}</legend>
-            <div class="qz__opts">
-              {q.opts.map((o) => (
-                <button type="button" class="qz__opt" data-v={o.v}>
-                  <Icon name={o.icon} size={30} />
-                  <span>{o.label}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ))}
+    <div class="qz__box" data-qz-box>
+      <div class="qz__ask" data-qz-ask>
+        <button type="button" class="qz__back" data-qz-back hidden>← Back</button>
+        <div class="qz__steps" data-qz-steps>
+          {questions.map((q, i) => (
+            <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
+              <legend class="qz__q"><span class="qz__n">0{i + 1}</span>{q.q}</legend>
+              <div class:list={['qz__opts', { 'qz__opts--two': q.opts.length === 2 }]}>
+                {q.opts.map((o) => (
+                  <button type="button" class="qz__opt" data-v={o.v} data-label={o.label}>
+                    <Icon name={o.icon} size={30} />
+                    <span>{o.label}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+        </div>
       </div>
 
       <div class="qz__result" data-qz-result hidden>
-        <span class="qz__poof" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i style={`--a:${i * 40}deg; --d:${(i % 3) * 40}ms`}></i>)}</span>
+        <p class="visually-hidden" aria-live="polite" data-qz-status></p>
+        <span class="qz__poof" aria-hidden="true">
+          <b class="qz__flash"></b>
+          {puffs.map(([a, r, s, d, z]) => <i style={`--a:${a}deg; --r:${r}px; --s:${s}; --d:${d}ms; --z:${z}px`}></i>)}
+        </span>
+        <span class="qz__ground" aria-hidden="true"></span>
+
         <div class="qz__scroll">
-          <button type="button" class="qz__wrap" data-qz-open aria-label="Open your mission scroll">
-            <span class="qz__wrap-slip"><small>Your</small>Mission</span>
-            <span class="qz__wrap-cord" aria-hidden="true"></span>
-            <span class="qz__wrap-tap"><span class="qz__wrap-dot" aria-hidden="true"></span>Tap to open</span>
+          <!-- the sealed scroll; the whole thing is the button -->
+          <button type="button" class="qz__seal-scroll" data-qz-open aria-label="Untie the scroll to see your mission">
+            <span class="qz__cap qz__cap--t" aria-hidden="true"></span>
+            <span class="qz__silk" aria-hidden="true">
+              <span class="qz__band qz__band--t"></span>
+              <span class="qz__slip"><span class="qz__slip-jp">任務</span><span class="qz__slip-en">Your mission</span></span>
+              <span class="qz__cord"><span class="qz__cord-l"></span><span class="qz__cord-r"></span></span>
+              <svg class="qz__knot" viewBox="0 0 80 96" width="64" height="77">
+                <g fill="none" stroke="#e7c465" stroke-width="5" stroke-linecap="round">
+                  <path d="M40 22 C22 4 6 14 14 26 C20 34 34 28 40 22 Z" />
+                  <path d="M40 22 C58 4 74 14 66 26 C60 34 46 28 40 22 Z" />
+                  <path d="M37 26 C32 44 30 58 28 70" />
+                  <path d="M43 26 C48 44 50 58 52 70" />
+                </g>
+                <circle cx="40" cy="23" r="7" fill="#f3d27a" stroke="#8a6a24" stroke-width="2" />
+                <g fill="#d9b04e"><rect x="23" y="68" width="10" height="20" rx="3" /><rect x="47" y="68" width="10" height="20" rx="3" /></g>
+                <g stroke="#8a6a24" stroke-width="1"><path d="M26 72v16M30 72v16M50 72v16M54 72v16" /></g>
+              </svg>
+              <span class="qz__band qz__band--b"></span>
+            </span>
+            <span class="qz__cap qz__cap--b" aria-hidden="true"></span>
           </button>
+
           <span class="qz__rod qz__rod--l" aria-hidden="true"></span>
-          <div class="qz__paper" aria-live="polite">
-            <img class="qz__img" data-qz-img alt="" width="640" height="400" />
+          <div class="qz__paper">
+            <div class="qz__pic"><img class="qz__img" data-qz-img alt="" width="1024" height="640" /></div>
             <div class="qz__body">
-              <p class="qz__seal" aria-hidden="true">Mission accepted</p>
+              <p class="qz__stamp" aria-hidden="true">Mission<br />accepted</p>
+              <p class="qz__why" data-qz-why></p>
               <h3 class="qz__title" data-qz-title></h3>
               <p class="qz__tag" data-qz-tag></p>
               <p class="qz__price" data-qz-price></p>
               <div class="qz__cta">
-                <a class="btn btn--primary" data-qz-book data-track="click_quiz_book">Book this mission</a>
+                <a class="btn btn--primary btn--call" data-qz-book data-track="click_quiz_book">Book this mission</a>
                 <a class="qz__more" href="#night" data-qz-more data-track="click_quiz_scroll">See its route on the scroll <span aria-hidden="true">↓</span></a>
               </div>
             </div>
           </div>
           <span class="qz__rod qz__rod--r" aria-hidden="true"></span>
         </div>
-        <button type="button" class="qz__again" data-qz-again>↺ Try again</button>
+
+        <p class="qz__tap" aria-hidden="true"><span class="qz__tap-dot"></span>Tap the scroll to untie it</p>
+        <div class="qz__after">
+          <button type="button" class="qz__again" data-qz-again>↺ Try again</button>
+          <a class="qz__all" href="/tours">or see all tours →</a>
+        </div>
       </div>
     </div>
   </div>
@@ -111,19 +161,37 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
     if (typeof w.gtag === 'function') w.gtag('event', event, params);
     else (w.dataLayer = w.dataLayer || []).push({ event, ...params });
   };
+  const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, reduce() ? 0 : ms));
 
   document.querySelectorAll<HTMLElement>('[data-quiz]').forEach((root) => {
     const tours: T[] = JSON.parse(root.querySelector('[data-qz-data]')!.textContent || '[]');
+    const box = root.querySelector<HTMLElement>('[data-qz-box]')!;
+    const ask = root.querySelector<HTMLElement>('[data-qz-ask]')!;
     const steps = root.querySelector<HTMLElement>('[data-qz-steps]')!;
     const qs = [...root.querySelectorAll<HTMLFieldSetElement>('[data-qz-q]')];
+    const back = root.querySelector<HTMLButtonElement>('[data-qz-back]')!;
     const result = root.querySelector<HTMLElement>('[data-qz-result]')!;
-    const stepNo = root.querySelector('[data-qz-step]');
+    const openBtn = root.querySelector<HTMLButtonElement>('[data-qz-open]')!;
+    const status = root.querySelector<HTMLElement>('[data-qz-status]')!;
+    const trail = [...root.querySelectorAll<HTMLElement>('[data-qz-trail]')];
     const answers: Record<string, string> = {};
+    const labels: Record<string, string> = {};
+    let current = 0, picked: T | undefined, busy = false;
+
+    const paintTrail = () => trail.forEach((li, k) => {
+      const key = li.dataset.qzTrail!;
+      li.querySelector('[data-qz-trail-v]')!.textContent = labels[key] ?? '—';
+      li.classList.toggle('is-done', key in labels);
+      li.classList.toggle('is-now', k === current && !result.classList.contains('is-shown'));
+    });
 
     const go = (i: number) => {
+      current = i;
       steps.style.transform = `translateX(${-100 * i}%)`;
       qs.forEach((q, k) => { q.disabled = k !== i; q.toggleAttribute('aria-hidden', k !== i); });
-      if (stepNo) stepNo.textContent = String(Math.min(i + 1, 3));
+      back.hidden = i === 0;
+      paintTrail();
       qs[i]?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
     };
 
@@ -144,44 +212,69 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       return best!;
     };
 
-    const show = () => {
-      const t = pick();
+    const fill = (t: T) => {
       const prices = t.tiers.map(([, p]) => p);
       const yen = (v: number) => `¥${v.toLocaleString('en-US')}`;
       const img = root.querySelector<HTMLImageElement>('[data-qz-img]')!;
       if (t.img) { img.src = t.img; img.alt = t.alt; }
       root.querySelector('[data-qz-title]')!.textContent = t.title;
       root.querySelector('[data-qz-tag]')!.textContent = t.tagline;
+      root.querySelector('[data-qz-why]')!.textContent = `For ${Object.values(labels).join(' · ')}`;
       const lo = Math.min(...prices), hi = Math.max(...prices);
-      const usdPerJpy = Number(root.dataset.usdPerJpy) || 0;
-      let rate = usdPerJpy;
+      let rate = Number(root.dataset.usdPerJpy) || 0;
       try { const c = JSON.parse(localStorage.getItem('ngt-fx') || 'null'); if (c?.r) rate = c.r; } catch {}
       const usd = (a: number, b: number) => (a === b ? `≈US$${Math.round(a * rate)}` : `≈US$${Math.round(a * rate)}–${Math.round(b * rate)}`);
-      root.querySelector('[data-qz-price]')!.textContent = lo === hi
-        ? `${yen(lo)} (${usd(lo, lo)}) per person`
-        : `${yen(lo)}–${hi.toLocaleString('en-US')} (${usd(lo, hi)}) per person, by party size`;
+      root.querySelector('[data-qz-price]')!.innerHTML = lo === hi
+        ? `<strong>${yen(lo)}</strong> <span>${usd(lo, lo)} per person</span>`
+        : `<strong>${yen(lo)}–${hi.toLocaleString('en-US')}</strong> <span>${usd(lo, hi)} per person, by party size</span>`;
       const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
-      const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
       book.href = t.booking || `/tour/${t.id}#book`; book.dataset.tour = t.id;
-      more.dataset.tour = t.id;
-      picked = t.id;
-      steps.parentElement!.classList.add('is-done');
-      result.hidden = false;
-      result.classList.remove('is-open');
-      const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
-      root.style.setProperty('--half', `${scroll.offsetWidth / 2 - 22}px`);
-      // Poof! A puff of ninja smoke, and a sealed scroll appears. The answer stays hidden until it is opened.
-      result.classList.remove('is-poof'); void result.offsetWidth; result.classList.add('is-poof');
-      setTimeout(() => root.querySelector<HTMLButtonElement>('[data-qz-open]')?.focus({ preventScroll: true }), 700);
-      track('quiz_complete', { tour: t.id, area: answers.area, time: answers.time, into: answers.into });
+      root.querySelector<HTMLAnchorElement>('[data-qz-more]')!.dataset.tour = t.id;
     };
-    let picked = '';
-    root.querySelector('[data-qz-open]')!.addEventListener('click', () => {
+
+    // 1) the questions fade away  2) poof of smoke  3) the sealed scroll drops in
+    const reveal = async () => {
+      busy = true;
+      picked = pick();
+      fill(picked);
+      ask.classList.add('is-leaving');
+      await wait(380);
+      box.classList.add('is-done');
+      result.hidden = false;
+      result.classList.remove('is-open', 'is-shown', 'is-poof', 'is-untie', 'is-settled');
+      const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
+      root.style.setProperty('--half', `${scroll.offsetWidth / 2 - 13}px`);
+      void result.offsetWidth;
+      result.classList.add('is-poof', 'is-shown');
+      paintTrail();
+      root.classList.add('is-sealed');
+      status.textContent = 'Your mission is sealed in a scroll. Untie it to see it.';
+      // keep the sealed scroll in view (on phones the questions may have been taller than the screen)
+      const r = result.getBoundingClientRect();
+      if (r.top < 60 || r.top + 460 > innerHeight) result.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'center' });
+      track('quiz_complete', { tour: picked.id, area: answers.area, time: answers.time, into: answers.into });
+      await wait(900);
+      openBtn.focus({ preventScroll: true });
+      busy = false;
+    };
+
+    // Untie: the knot and cord come off, the silk slips away, the rods roll apart and the answer is stamped in
+    openBtn.addEventListener('click', async () => {
+      if (!picked || result.classList.contains('is-open')) return;
+      result.classList.add('is-untie');
+      await wait(420);
+      // glide the stage to the height of the paper, then let it size itself
+      const stage = result.querySelector<HTMLElement>('.qz__scroll')!;
+      const paper = result.querySelector<HTMLElement>('.qz__paper')!;
+      stage.style.height = `${paper.offsetHeight}px`;
       result.classList.add('is-open');
-      // the big picture scroll further down switches to this tour too (rolled up, ready to open)
-      document.dispatchEvent(new CustomEvent('ngt:mission', { detail: picked }));
-      track('quiz_open', { tour: picked });
-      setTimeout(() => root.querySelector<HTMLAnchorElement>('[data-qz-book]')?.focus({ preventScroll: true }), 900);
+      setTimeout(() => { result.classList.add('is-settled'); stage.style.height = ''; }, reduce() ? 0 : 1150);
+      root.classList.remove('is-sealed');
+      status.textContent = `Your mission: ${picked.title}. ${picked.tagline}`;
+      document.dispatchEvent(new CustomEvent('ngt:mission', { detail: picked.id }));
+      track('quiz_open', { tour: picked.id });
+      await wait(1300);
+      root.querySelector<HTMLAnchorElement>('[data-qz-book]')?.focus({ preventScroll: true });
     });
 
     // "See its route": glide down to the picture scroll (now showing this tour) and put focus on its open button
@@ -189,24 +282,33 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       const target = document.getElementById('night');
       if (!target) return;
       e.preventDefault();
-      target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      target.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' });
       setTimeout(() => target.querySelector<HTMLButtonElement>('[data-emk-open]')?.focus({ preventScroll: true }), 900);
     });
 
     qs.forEach((q, i) => q.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.qz__opt');
-      if (!b) return;
-      answers[q.dataset.qzQ!] = b.dataset.v!;
+      if (!b || busy) return;
+      const key = q.dataset.qzQ!;
+      answers[key] = b.dataset.v!;
+      labels[key] = b.dataset.label!;
       q.querySelectorAll('.qz__opt').forEach((o) => o.classList.toggle('is-picked', o === b));
-      if (i < qs.length - 1) setTimeout(() => go(i + 1), 220);
-      else setTimeout(show, 220);
+      paintTrail();
+      if (i < qs.length - 1) setTimeout(() => go(i + 1), 260);
+      else setTimeout(reveal, 260);
     }));
 
+    back.addEventListener('click', () => { if (current > 0 && !busy) go(current - 1); });
+
     root.querySelector('[data-qz-again]')!.addEventListener('click', () => {
-      result.classList.remove('is-open', 'is-poof');
+      result.classList.remove('is-open', 'is-poof', 'is-shown', 'is-untie', 'is-settled');
       result.hidden = true;
-      steps.parentElement!.classList.remove('is-done');
+      root.classList.remove('is-sealed');
+      box.classList.remove('is-done');
+      ask.classList.remove('is-leaving');
+      Object.keys(answers).forEach((k) => { delete answers[k]; delete labels[k]; });
       qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
+      status.textContent = '';
       go(0);
     });
   });
@@ -216,91 +318,186 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   /* Needs JS to work, so it only appears when scripts run */
   .qz { display: none; }
   :global(.js) .qz { display: block; }
-  .qz { background: #efe4cc var(--washi); color: var(--ai); padding: 72px 0; overflow: clip; border-top: 1px solid rgb(31 45 82 / 0.12); }
+  .qz { --gold: #e7c465; background: #efe4cc var(--washi); color: var(--ai); padding: 84px 0 76px; overflow: clip; border-top: 1px solid rgb(31 45 82 / 0.12); }
   .qz .eyebrow { color: var(--ai); }
-  .qz__in { display: grid; grid-template-columns: 1fr 1.6fr; gap: 32px 56px; align-items: center; }
-  .qz__head h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 0.95; margin: 0 0 16px; }
+  .qz__in { display: grid; grid-template-columns: 1fr 1.65fr; gap: 32px 56px; align-items: start; }
+  .qz__head h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 0.95; margin: 0 0 14px; }
   .qz__o { color: transparent; -webkit-text-stroke: 2px var(--ai); }
-  .qz__progress { font-family: var(--mono); font-weight: 700; letter-spacing: 0.1em; margin: 0; color: rgb(31 45 82 / 0.6); }
-  .qz__progress span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--ai); }
+  .qz__lead { margin: 0 0 22px; max-width: 28ch; color: #4a4336; }
 
-  /* clip (not hidden) so focusing an answer can never scroll the slider sideways */
-  .qz__box { position: relative; overflow: clip; padding: 4px 0 12px; min-height: 330px; min-width: 0; }
-  .qz__steps { display: flex; transition: transform 0.55s cubic-bezier(.7,0,.2,1), opacity 0.3s; }
-  .qz__box.is-done { min-height: 0; }
-  .qz__box.is-done .qz__steps { display: none; }
-  .qz__step { flex: none; width: 100%; border: 0; margin: 0; padding: 0; min-width: 0; }
-  .qz__q { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1; margin-bottom: 18px; padding: 0; display: flex; gap: 14px; align-items: baseline; }
+  /* The trail of answers: fills in as you go */
+  .qz__trail { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-width: 320px; }
+  .qz__trail-i { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 9px 12px; border: 1.5px dashed rgb(31 45 82 / 0.35); border-radius: 8px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+  .qz__trail-k { font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .qz__trail-v { font-family: var(--display); font-size: 1.05rem; text-transform: uppercase; text-align: right; }
+  .qz__trail-i.is-now { border-style: solid; border-color: var(--ai); background: #fff; }
+  .qz__trail-i.is-done { border-style: solid; border-color: var(--ai); background: var(--ai); color: var(--cream); }
+
+  /* Questions */
+  .qz__box { position: relative; min-width: 0; }
+  .qz__ask { position: relative; overflow: clip; padding: 4px 0 12px; min-height: 330px; transition: opacity 0.35s, transform 0.35s cubic-bezier(.7,0,.2,1); }
+  .qz__ask.is-leaving { opacity: 0; transform: translateY(-16px) scale(0.98); }
+  .qz__box.is-done .qz__ask { display: none; }
+  .qz__steps { display: flex; transition: transform 0.55s cubic-bezier(.7,0,.2,1); }
+  .qz__step { flex: none; width: 100%; border: 0; margin: 0; padding: 0; min-width: 0; transition: opacity 0.4s; }
+  .qz__step[disabled] { opacity: 0; }
+  .qz__back { position: absolute; top: 4px; right: 0; z-index: 2; background: none; border: 0; padding: 6px 2px; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
+  .qz__back:hover, .qz__back:focus-visible { border-bottom-color: var(--ai); outline: none; }
+  .qz__q { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1; margin-bottom: 18px; padding: 0 90px 0 0; display: flex; gap: 14px; align-items: baseline; }
   .qz__n { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; border: 1.5px solid currentColor; padding: 2px 6px; }
-  .qz__opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .qz__opts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .qz__opts--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* Answer cards: white on washi, navy frame and a filled icon disc, so they read as buttons */
   .qz__opt { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; min-height: 124px; background: #fff; color: var(--ai); border: 2px solid var(--ai); border-radius: 10px; box-shadow: 0 5px 0 var(--ai); cursor: pointer; font-family: var(--display); font-size: 1.35rem; text-transform: uppercase; text-align: left; line-height: 1; transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.15s; }
-  .qz__opt :global(svg) { width: 44px; height: 44px; padding: 8px; border-radius: 50%; background: var(--ai); color: var(--cream); flex: none; transition: background 0.2s, color 0.2s; }
+  .qz__opt :global(svg) { width: 44px; height: 44px; padding: 8px; border-radius: 50%; background: var(--ai); color: var(--cream); flex: none; transition: background 0.2s, color 0.2s, transform 0.3s cubic-bezier(.3,1.6,.5,1); }
   .qz__opt:hover, .qz__opt:focus-visible { background: var(--ai); color: var(--cream); transform: translateY(-2px); box-shadow: 0 7px 0 #0f1730; outline: none; }
-  .qz__opt:hover :global(svg), .qz__opt:focus-visible :global(svg) { background: var(--cream); color: var(--ai); }
+  .qz__opt:hover :global(svg), .qz__opt:focus-visible :global(svg) { background: var(--cream); color: var(--ai); transform: rotate(-10deg) scale(1.08); }
   .qz__opt:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ai); }
-  .qz__opt.is-picked { background: var(--ai); color: var(--cream); }
+  .qz__opt.is-picked { background: var(--ai); color: var(--cream); animation: qz-picked 0.3s ease; }
+  .qz__opt.is-picked :global(svg) { background: var(--gold); color: var(--ai); }
   .qz__opt.is-picked::after { content: '✓'; position: absolute; top: 12px; right: 14px; font-family: var(--mono); font-size: 1rem; }
+  @keyframes qz-picked { 50% { transform: scale(0.96); } }
 
-  /* Result: the scroll opens from the middle */
+  /* ============ Result ============ */
   .qz__result[hidden] { display: none; }
-  .qz__result { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  .qz__result { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 10px; }
   .qz__scroll { position: relative; width: 100%; display: flex; align-items: stretch; }
-  .qz__rod { position: relative; z-index: 3; flex: none; width: 22px; margin: -10px 0; border-radius: 11px; background: linear-gradient(90deg, #3b2412, #a8743f 50%, #2e1b0c); box-shadow: 0 8px 18px rgb(0 0 0 / 0.4); }
-  .qz__rod--l { transform: translateX(calc(var(--half, 300px))); }
+  /* While sealed the paper is lifted out of the flow and the stage keeps a fixed height, so the sealed scroll sits
+     centred and nothing on the page jumps. On opening, the height glides to the paper's own height (set from JS). */
+  .qz__result:not(.is-settled) .qz__scroll { height: var(--stage-h, 440px); transition: height 0.9s cubic-bezier(.65,0,.25,1); }
+  .qz__result:not(.is-settled) .qz__paper { position: absolute; top: 0; left: 26px; right: 26px; }
+  .qz__result:not(.is-settled) .qz__rod { position: absolute; top: -18px; bottom: -18px; margin: 0; }
+  .qz__result:not(.is-settled) .qz__rod--l { left: 0; }
+  .qz__result:not(.is-settled) .qz__rod--r { right: 0; }
+
+  /* Rods: turned wood with ivory end caps; they start together in the middle */
+  .qz__rod { position: relative; z-index: 3; flex: none; width: 26px; margin: -18px 0; border-radius: 13px; background:
+      radial-gradient(ellipse 60% 14px at 50% 0, #efe6d2 60%, transparent 62%) top / 100% 18px no-repeat,
+      radial-gradient(ellipse 60% 14px at 50% 100%, #efe6d2 60%, transparent 62%) bottom / 100% 18px no-repeat,
+      linear-gradient(90deg, #3b2412, #8a5a2e 30%, #c28a4c 50%, #7a4f2a 70%, #2e1b0c);
+    box-shadow: 0 10px 20px rgb(0 0 0 / 0.35); }
+  .qz__rod--l { transform: translateX(var(--half, 300px)); }
   .qz__rod--r { transform: translateX(calc(var(--half, 300px) * -1)); }
-  .qz__paper { flex: 1; min-width: 0; display: grid; grid-template-columns: 0.9fr 1fr; background: #fbf6ea; color: var(--ai); border: 10px solid var(--ai); box-shadow: 0 18px 40px rgb(31 45 82 / 0.28); clip-path: inset(0 50% 0 50%); }
-  /* animate only while opening, so the closed scroll never slides into place from the wrong width */
-  .qz__result.is-open .qz__rod { transform: none; transition: transform 0.9s cubic-bezier(.7,0,.2,1); }
-  .qz__result.is-open .qz__paper { clip-path: inset(0 0 0 0); transition: clip-path 0.9s cubic-bezier(.7,0,.2,1); }
-  .qz__img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; }
-  .qz__body { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
-  .qz__seal { align-self: flex-start; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1.5px solid var(--ai); padding: 3px 8px; margin: 0 0 4px; transform: rotate(-3deg); }
-  .qz__title { font-size: clamp(1.6rem, 2.6vw, 2.2rem); text-transform: uppercase; line-height: 1; margin: 0; }
-  .qz__tag { margin: 0; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; }
-  .qz__price { margin: 6px 0 8px; font-family: var(--display); font-size: 1.5rem; }
-  .qz__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: auto; }
+
+  /* Paper: washi on a navy silk mount with a thin gold line */
+  .qz__paper { position: relative; flex: 1; min-width: 0; display: grid; grid-template-columns: 0.95fr 1fr; color: var(--ai);
+    background: #fbf6ea var(--washi); border: 12px solid var(--ai); outline: 2px solid var(--gold); outline-offset: -16px; box-shadow: 0 22px 44px -10px rgb(31 45 82 / 0.4); clip-path: inset(0 50% 0 50%); visibility: hidden; }
+  .qz__pic { position: relative; overflow: hidden; min-height: 260px; }
+  .qz__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .qz__body { position: relative; padding: 26px 28px 26px; display: flex; flex-direction: column; gap: 8px; }
+  .qz__stamp { position: absolute; top: 18px; right: 18px; margin: 0; width: 86px; height: 86px; border-radius: 50%; border: 3px double var(--ai); display: grid; place-items: center; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 0.62rem; line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; transform: rotate(-12deg); opacity: 0.9; }
+  .qz__why { margin: 0; padding-right: 96px; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(31 45 82 / 0.7); }
+  .qz__title { font-size: clamp(1.7rem, 2.8vw, 2.4rem); text-transform: uppercase; line-height: 1; margin: 2px 0 0; padding-right: 96px; }
+  .qz__tag { margin: 0; font-size: 1rem; font-weight: 700; color: #4a4336; }
+  .qz__price { margin: 10px 0 12px; }
+  .qz__price :global(strong) { display: block; font-family: var(--display); font-weight: 400; font-size: 1.9rem; line-height: 1; }
+  .qz__price :global(span) { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: rgb(31 45 82 / 0.75); }
+  .qz__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: auto; }
   .qz__more { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ai); border: 2px solid var(--ai); border-radius: 999px; padding: 10px 16px; text-decoration: none; transition: background 0.25s, color 0.25s; }
-  .qz__more:hover { background: var(--ai); color: var(--cream); }
+  .qz__more:hover, .qz__more:focus-visible { background: var(--ai); color: var(--cream); }
   .qz__more span { display: inline-block; animation: qz-down 1.4s ease-in-out infinite; }
   @keyframes qz-down { 50% { transform: translateY(4px); } }
-  @media (prefers-reduced-motion: reduce) { .qz__more span { animation: none; } }
+  .qz__after { display: flex; align-items: center; gap: 18px; opacity: 0; pointer-events: none; transition: opacity 0.4s 1.2s; }
   .qz__again { background: none; border: 0; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
+  .qz__all { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ai); }
 
-  /* Sealed scroll: navy silk wrapped around the rods, tied with a gold cord; the whole thing is the button */
-  .qz__wrap { position: absolute; z-index: 4; left: 50%; top: -14px; bottom: -14px; width: 150px; margin-left: -75px; border: 0; padding: 0; cursor: pointer; border-radius: 12px; color: var(--ai);
-    background: var(--ai) var(--seigaiha); box-shadow: inset 10px 0 18px -8px rgb(0 0 0 / 0.5), inset -10px 0 18px -8px rgb(0 0 0 / 0.5), 0 18px 34px rgb(31 45 82 / 0.35);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: transform 0.45s cubic-bezier(.7,0,.2,1), opacity 0.35s; }
-  .qz__wrap-slip { background: var(--cream); padding: 16px 12px; width: 62%; font-family: var(--display); font-size: 1.6rem; line-height: 1; text-transform: uppercase; box-shadow: 0 4px 10px rgb(0 0 0 / 0.3); }
-  .qz__wrap-slip small { display: block; font-family: var(--mono); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px; }
-  .qz__wrap-cord { position: absolute; left: -6px; right: -6px; top: 58%; height: 6px; background: linear-gradient(90deg, #8a6a24, #e9c96a 50%, #8a6a24); border-radius: 3px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.35); }
-  .qz__wrap-tap { position: absolute; bottom: 18px; display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); }
-  .qz__wrap-dot { width: 9px; height: 9px; border-radius: 50%; background: #f3d27a; animation: qz-ping 1.5s ease-out infinite; }
-  @keyframes qz-ping { 0% { box-shadow: 0 0 0 0 rgb(243 210 122 / 0.7); } 100% { box-shadow: 0 0 0 12px rgb(243 210 122 / 0); } }
-  .qz__wrap:hover, .qz__wrap:focus-visible { transform: scale(1.04) rotate(-1deg); outline: 3px solid #f3d27a; outline-offset: 4px; }
-  .qz__result.is-poof:not(.is-open) .qz__wrap { animation: qz-pop 0.6s cubic-bezier(.3,1.5,.5,1) 0.15s both, qz-wiggle 2.4s ease-in-out 1.2s infinite; }
-  @keyframes qz-pop { from { opacity: 0; transform: scale(0.3) rotate(-12deg); } }
-  @keyframes qz-wiggle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
-  .qz__result.is-open .qz__wrap { opacity: 0; transform: scaleX(0.1); pointer-events: none; }
-  /* before opening, the answer and its buttons stay hidden */
-  .qz__result:not(.is-open) .qz__paper { visibility: hidden; }
-  .qz__result:not(.is-open) .qz__again { visibility: hidden; }
-  /* Poof: puffs of smoke burst out from the middle and fade (transform + opacity only) */
-  .qz__poof { position: absolute; z-index: 5; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
-  .qz__poof i { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgb(255 255 255 / 0.95), rgb(230 224 212 / 0.7) 45%, rgb(230 224 212 / 0) 70%); opacity: 0; }
-  .qz__result.is-poof .qz__poof i { animation: qz-puff 0.9s ease-out var(--d) both; }
-  @keyframes qz-puff { 0% { opacity: 0.95; transform: rotate(var(--a)) translateX(0) scale(0.3); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(150px) scale(2.2); } }
+  /* ---- The sealed scroll ---- */
+  .qz__seal-scroll { position: absolute; z-index: 4; left: 50%; top: 50%; height: 400px; margin-top: -200px; width: 150px; margin-left: -75px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; color: var(--ai); -webkit-tap-highlight-color: transparent; }
+  .qz__cap { flex: none; width: 58%; height: 16px; border-radius: 8px; background: linear-gradient(90deg, #3b2412, #b07a42 45%, #d9a868 55%, #3b2412); box-shadow: 0 2px 4px rgb(0 0 0 / 0.3); position: relative; z-index: 1; }
+  .qz__cap::after { content: ''; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff8e6, #d8ccb0 60%, #a89a7a); box-shadow: 0 2px 4px rgb(0 0 0 / 0.35); }
+  .qz__silk { position: relative; flex: 1; width: 100%; margin: -6px 0; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+    background:
+      linear-gradient(90deg, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0) 22%, rgb(255 255 255 / 0.12) 46%, rgb(255 255 255 / 0) 60%, rgb(0 0 0 / 0.5)),
+      var(--ai) var(--seigaiha);
+    box-shadow: 0 26px 40px -12px rgb(31 45 82 / 0.55); }
+  .qz__band { position: absolute; left: 0; right: 0; height: 12px; background: repeating-linear-gradient(90deg, #c9a14a 0 6px, #e7c465 6px 12px); opacity: 0.9; }
+  .qz__band--t { top: 22px; }
+  .qz__band--b { bottom: 22px; }
+  .qz__slip { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; background: #fbf6ea; color: var(--ai); padding: 16px 10px 12px; width: 56%; margin-top: -40px; box-shadow: 0 4px 10px rgb(0 0 0 / 0.35); border: 1px solid #d9cdb3; }
+  .qz__slip-jp { writing-mode: vertical-rl; font-family: var(--mincho); font-weight: 800; font-size: 2rem; line-height: 1; letter-spacing: 0.15em; }
+  .qz__slip-en { font-family: var(--mono); font-weight: 700; font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; line-height: 1.3; }
+  .qz__cord { position: absolute; left: -2px; right: -2px; top: 62%; height: 9px; z-index: 2; }
+  .qz__cord-l, .qz__cord-r { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(135deg, #8a6a24 0 3px, #e7c465 3px 7px); box-shadow: 0 2px 4px rgb(0 0 0 / 0.4); transition: transform 0.4s cubic-bezier(.7,0,.2,1), opacity 0.4s; }
+  .qz__cord-l { left: 0; border-radius: 4px 0 0 4px; }
+  .qz__cord-r { right: 0; border-radius: 0 4px 4px 0; }
+  .qz__knot { position: absolute; z-index: 3; left: 50%; top: calc(62% - 20px); margin-left: -32px; transform-origin: 50% 25%; filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.4)); transition: transform 0.4s cubic-bezier(.7,0,.2,1), opacity 0.3s; }
+  .qz__seal-scroll:hover .qz__silk, .qz__seal-scroll:focus-visible .qz__silk { outline: 3px solid var(--gold); outline-offset: 5px; }
+  .qz__seal-scroll:focus { outline: none; }
+
+  /* ground shadow under the sealed scroll */
+  .qz__ground { position: absolute; z-index: 0; left: 50%; top: calc(10px + var(--stage-h, 440px) / 2 + 196px); width: 240px; height: 28px; margin-left: -120px; border-radius: 50%; background: radial-gradient(ellipse, rgb(31 45 82 / 0.28), transparent 70%); opacity: 0; transform: scale(0.4); transition: opacity 0.5s, transform 0.5s; }
+  :global(.is-sealed) .qz__ground { opacity: 1; transform: none; }
+
+  .qz__tap { display: inline-flex; align-items: center; gap: 10px; margin: 18px 0 0; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0; }
+  .qz__tap-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ai); animation: qz-ping 1.5s ease-out infinite; }
+  @keyframes qz-ping { 0% { box-shadow: 0 0 0 0 rgb(31 45 82 / 0.5); } 100% { box-shadow: 0 0 0 12px rgb(31 45 82 / 0); } }
+  :global(.is-sealed) .qz__tap { opacity: 1; transition: opacity 0.4s 1s; }
+
+  /* 1) arrive: drops out of the smoke with a bounce, then breathes and wiggles now and then */
+  .qz__result.is-poof .qz__seal-scroll { animation: qz-drop 0.75s cubic-bezier(.3,1.45,.5,1) 0.2s both, qz-wiggle 3.2s ease-in-out 2s infinite; }
+  @keyframes qz-drop { 0% { opacity: 0; transform: translateY(-60px) scale(0.5) rotate(-14deg); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+  @keyframes qz-wiggle { 0%, 84%, 100% { transform: none; } 88% { transform: rotate(-3deg) translateY(-3px); } 92% { transform: rotate(3deg) translateY(-3px); } 96% { transform: rotate(-1.5deg); } }
+  /* 2) untie: the knot falls, the cord slides off both sides */
+  .qz__result.is-untie .qz__knot { transform: translateY(40px) rotate(24deg) scale(0.6); opacity: 0; }
+  .qz__result.is-untie .qz__cord-l { transform: translateX(-60px); opacity: 0; }
+  .qz__result.is-untie .qz__cord-r { transform: translateX(60px); opacity: 0; }
+  .qz__result.is-untie .qz__seal-scroll { animation: none; }
+  /* 3) open: the silk slips away, the rods roll apart and unroll the paper */
+  .qz__result.is-open .qz__seal-scroll { opacity: 0; transform: scaleX(0.2); pointer-events: none; transition: opacity 0.3s, transform 0.4s cubic-bezier(.7,0,.2,1); }
+  .qz__result.is-open .qz__paper { visibility: visible; clip-path: inset(0 0 0 0); transition: clip-path 1s cubic-bezier(.65,0,.25,1) 0.1s; }
+  .qz__result.is-open .qz__rod { transform: none; transition: transform 1s cubic-bezier(.65,0,.25,1) 0.1s; }
+  /* 4) the answer arrives piece by piece */
+  .qz__result.is-open .qz__img { animation: qz-zoom 1.6s ease-out 0.4s both; }
+  @keyframes qz-zoom { from { transform: scale(1.15); } }
+  .qz__result.is-open .qz__why, .qz__result.is-open .qz__title, .qz__result.is-open .qz__tag, .qz__result.is-open .qz__price, .qz__result.is-open .qz__cta { animation: qz-rise 0.55s cubic-bezier(.2,.8,.2,1) both; }
+  .qz__result.is-open .qz__why { animation-delay: 0.75s; }
+  .qz__result.is-open .qz__title { animation-delay: 0.85s; }
+  .qz__result.is-open .qz__tag { animation-delay: 0.95s; }
+  .qz__result.is-open .qz__price { animation-delay: 1.05s; }
+  .qz__result.is-open .qz__cta { animation-delay: 1.15s; }
+  @keyframes qz-rise { from { opacity: 0; transform: translateY(14px); } }
+  .qz__result.is-open .qz__stamp { animation: qz-stamp 0.45s cubic-bezier(.3,1.6,.5,1) 1.3s both; }
+  @keyframes qz-stamp { 0% { opacity: 0; transform: scale(2.2) rotate(-30deg); } 100% { opacity: 0.9; transform: rotate(-12deg); } }
+  .qz__result.is-open .qz__after { opacity: 1; pointer-events: auto; }
+  .qz__result.is-open ~ .qz__tap, .qz__result.is-open .qz__tap { display: none; }
+
+  /* ---- Poof: a flash ring, a dense core and billows that drift up and fade (transform + opacity only) ---- */
+  .qz__poof { position: absolute; z-index: 6; left: 50%; top: calc(10px + var(--stage-h, 440px) / 2); width: 0; height: 0; pointer-events: none; }
+  .qz__poof i { position: absolute; left: calc(var(--z) / -2); top: calc(var(--z) / -2); width: var(--z); height: var(--z); border-radius: 50%; opacity: 0;
+    background: radial-gradient(circle at 42% 38%, #ffffff 0%, #f1ece2 38%, rgb(214 206 190 / 0.75) 58%, rgb(214 206 190 / 0) 72%); }
+  .qz__flash { position: absolute; left: -40px; top: -40px; width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgb(255 255 255 / 0.9); opacity: 0; }
+  .qz__result.is-poof .qz__poof i { animation: qz-puff 1.25s cubic-bezier(.15,.7,.3,1) var(--d) both; }
+  .qz__result.is-poof .qz__flash { animation: qz-flash 0.5s ease-out both; }
+  @keyframes qz-puff {
+    0% { opacity: 0; transform: rotate(var(--a)) translateX(0) scale(0.2); }
+    12% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--r)) translateY(-30px) scale(var(--s)); }
+  }
+  @keyframes qz-flash { 0% { opacity: 1; transform: scale(0.2); } 100% { opacity: 0; transform: scale(3.4); } }
 
   @media (max-width: 900px) {
-    .qz__in { grid-template-columns: 1fr; }
-    .qz__box { min-height: 0; }
-    .qz__paper { grid-template-columns: 1fr; }
-    .qz__img { min-height: 0; height: 150px; }
+    .qz__in { grid-template-columns: 1fr; gap: 26px; }
+    .qz__lead { margin-bottom: 14px; }
+    .qz__trail { grid-template-columns: repeat(3, 1fr); max-width: none; }
+    .qz__trail-i { flex-direction: column; gap: 4px; padding: 8px 10px; }
+    .qz__trail-v { text-align: left; font-size: 0.9rem; }
+    .qz__ask { min-height: 0; }
     .qz__opts { grid-template-columns: 1fr 1fr; }
-    .qz__opt { min-height: 96px; font-size: 1.15rem; }
+    .qz__opt { min-height: 100px; font-size: 1.15rem; padding: 14px; }
+    .qz__q { padding-right: 70px; }
+    .qz__paper { grid-template-columns: 1fr; border-width: 10px; outline-offset: -14px; }
+    .qz__pic { min-height: 0; height: 180px; }
+    .qz__stamp { width: 72px; height: 72px; font-size: 0.54rem; top: -40px; right: 12px; background: #fbf6ea; }
+    .qz__why, .qz__title { padding-right: 0; }
+    .qz__seal-scroll { width: 124px; margin-left: -62px; height: 360px; margin-top: -180px; }
+    .qz__result { --stage-h: 400px; }
+    .qz__ground { top: calc(10px + var(--stage-h) / 2 + 176px); }
+    .qz__slip-jp { font-size: 1.7rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .qz__steps, .qz__rod, .qz__paper, .qz__wrap { transition: none; }
-    .qz__result.is-poof .qz__poof i, .qz__result.is-poof:not(.is-open) .qz__wrap, .qz__wrap-dot { animation: none; }
+    .qz__steps, .qz__rod, .qz__paper, .qz__seal-scroll, .qz__ask, .qz__cord-l, .qz__cord-r, .qz__knot, .qz__after, .qz__ground { transition: none !important; }
+    .qz__result.is-poof .qz__poof i, .qz__result.is-poof .qz__flash, .qz__result.is-poof .qz__seal-scroll, .qz__tap-dot, .qz__more span,
+    .qz__result.is-open .qz__img, .qz__result.is-open .qz__why, .qz__result.is-open .qz__title, .qz__result.is-open .qz__tag,
+    .qz__result.is-open .qz__price, .qz__result.is-open .qz__cta, .qz__result.is-open .qz__stamp, .qz__opt.is-picked { animation: none !important; }
   }
 </style>
