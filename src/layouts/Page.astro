@@ -6,6 +6,7 @@ const { frontmatter } = Astro.props;
 <Base title={frontmatter.title} description={frontmatter.description}>
   <section class="section">
     <div class="wrap prose">
+      {frontmatter.reviewDraft && <p class="badge badge--draft">DRAFT · under legal review, not yet in force</p>}
       <h1>{frontmatter.title}</h1>
       <slot />
     </div>
