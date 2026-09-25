@@ -27,9 +27,6 @@ itinerary:
 - title: Dismissal (5 min)
 itineraryNote: The tour ends in a restaurant area, so you can head straight to dinner in Shinjuku.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-VZ4LX
-otaLinks:
-- name: GetYourGuide
-  url: https://www.getyourguide.com/tokyo-l193/tokyo-kabukicho-golden-gai-walking-tour-with-ninja-guide-t1204219/
 order: 1
 draft: false
 story:

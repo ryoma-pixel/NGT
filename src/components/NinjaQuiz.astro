@@ -76,7 +76,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
               <p class="qz__price" data-qz-price></p>
               <div class="qz__cta">
                 <a class="btn btn--primary" data-qz-book data-track="click_quiz_book">Book this mission</a>
-                <a class="qz__more" data-qz-more data-track="click_quiz_details">See the mission →</a>
+                <a class="qz__more" data-qz-more data-track="click_quiz_scroll">Unroll its scroll →</a>
               </div>
             </div>
           </div>
@@ -147,7 +147,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
       const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
       book.href = `/tour/${t.id}#book`; book.dataset.tour = t.id;
-      more.href = `/tour/${t.id}`; more.dataset.tour = t.id;
+      more.href = `/tour/${t.id}#scroll`; more.dataset.tour = t.id;
       steps.parentElement!.classList.add('is-done');
       result.hidden = false;
       const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;

@@ -1,5 +1,6 @@
 ---
 import NextStep from '../../components/NextStep.astro';
+import Emaki from '../../components/Emaki.astro';
 import Tate from '../../components/Tate.astro';
 import Base from '../../layouts/Base.astro';
 import BookingBox from '../../components/BookingBox.astro';
@@ -136,32 +137,26 @@ const reels = getReels(await getTours(), tour.id);
             {timeline.map((s, k) => (
               <li style={`flex:${Math.max(s.minutes, 4)}; --k:${k}`}>
                 <span class="tl__seg"></span>
-                <span class="tl__time">{showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} min` : s.minutes ? `${s.minutes} min` : 'Start'}</span>
+                <span class="tl__time">{showRanges && s.minutes ? `${pad(s.from)}–${pad(s.to)} min` : s.minutes ? `${s.minutes} min` : k === 0 ? 'Start' : 'End'}</span>
                 <span class="tl__label">{s.label}</span>
               </li>
             ))}
           </ol>
         )}
-        <div class="chapters">
-          {d.story.map((c, i) => (
-            <article class="ch" data-reveal>
-              {c.image && (
-                <figure class="ch__media" data-wipe>
-                  <img src={c.image} srcset={srcset(c.image, 1400)} sizes="(max-width: 900px) 100vw, 55vw" alt={c.imageAlt ?? ''} width="1400" height="1050" loading="lazy" />
-                </figure>
-              )}
-              <div class="ch__text">
-                <p class="ch__num outline" aria-hidden="true">{pad(i + 1)}</p>
-                <p class="ch__quest">Side quest</p>
-                <h3>{c.title}</h3>
-                <p>{c.text}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-        <NextStep lead="That’s your hour. Pick the day." label="See available times" href={d.bookingUrl ?? '#book'} where="tour_story" tour={tour.id} external />
       </div>
     </section>
+  )}
+
+  {d.story.length > 0 && (
+    <Emaki
+      id="scroll"
+      eyebrow={`Your ${d.durationMinutes} minutes, unrolled`}
+      tour={tour.id}
+      kamon={d.kamon}
+      cover={{ title: d.tagline ?? d.shortTitle, sub: `${d.shortTitle} · ${d.durationMinutes} min`, tate: `${AREA_JP[d.area]}の${d.themes.includes('Nightlife') ? '一夜' : '一刻'}` }}
+      scenes={d.story.filter((c) => c.image).map((c, n) => ({ kicker: `Side quest ${pad(n + 1)}`, title: c.title, text: c.text, image: c.image!, alt: c.imageAlt ?? '' }))}
+      end={{ title: 'Your turn.', cta: 'See available times', href: d.bookingUrl ?? '#book', external: !!d.bookingUrl }}
+    />
   )}
 
   <!-- 4. Photos -->

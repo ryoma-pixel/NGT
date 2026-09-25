@@ -6,14 +6,14 @@ import Kamon from './Kamon.astro';
 import Mist from './Mist.astro';
 import { srcset } from '../lib/img';
 interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
-interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string }; kamon?: string }
-const { scenes, cover, end, kamon } = Astro.props;
+interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string }
+const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour } = Astro.props;
 
 ---
-<section class="emk" data-emaki aria-label="A night with your Ninja, told as a picture scroll">
+<section class="emk" id={id} data-emaki aria-label={`${eyebrow}, told as a picture scroll`}>
   <div class="emk__pin">
     <div class="wrap emk__head">
-      <p class="eyebrow">A night with your Ninja</p>
+      <p class="eyebrow">{eyebrow}</p>
       <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / {String(scenes.length).padStart(2, '0')}</p>
     </div>
     <div class="emk__stage">
@@ -46,7 +46,7 @@ const { scenes, cover, end, kamon } = Astro.props;
           ))}
           <li class="emk__end">
             <p class="emk__end-t">{end.title}</p>
-            <a class="btn btn--primary" href={end.href} data-track="click_emaki_book">{end.cta}</a>
+            <a class="btn btn--primary" href={end.href} data-track="click_emaki_book" data-tour={tour} {...(end.external ? { rel: 'noopener' } : {})}>{end.cta}</a>
           </li>
         </ol>
       </div>

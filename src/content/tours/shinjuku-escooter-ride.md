@@ -30,11 +30,6 @@ itinerary:
 - title: Goal & wrap-up (about 20 min)
   text: Return to Kabukicho. Your photos and videos are shared afterwards via a download link.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-7QR5Z
-otaLinks:
-- name: KKday
-  url: https://www.kkday.com/en-us/product/529696
-- name: Rakuten Travel Experiences
-  url: https://experiences.travel.rakuten.com/experiences/60497
 order: 8
 draft: false
 story:

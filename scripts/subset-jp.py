@@ -18,6 +18,7 @@ for path in glob.glob('src/**/*.astro', recursive=True) + glob.glob('src/**/*.ts
     if path.endswith('lib/tours.ts'):
         block = text.split('AREA_JP', 1)[1]
         chars.update(re.findall(r"[぀-ヿ一-鿿]", block))
+chars.update('の一夜刻')  # emaki titles on tour pages: <area>の一夜 / <area>の一刻
 chars = sorted(c for c in chars if not c.isascii())
 print(len(chars), 'characters:', ''.join(chars))
 

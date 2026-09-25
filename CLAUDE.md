@@ -58,7 +58,7 @@
 - 本番以外（Netlify の確認用URL・ローカル）は `noindex, nofollow` を出す（`Base.astro`、`CONTEXT=production` のときだけ外れる）。
 - FAQの分担（2026-09-25 ご本人指示）：トップ＝全体の質問（`src/data/faq.json`：貸切・料金の仕組み・子ども・言語・予約方法・集合場所・直販の理由）。ツアー詳細＝そのツアーの質問（集合場所・開始時刻・そのツアーの料金・予約方法と締切＋各ツアーの `faq`）で、最後に全体FAQへのリンク。
 - CTAは「広告っぽくなく自然に、多めに」（ご本人方針）：`NextStep.astro`（ひとこと＋タイプライター風の下線リンク1つ）を、迷いやすい所の直後に置く。トップ：ツアー一覧の後（→診断）、料金の後、流れの後、口コミの後、FAQの後（→問い合わせ）。ツアー詳細：体験の後、行程の後、リールの後、口コミの後、FAQの後（→全体FAQ）。予約エンジンへのリンクは `click_book`、それ以外は `click_next_step` で計測。
-- OTAボタン：ツアー詳細の予約ボックスに「Prefer a booking app? Also on」として枠線ボタンで表示（`otaLinks`）。2026-09-25 にWeb検索で見つけたものを仮登録：秘境神社＝GetYourGuide（t1204219）、Eスクーター＝KKday（529696）・楽天トラベル体験（60497）。**どのツアーのページか、オーナーの確認が必要**。Klook（196854「Kabukicho & Golden Gai」）は秘境神社かゴールデン街か判別できず未登録。
+- OTAボタン：ツアー詳細の予約ボックスに「Prefer a booking app? Also on」として枠線ボタンで表示（`otaLinks`）。**載せるOTAは Klook と Viator の2社だけ**（ご本人指示）。2026-09-25 時点で見つかったのは Klook（196854「Tokyo Shinjuku Ninja Walking Tour: Kabukicho & Golden Gai (60min)」）のみで、同名のGetYourGuide商品の行程（花園神社→ゴールデン街→ゴジラ）からゴールデン街ツアーに仮登録。Viator の掲載は見つからず。ほかのツアーのKlook・ViatorのURLは LINKTIVITY に確認する。
 - 予約の説明文から確認できていない表現（instant confirmation、pay online）を外した。
 - （第4案までの）動きの一覧：初回訪問だけ襖が開きロゴが押されるイントロ／見出しの単語が下からせり上がる／スクロールで写真が沈むパララックス／はちまきの帯に体験と地名が流れるマーキー／ツアーを横に選ぶ「MISSION」レール／数字のカウントアップ／写真が固定されて場面が切り替わる「一夜の物語」／料金がハンコのように押される／写真が襖のように開くChapter／ツアーページ下部に予約バー。
 - 速さのルール：動きは transform と opacity だけ（スマホでもカクつかない）。`prefers-reduced-motion` の人には動きを止める。画像は `scripts/make-image-variants.py` で 640/1024px 版を作り srcset で出し分け。フォントは英字のみを自己ホスト（Anton 19KB、Space Mono 17KB×2）。
@@ -116,7 +116,7 @@
 ## 設計図ページ（2026-09-25 作成）
 - https://claude.ai/artifact/6uiSMKsAGJ74ckGyaFioaL （非公開。共有はご本人が Share メニューから）
 - サイトマップ、トップとツアー詳細の構成、決めること、確認用URL（Netlify）の作り方。各項目の「OK／直す」とメモは artifact の db（コレクション `review`、ドキュメントIDは項目ID）に保存される。ArtifactData の list で読み、修正に反映する。
-- 絵巻の8ツアー展開は案A（ツアー詳細にそのツアーの絵巻）／B（トップで家紋から選ぶ）／A＋C（Aに診断からの入口）をご本人が選ぶ（ドキュメントID `emaki-plan` の `choice`）。おすすめはA＋C。
+- 絵巻の8ツアー展開は **A＋C に決定**（2026-09-25）：各ツアー詳細の行程の写真パートを、そのツアーの絵巻（`Emaki.astro` に `id="scroll"`、場面＝`story`、ラベル「Side quest 01」、表紙の縦書き＝「<地名>の一夜」（夜のツアー）／「<地名>の一刻」）に置き換え。トップは秘境神社の1本のまま。忍術診断の結果に「Unroll its scroll →」（`/tour/<slug>#scroll`）。
 
 ## 残作業（v1 公開の前に必須）
 - [ ] ウォークツアーのキャンセル規定をご本人に確認し、FAQ（全体・各ツアー）に入れる。現行の規約はNINJA GO RIDE用のため、未記載のままにしている。

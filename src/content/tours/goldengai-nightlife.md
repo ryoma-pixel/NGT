@@ -26,6 +26,9 @@ itinerary:
 - title: Wrap-up (10 min)
 itineraryNote: The tour ends near WARP SHINJUKU. Continue to the clubs, bars or restaurants your guide recommends.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-DP8D3
+otaLinks:
+- name: Klook
+  url: https://www.klook.com/en-US/activity/196854-tokyo-shinjuku-ninja-walking-tour-kabukicho-golden-gai-60min/
 order: 2
 draft: false
 story:
