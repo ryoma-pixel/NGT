@@ -1,6 +1,7 @@
 ---
 title: "E-Scooter & Walking Tour with a Ninja Guide"
 shortTitle: "E-Scooter & Walking Tour"
+hook: "Glide between Shinjuku’s skyscrapers with a Ninja leading the way."
 summary: "Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then explore Kabukicho on foot with photos and videos included."
 area: Shinjuku
 themes: [E-Scooter, Entertainment]
@@ -34,11 +35,26 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-7QR5Z"
 order: 8
 draft: false
+story:
+- title: 'Night course: Tokyo’s giant projection mapping'
+  text: The highlight of the night is “TOKYO Night & Light,” the projection mapping on the Tokyo Metropolitan Government Building recognized by Guinness World Records™ as the world’s largest. Ride up on your e-scooter and experience the light and sound up close.
+  image: /images/tours/shinjuku-escooter-ride/story-1.webp
+  imageAlt: E-scooter riders on a Shinjuku street at night
+- title: 'Day course: breeze & architecture'
+  text: Riding under the sun feels wonderfully free. Capture crisp, vibrant photos with the Tokyo Metropolitan Government Building and blue sky behind you. A perfect active sightseeing experience.
+  image: /images/tours/shinjuku-escooter-ride/story-2.webp
+  imageAlt: Guests with e-scooters in front of the Tokyo Metropolitan Government Building
+gallery:
+- src: /images/tours/shinjuku-escooter-ride/gallery-1.webp
+  alt: Guests posing with their e-scooters and Ninja guide
+- src: /images/tours/shinjuku-escooter-ride/gallery-2.webp
+  alt: Riding an e-scooter through Shinjuku by day
+- src: /images/tours/shinjuku-escooter-ride/gallery-3.webp
+  alt: A guest with an e-scooter at night
+- src: /images/tours/shinjuku-escooter-ride/gallery-4.webp
+  alt: Guests posing on a neon street at night
+- src: /images/tours/shinjuku-escooter-ride/gallery-5.webp
+  alt: Guests with the Ninja guide at a torii gate
+- src: /images/tours/shinjuku-escooter-ride/gallery-6.webp
+  alt: A group riding e-scooters at night
 ---
-## Choose your course
-
-### Night course: Tokyo’s giant projection mapping
-The highlight of the night is “TOKYO Night & Light,” the projection mapping on the Tokyo Metropolitan Government Building recognized by Guinness World Records™ as the world’s largest. Ride up on your e-scooter and experience the light and sound up close.
-
-### Day course: breeze & architecture
-Riding under the sun feels wonderfully free. Capture crisp, vibrant photos with the Tokyo Metropolitan Government Building and blue sky behind you. A perfect active sightseeing experience.

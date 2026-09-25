@@ -2,14 +2,66 @@
   "asOf": "2026-09-08",
   "note": "Short excerpts from English reviews rated 4–5 stars on Google and Tripadvisor, quoted without edits (shortened with …). Checked on September 8, 2026.",
   "ratings": [
-    { "source": "Google", "score": 5.0, "count": 23, "url": "https://www.google.com/maps/search/?api=1&query=NINJA+GO+TOURS+Kabukicho" },
-    { "source": "Tripadvisor", "score": 5.0, "count": 19, "label": "NINJA GO RIDE", "url": "https://www.tripadvisor.com/AttractionProductReview-g14133667-d33673719-Tokyo_Ninja_E_Scooter_Tour_with_Local_Guide_NINJA_GO_RIDE-Kabukicho_Shinjuku_Tok.html" }
+    {
+      "source": "Google",
+      "score": 5.0,
+      "count": 23,
+      "url": "https://www.google.com/maps/search/?api=1&query=NINJA+GO+TOURS+Kabukicho"
+    },
+    {
+      "source": "Tripadvisor",
+      "score": 5.0,
+      "count": 19,
+      "label": "NINJA GO RIDE",
+      "url": "https://www.tripadvisor.com/AttractionProductReview-g14133667-d33673719-Tokyo_Ninja_E_Scooter_Tour_with_Local_Guide_NINJA_GO_RIDE-Kabukicho_Shinjuku_Tok.html"
+    }
   ],
   "items": [
-    { "text": "Our ninja guide took us on an incredible journey through the winding streets of Shinjuku. Not only did we see the iconic sights, but we also discovered hidden gems we never would have found on our own.", "author": "R.N.", "source": "Google", "stars": 5 },
-    { "text": "Definitely one of the best tours I've done in Tokyo, great fun, great hosts would do it again", "author": "C.K.", "source": "Google", "stars": 5 },
-    { "text": "We got a nice tour of the LGBT and Shinjuku night life. The tour guide was friendly and knowledgeable!", "author": "L.", "source": "Google", "stars": 5 },
-    { "text": "…he took us to Golden Gai and Kabukicho, gave us a rundown of the history of Shinjuku, and also took us to different shrines and hidden gems.", "author": "K.N.", "source": "Google", "stars": 5 },
-    { "text": "We laughed, got to know the area from a locals view and also seen an amazing light show on the government building…", "author": "C.B.", "source": "Tripadvisor", "stars": 5, "tour": "E-Scooter tour" }
+    {
+      "text": "Our ninja guide took us on an incredible journey through the winding streets of Shinjuku. Not only did we see the iconic sights, but we also discovered hidden gems we never would have found on our own.",
+      "author": "R.N.",
+      "source": "Google",
+      "stars": 5,
+      "tours": [
+        "shinjuku-secret-shrine",
+        "goldengai-nightlife"
+      ]
+    },
+    {
+      "text": "Definitely one of the best tours I've done in Tokyo, great fun, great hosts would do it again",
+      "author": "C.K.",
+      "source": "Google",
+      "stars": 5,
+      "tours": []
+    },
+    {
+      "text": "We got a nice tour of the LGBT and Shinjuku night life. The tour guide was friendly and knowledgeable!",
+      "author": "L.",
+      "source": "Google",
+      "stars": 5,
+      "tours": [
+        "shinjuku-nichome-lgbtq"
+      ]
+    },
+    {
+      "text": "…he took us to Golden Gai and Kabukicho, gave us a rundown of the history of Shinjuku, and also took us to different shrines and hidden gems.",
+      "author": "K.N.",
+      "source": "Google",
+      "stars": 5,
+      "tours": [
+        "goldengai-nightlife",
+        "shinjuku-secret-shrine"
+      ]
+    },
+    {
+      "text": "We laughed, got to know the area from a locals view and also seen an amazing light show on the government building…",
+      "author": "C.B.",
+      "source": "Tripadvisor",
+      "stars": 5,
+      "tour": "E-Scooter tour",
+      "tours": [
+        "shinjuku-escooter-ride"
+      ]
+    }
   ]
 }

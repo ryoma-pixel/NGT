@@ -1,6 +1,7 @@
 ---
 title: "Ueno Ameyoko! “The First 60 Minutes in Tokyo” to Master Local Rules"
 shortTitle: "Ueno Ameyoko: Your First 60 Minutes"
+hook: "Your first 60 minutes in Tokyo, the way locals actually live it."
 summary: "Ask your local friend anything, try Ameyoko’s street auction, scout the izakaya under the tracks and learn shrine etiquette at Ueno Toshogu."
 area: Ueno
 themes: [Food, Culture, JapaneseCustoms, Walk]
@@ -34,17 +35,38 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-HPI5A"
 order: 5
 draft: false
+story:
+- title: Put down the guidebook and hit the streets
+  text: 'We start with a quick orientation to clear up any worries or questions you have after arriving in Tokyo. Skip the overwhelming research: your local best friend teaches you the street smarts you need for your whole stay, so you can explore with confidence.'
+  image: /images/tours/ueno-ameyoko/story-1.webp
+  imageAlt: The entrance to the Ameyoko shopping street
+- title: Ameyoko’s energy and the Tataki-uri
+  text: 'Head to the Ameyoko shopping street, which still carries the raw energy of Tokyo’s post-war markets. Try the famous snack street auction: hand a 1,000 JPY bill to the energetic vendor and grab a huge bag of snacks.'
+  image: /images/tours/ueno-ameyoko/story-2.webp
+  imageAlt: A vendor holding up snacks at a Tataki-uri street auction
+- title: Scout the red lantern alleys
+  text: We scout popular local izakaya alleys, including the street-drinking spots under the Ueno tracks. Learn local rules like *otoshi* (table charges) and cash-only policies while you soak up the atmosphere safely.
+  image: /images/tours/ueno-ameyoko/story-3.webp
+  imageAlt: Izakaya seats under the train tracks in Ueno
+- title: A silent forest and shrine etiquette
+  text: Leave the noise behind, pass through the red torii gates of Hanazono Inari Shrine and enter the quiet forest of Ueno Park. Learn the “two bows, two claps, one bow” etiquette at Ueno Toshogu Shrine, where a real shogun is enshrined, and finish ready to explore the city on your own.
+  image: /images/tours/ueno-ameyoko/story-4.webp
+  imageAlt: A tunnel of red torii gates in Ueno Park
+gallery:
+- src: /images/tours/ueno-ameyoko/gallery-1.webp
+  alt: Fruit stalls along Ameyoko
+- src: /images/tours/ueno-ameyoko/gallery-2.webp
+  alt: Busy Ameyoko market lanes
+- src: /images/tours/ueno-ameyoko/gallery-3.webp
+  alt: Ameyoko at night
+- src: /images/tours/ueno-ameyoko/gallery-4.webp
+  alt: The torii gate of Hanazono Inari Shrine
+- src: /images/tours/ueno-ameyoko/gallery-5.webp
+  alt: Wooden prayer plaques at a shrine
+- src: /images/tours/ueno-ameyoko/gallery-6.webp
+  alt: Ueno Toshogu Shrine
+- src: /images/tours/ueno-ameyoko/gallery-7.webp
+  alt: A seafood stall in Ameyoko
+- src: /images/tours/ueno-ameyoko/gallery-8.webp
+  alt: The golden gate of Ueno Toshogu
 ---
-## What you’ll experience
-
-### 1. Put down the guidebook and hit the streets
-We start with a quick orientation to clear up any worries or questions you have after arriving in Tokyo. Skip the overwhelming research: your local best friend teaches you the street smarts you need for your whole stay, so you can explore with confidence.
-
-### 2. Ameyoko’s energy and the Tataki-uri
-Head to the Ameyoko shopping street, which still carries the raw energy of Tokyo’s post-war markets. Try the famous snack street auction: hand a 1,000 JPY bill to the energetic vendor and grab a huge bag of snacks.
-
-### 3. Scout the red lantern alleys
-We scout popular local izakaya alleys, including the street-drinking spots under the Ueno tracks. Learn local rules like *otoshi* (table charges) and cash-only policies while you soak up the atmosphere safely.
-
-### 4. A silent forest and shrine etiquette
-Leave the noise behind, pass through the red torii gates of Hanazono Inari Shrine and enter the quiet forest of Ueno Park. Learn the “two bows, two claps, one bow” etiquette at Ueno Toshogu Shrine, where a real shogun is enshrined, and finish ready to explore the city on your own.

@@ -1,6 +1,7 @@
 ---
 title: "Shinjuku’s Secret Shrine & Neon Backstreets with a Ninja"
 shortTitle: "Secret Shrine & Neon Backstreets"
+hook: "Tonight, the neon hides a secret. Your Ninja knows the way in."
 summary: "Explore Kabukicho with a modern-day Ninja, then slip behind the neon to a hidden shrine, retro Golden Gai and the quiet of Hanazono Shrine."
 area: Shinjuku
 themes: [Entertainment, History, Nightlife, Walk]
@@ -35,17 +36,34 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-VZ4LX"
 order: 1
 draft: false
+story:
+- title: Meet under Godzilla and enter the “Sleepless City”
+  text: The meeting point is beneath Shinjuku’s landmark, the Godzilla Head. After meeting your Ninja guide, head to the iconic red arch of Kabukicho Ichibangai. Passing through this gate, once called “Tokyo’s Broadway,” you start your adventure in an entertainment district that has buzzed from the Showa era to today.
+  image: /images/tours/shinjuku-secret-shrine/story-1.webp
+  imageAlt: The red Kabukicho Ichibangai arch above a busy street
+- title: Through the neon forest to a secret shrine
+  text: 'Just past the bustling streets, the atmosphere changes completely. You visit a historic shrine that has long protected Shinjuku, a rare shrine linked to the “Oni no O” (King of Demons) of Japanese folklore. It is dedicated to Ebisu, the god of business prosperity, and is also known as a guardian of healthy skin. Try a Japanese wish-making ritual: pour water over the “Kaeru-ishi” (Frog Stone) and pray for good fortune to return. In Japanese, *kaeru* means both “frog” and “return.”'
+  image: /images/tours/shinjuku-secret-shrine/story-2.webp
+  imageAlt: A Ninja guide with a lantern in a tunnel of red torii gates
+- title: Time slip to retro Golden Gai
+  text: Next, head to Golden Gai, which keeps the atmosphere of Tokyo’s post-war black markets. About 280 tiny bars are packed between high-rise buildings in narrow alleys where film directors and writers once debated night after night. These back alleys can feel intimidating on your own, but with your Ninja guide you walk through like a local.
+  image: /images/tours/shinjuku-secret-shrine/story-3.webp
+  imageAlt: The neon Golden Gai sign at night
+- title: Finale at Hanazono Shrine, home of the god of entertainment
+  text: Finally, visit the urban oasis of Hanazono Shrine, where actors and artists have long come to pray for success. After swimming through the sea of neon, calm your mind in its quiet grounds. Your guide will recommend the perfect dinner spot nearby, and the mission is complete!
+  image: /images/tours/shinjuku-secret-shrine/story-4.webp
+  imageAlt: A guest and the Ninja guide at the steps of Hanazono Shrine
+gallery:
+- src: /images/tours/shinjuku-secret-shrine/gallery-1.webp
+  alt: A guest walking with the Ninja guide through Kabukicho
+- src: /images/tours/shinjuku-secret-shrine/gallery-2.webp
+  alt: A guest photographing the Ninja guide on a Shinjuku street
+- src: /images/tours/shinjuku-secret-shrine/gallery-3.webp
+  alt: Guests walking with the Ninja guide at Hanazono Shrine
+- src: /images/tours/shinjuku-secret-shrine/gallery-4.webp
+  alt: Shinjuku skyline glowing at night
+- src: /images/tours/shinjuku-secret-shrine/gallery-5.webp
+  alt: A quiet back alley behind the neon
+- src: /images/tours/shinjuku-secret-shrine/gallery-6.webp
+  alt: Shinjuku crossing at dusk
 ---
-## What you’ll experience
-
-### 1. Meet under Godzilla and enter the “Sleepless City”
-The meeting point is beneath Shinjuku’s landmark, the Godzilla Head. After meeting your Ninja guide, head to the iconic red arch of Kabukicho Ichibangai. Passing through this gate, once called “Tokyo’s Broadway,” you start your adventure in an entertainment district that has buzzed from the Showa era to today.
-
-### 2. Through the neon forest to a secret shrine
-Just past the bustling streets, the atmosphere changes completely. You visit a historic shrine that has long protected Shinjuku, a rare shrine linked to the “Oni no O” (King of Demons) of Japanese folklore. It is dedicated to Ebisu, the god of business prosperity, and is also known as a guardian of healthy skin. Try a Japanese wish-making ritual: pour water over the “Kaeru-ishi” (Frog Stone) and pray for good fortune to return. In Japanese, *kaeru* means both “frog” and “return.”
-
-### 3. Time slip to retro Golden Gai
-Next, head to Golden Gai, which keeps the atmosphere of Tokyo’s post-war black markets. About 280 tiny bars are packed between high-rise buildings in narrow alleys where film directors and writers once debated night after night. These back alleys can feel intimidating on your own, but with your Ninja guide you walk through like a local.
-
-### 4. Finale at Hanazono Shrine, home of the god of entertainment
-Finally, visit the urban oasis of Hanazono Shrine, where actors and artists have long come to pray for success. After swimming through the sea of neon, calm your mind in its quiet grounds. Your guide will recommend the perfect dinner spot nearby, and the mission is complete!

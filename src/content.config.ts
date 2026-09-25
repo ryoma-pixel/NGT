@@ -18,12 +18,19 @@ const tours = defineCollection({
     ageNote: z.string().optional(),
     heroImage: z.string().optional(),
     heroAlt: z.string().optional(),
+    // One-line teaser that sells the feeling of the tour (shown big in the hero)
+    hook: z.string().optional(),
     meetingPoint: z.object({
       name: z.string(),
       access: z.string().optional(),
       lookFor: z.string().optional(),
+      image: z.string().optional(),
+      imageAlt: z.string().optional(),
       mapUrl: z.string().url().optional(),
     }).optional(),
+    // The tour told as chapters, each with a real photo
+    story: z.array(z.object({ title: z.string(), text: z.string(), image: z.string().optional(), imageAlt: z.string().optional() })).default([]),
+    gallery: z.array(z.object({ src: z.string(), alt: z.string() })).default([]),
     highlights: z.array(z.object({ icon: z.string().optional(), title: z.string(), text: z.string() })).default([]),
     itinerary: z.array(z.object({ title: z.string(), text: z.string().optional() })).default([]),
     itineraryNote: z.string().optional(),

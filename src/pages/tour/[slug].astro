@@ -2,7 +2,8 @@
 import Base from '../../layouts/Base.astro';
 import BookingBox from '../../components/BookingBox.astro';
 import TourCard from '../../components/TourCard.astro';
-import { getTours, fromPrice, THEME_LABELS } from '../../lib/tours';
+import { getTours, fromPrice, yen, THEME_LABELS, AREA_JP } from '../../lib/tours';
+import reviews from '../../data/reviews.json';
 import { render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -13,6 +14,26 @@ const { tour, tours } = Astro.props;
 const d = tour.data;
 const { Content } = await render(tour);
 const related = tours.filter((t) => t.id !== tour.id && t.data.area === d.area).slice(0, 3);
+const price = d.fixedPricePerPerson ?? fromPrice(tour);
+const priceNote = d.fixedPricePerPerson ? 'per person' : 'per person in groups of 4+';
+
+// Timeline: size each itinerary step by the minutes written in its title, e.g. "Golden Gai (25 min)"
+const steps = d.itinerary.map((s) => {
+  const m = s.title.match(/\((?:about |approx\.\s*)?(\d+)\s*min/i);
+  return { label: s.title.replace(/\s*\((?:about |approx\.\s*)?\d+\s*min[^)]*\)/i, ''), minutes: m ? Number(m[1]) : 0 };
+});
+const known = steps.reduce((a, s) => a + s.minutes, 0);
+const unknown = steps.filter((s) => !s.minutes).length;
+const filler = unknown ? Math.max(3, Math.round(Math.max(0, d.durationMinutes - known) / unknown)) : 0;
+const timeline = steps.map((s) => ({ ...s, weight: s.minutes || filler }));
+
+const tourReviews = reviews.items.filter((r) => r.tours.includes(tour.id));
+const heroThumbs = d.gallery.slice(0, 3);
+// Gallery mosaic: first photo is big (2x2); make just enough photos tall (1x2) so the 4-column grid has no holes
+const extraTall = (4 - ((3 + d.gallery.length) % 4)) % 4;
+const tallIdx = new Set(Array.from({ length: extraTall }, (_, k) => 3 + k * 2).filter((i) => i < d.gallery.length));
+const galClass = (i: number) => (i === 0 ? 'gal__item gal__item--big' : tallIdx.has(i) ? 'gal__item gal__item--tall' : 'gal__item');
+const finale = d.story.at(-1)?.image ?? d.heroImage;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -22,7 +43,7 @@ const jsonLd = {
   ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
   offers: {
     '@type': 'Offer',
-    price: fromPrice(tour),
+    price,
     priceCurrency: 'JPY',
     availability: 'https://schema.org/InStock',
     url: new URL(`/tour/${tour.id}`, Astro.site).toString(),
@@ -31,92 +52,202 @@ const jsonLd = {
 };
 ---
 <Base title={d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd}>
+  <!-- 1. Hero: the promise -->
   <section class="th">
-    {d.heroImage && <img class="th__img" src={d.heroImage} alt={d.heroAlt ?? ''} width="1600" height="900" />}
+    {d.heroImage && <img class="th__img" src={d.heroImage} alt={d.heroAlt ?? ''} width="1600" height="1000" fetchpriority="high" />}
     <div class="wrap th__in">
-      <nav class="th__crumbs" aria-label="Breadcrumb"><a href="/tours">Tours</a> / <a href={`/area/${d.area}`}>{d.area}</a></nav>
+      <nav class="th__crumbs" aria-label="Breadcrumb"><a href="/tours">Tours</a> / <a href={`/area/${d.area}`}>{d.area}</a> <span class="th__jp" aria-hidden="true">{AREA_JP[d.area]}</span></nav>
       {d.draft && <span class="badge badge--draft">DRAFT – not shown on the live site</span>}
       <h1>{d.title}</h1>
-      <p class="th__sum">{d.summary}</p>
+      {d.hook && <p class="th__hook">{d.hook}</p>}
       <ul class="th__facts">
-        <li>⏱ {d.durationMinutes} minutes</li>
-        {d.privateTour && <li>👥 Private – your group only</li>}
+        <li>⏱ {d.durationMinutes} min</li>
+        {d.privateTour && <li>👥 Private – just your group</li>}
         <li>🗣 {d.language}</li>
         {d.ageNote && <li>🎟 {d.ageNote}</li>}
-        {d.seasonal && <li>🌸 {d.seasonal}</li>}
       </ul>
+      <div class="th__cta">
+        <a class="btn btn--primary btn--lg" href="#book" data-track="click_hero_book" data-tour={tour.id}>Check availability</a>
+        <p class="th__price"><strong>{yen(price)}</strong> {priceNote}</p>
+      </div>
+      {heroThumbs.length > 0 && (
+        <div class="th__thumbs">
+          {heroThumbs.map((g, i) => (
+            <button type="button" class="th__thumb" data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
+              <img src={g.src} alt="" width="160" height="110" loading="lazy" />
+            </button>
+          ))}
+          <button type="button" class="th__more" data-open-gallery="0">+{d.gallery.length} photos</button>
+        </div>
+      )}
     </div>
   </section>
 
-  <div class="wrap tl">
-    <div class="tl__main">
-      {d.highlights.length > 0 && (
-        <section>
-          <h2>Highlights</h2>
-          <ul class="hl">
-            {d.highlights.map((h) => (
-              <li>
-                {h.icon && <span class="hl__icon" aria-hidden="true">{h.icon}</span>}
-                <div><strong>{h.title}</strong><p>{h.text}</p></div>
+  <!-- 2. Why you will love it -->
+  {d.highlights.length > 0 && (
+    <section class="section section--dark hl">
+      <div class="wrap">
+        <p class="eyebrow"><span class="jp">見どころ</span> Why you will love it</p>
+        <ul class="hl__list">
+          {d.highlights.map((h, i) => (
+            <li data-reveal style={`--d:${i * 80}ms`}>
+              {h.icon && <span class="hl__icon" aria-hidden="true">{h.icon}</span>}
+              <strong>{h.title}</strong>
+              <p>{h.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <!-- 3. The story, chapter by chapter -->
+  {d.story.length > 0 && (
+    <section class="section story">
+      <div class="wrap">
+        <p class="eyebrow"><span class="jp">体験</span> Your adventure, step by step</p>
+        <h2>Here’s how your {d.durationMinutes} minutes unfold</h2>
+        {timeline.length > 1 && (
+          <ol class="tl-bar" aria-label="Tour timeline">
+            {timeline.map((s) => (
+              <li style={`flex:${s.weight}`}>
+                <span class="tl-bar__seg"></span>
+                <span class="tl-bar__label">{s.label}{s.minutes ? <em> {s.minutes} min</em> : null}</span>
               </li>
             ))}
-          </ul>
-        </section>
-      )}
-
-      <section class="prose"><Content /></section>
-
-      {d.itinerary.length > 0 && (
-        <section>
-          <h2>Itinerary</h2>
-          <ol class="it">
-            {d.itinerary.map((s) => <li><h3>{s.title}</h3>{s.text && <p>{s.text}</p>}</li>)}
           </ol>
-          {d.itineraryNote && <p class="it__note">{d.itineraryNote}</p>}
-        </section>
-      )}
+        )}
+        <div class="chapters">
+          {d.story.map((c, i) => (
+            <article class="ch" data-reveal>
+              {c.image && (
+                <figure class="ch__media">
+                  <img src={c.image} alt={c.imageAlt ?? ''} width="1400" height="1050" loading="lazy" />
+                  <span class="ch__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                </figure>
+              )}
+              <div class="ch__text">
+                <p class="ch__kicker">Chapter {i + 1}</p>
+                <h3>{c.title}</h3>
+                {c.text.split(/\n\n+/).map((para) => <p set:html={para.replace(/\*(.+?)\*/g, '<em>$1</em>')} />)}
+              </div>
+            </article>
+          ))}
+        </div>
+        {d.itineraryNote && <p class="story__end">🏁 {d.itineraryNote}</p>}
+        <div class="prose"><Content /></div>
+      </div>
+    </section>
+  )}
 
-      <section class="facts card">
-        <h2>Good to know before you book</h2>
-        <dl>
-          {d.startTimes && <><dt>Start times</dt><dd>{d.startTimes}</dd></>}
-          {d.bookingDeadline && <><dt>Booking</dt><dd>{d.bookingDeadline}</dd></>}
-          <dt>Duration</dt><dd>{d.durationMinutes} minutes</dd>
-          <dt>Language</dt><dd>{d.language}</dd>
-        </dl>
-      </section>
+  <!-- 4. Photos from past tours -->
+  {d.gallery.length > 0 && (
+    <section class="section section--dark gal">
+      <div class="wrap">
+        <p class="eyebrow"><span class="jp">写真</span> Moments from our tours</p>
+        <h2>See it before you go</h2>
+        <div class="gal__grid">
+          {d.gallery.map((g, i) => (
+            <button type="button" class={galClass(i)} data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
+              <img src={g.src} alt={g.alt} width="1100" height="733" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <dialog class="lb" aria-label="Photo viewer">
+        <button type="button" class="lb__close" aria-label="Close">×</button>
+        <button type="button" class="lb__nav lb__prev" aria-label="Previous photo">‹</button>
+        <figure><img alt="" /><figcaption></figcaption></figure>
+        <button type="button" class="lb__nav lb__next" aria-label="Next photo">›</button>
+      </dialog>
+      <script type="application/json" id="gallery-data" set:html={JSON.stringify(d.gallery)} />
+    </section>
+  )}
 
-      {d.meetingPoint && (
-        <section>
-          <h2>Meeting point</h2>
-          <p class="mp__name">📍 <strong>{d.meetingPoint.name}</strong></p>
-          {d.meetingPoint.access && <p>{d.meetingPoint.access}</p>}
-          {d.meetingPoint.lookFor && <p class="mp__look">👀 {d.meetingPoint.lookFor}</p>}
-          {d.meetingPoint.mapUrl && <a class="btn btn--ghost" href={d.meetingPoint.mapUrl} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}>Open in Google Maps</a>}
-        </section>
-      )}
+  <!-- 5. Guest voices for this tour -->
+  {tourReviews.length > 0 && (
+    <section class="section tr">
+      <div class="wrap">
+        <p class="eyebrow"><span class="jp">お客様の声</span> From our guests</p>
+        <div class="tr__list">
+          {tourReviews.map((r) => (
+            <figure class="tr__item">
+              <span class="tr__stars" aria-label={`${r.stars} out of 5 stars`}>{'★'.repeat(r.stars)}</span>
+              <blockquote>“{r.text}”</blockquote>
+              <figcaption>{r.author} — {r.source} review</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
-      {d.notes.length > 0 && (
-        <section>
-          <h2>Important notes</h2>
-          <dl class="notes">
-            {d.notes.map((n) => <><dt>{n.title}</dt><dd>{n.text}</dd></>)}
+  <!-- 6. Plan & book -->
+  <section class="section section--paper2 plan" id="plan">
+    <div class="wrap plan__grid">
+      <div class="plan__main">
+        <p class="eyebrow"><span class="jp">詳細</span> Plan your tour</p>
+        <h2>Everything you need to know</h2>
+
+        <div class="card facts">
+          <dl>
+            {d.startTimes && <><dt>Start times</dt><dd>{d.startTimes}</dd></>}
+            {d.bookingDeadline && <><dt>Booking</dt><dd>{d.bookingDeadline}</dd></>}
+            <dt>Duration</dt><dd>{d.durationMinutes} minutes</dd>
+            <dt>Language</dt><dd>{d.language}</dd>
           </dl>
-        </section>
-      )}
+        </div>
 
-      {d.themes.length > 0 && (
-        <p class="tags">{d.themes.map((t) => <a class="badge" href={`/theme/${t}`}>{THEME_LABELS[t]}</a>)}</p>
-      )}
+        {d.meetingPoint && (
+          <div class="card mp">
+            {d.meetingPoint.image && <img class="mp__img" src={d.meetingPoint.image} alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />}
+            <div class="mp__body">
+              <h3>📍 Meeting point</h3>
+              <p class="mp__name"><strong>{d.meetingPoint.name}</strong></p>
+              {d.meetingPoint.access && <p>{d.meetingPoint.access}</p>}
+              {d.meetingPoint.lookFor && <p class="mp__look">👀 {d.meetingPoint.lookFor}</p>}
+              {d.meetingPoint.mapUrl && <a class="btn btn--ghost" href={d.meetingPoint.mapUrl} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}>Open in Google Maps</a>}
+            </div>
+          </div>
+        )}
+
+        {d.notes.length > 0 && (
+          <div class="notes">
+            <h3>Important notes</h3>
+            {d.notes.map((n) => (
+              <details>
+                <summary>{n.title}</summary>
+                <p>{n.text}</p>
+              </details>
+            ))}
+          </div>
+        )}
+
+        {d.themes.length > 0 && (
+          <p class="tags">{d.themes.map((t) => <a class="badge" href={`/theme/${t}`}>{THEME_LABELS[t]}</a>)}</p>
+        )}
+      </div>
+      <div class="plan__side">
+        <BookingBox tour={tour} />
+      </div>
     </div>
-    <div class="tl__side">
-      <BookingBox tour={tour} />
+  </section>
+
+  <!-- 7. Last push -->
+  <section class="fin">
+    {finale && <img class="fin__img" src={finale} alt="" width="1400" height="1050" loading="lazy" />}
+    <div class="wrap fin__in">
+      <p class="fin__jp" aria-hidden="true">いざ、出発！</p>
+      <h2>Your Ninja is ready. Are you?</h2>
+      <p class="fin__price">{yen(price)} {priceNote}</p>
+      <a class="btn btn--primary btn--lg" href="#book" data-track="click_final_book" data-tour={tour.id}>Check availability</a>
     </div>
-  </div>
+  </section>
 
   {related.length > 0 && (
     <section class="section">
       <div class="wrap">
+        <p class="eyebrow"><span class="jp">他のツアー</span> More adventures</p>
         <h2>More tours in {d.area}</h2>
         <div class="grid grid--3">{related.map((t) => <TourCard tour={t} />)}</div>
       </div>
@@ -124,46 +255,153 @@ const jsonLd = {
   )}
 </Base>
 
+<script>
+  // Photo viewer for the gallery and hero thumbnails
+  const dataEl = document.getElementById('gallery-data');
+  const dlg = document.querySelector<HTMLDialogElement>('.lb');
+  if (dataEl && dlg) {
+    const photos: { src: string; alt: string }[] = JSON.parse(dataEl.textContent || '[]');
+    const img = dlg.querySelector('img')!;
+    const cap = dlg.querySelector('figcaption')!;
+    let idx = 0;
+    const show = (i: number) => {
+      idx = (i + photos.length) % photos.length;
+      img.src = photos[idx].src;
+      img.alt = photos[idx].alt;
+      cap.textContent = `${idx + 1} / ${photos.length} · ${photos[idx].alt}`;
+    };
+    document.querySelectorAll<HTMLElement>('[data-open-gallery]').forEach((b) =>
+      b.addEventListener('click', () => { show(Number(b.dataset.openGallery)); dlg.showModal(); }),
+    );
+    dlg.querySelector('.lb__close')!.addEventListener('click', () => dlg.close());
+    dlg.querySelector('.lb__prev')!.addEventListener('click', () => show(idx - 1));
+    dlg.querySelector('.lb__next')!.addEventListener('click', () => show(idx + 1));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') show(idx + 1);
+      if (e.key === 'ArrowLeft') show(idx - 1);
+    });
+  }
+</script>
+
 <style>
-  .th { position: relative; min-height: min(70svh, 640px); display: flex; align-items: flex-end; background: var(--night); color: #fff; overflow: hidden; }
-  .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: th-zoom 18s ease-out both; }
-  .th::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(0deg, rgb(8 8 18 / 0.92) 0%, rgb(8 8 18 / 0.5) 45%, rgb(8 8 18 / 0.05) 80%); }
-  .th__in { position: relative; z-index: 2; width: 100%; padding: 120px 16px 36px; }
+  /* Hero */
+  .th { position: relative; min-height: min(88svh, 860px); display: flex; align-items: flex-end; background: var(--night); color: #fff; overflow: hidden; }
+  .th__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: th-zoom 20s ease-out both; }
+  .th::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse 80% 70% at 0% 100%, rgb(8 8 18 / 0.9) 0%, rgb(8 8 18 / 0.55) 50%, rgb(8 8 18 / 0) 85%), linear-gradient(0deg, rgb(8 8 18 / 0.6), rgb(8 8 18 / 0) 40%); }
+  .th__in { position: relative; z-index: 2; width: 100%; padding: 120px 16px 40px; }
   .th__crumbs { font-size: 0.85rem; color: rgb(255 255 255 / 0.75); margin-bottom: 12px; }
   .th__crumbs a { text-decoration: none; color: var(--lantern); }
-  .th h1 { max-width: 20em; text-shadow: 0 2px 20px rgb(0 0 0 / 0.4); }
-  .th__sum { font-size: 1.1rem; max-width: 40em; color: rgb(255 255 255 / 0.88); }
-  .th__facts { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 0.9rem; }
+  .th__jp { margin-left: 6px; font-family: var(--display); }
+  .th h1 { font-size: clamp(2rem, 4.6vw, 3.6rem); max-width: 18em; text-shadow: 0 2px 20px rgb(0 0 0 / 0.4); }
+  .th__hook { font-family: var(--display); font-size: clamp(1.15rem, 2.2vw, 1.6rem); color: var(--lantern); max-width: 28em; margin: 0.2em 0 0.8em; }
+  .th__facts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 0.9rem; }
   .th__facts li { background: rgb(255 255 255 / 0.14); border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.35em 0.9em; }
-  @keyframes th-zoom { from { transform: scale(1.1); } to { transform: scale(1); } }
-  @media (prefers-reduced-motion: reduce) { .th__img { animation: none; } }
-  .tl { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; padding-top: 40px; padding-bottom: 40px; }
-  .tl__main > section { margin-bottom: 36px; }
-  .hl { list-style: none; padding: 0; display: grid; gap: 10px; }
-  .hl li { display: flex; gap: 14px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
-  .hl__icon { font-size: 1.6rem; line-height: 1; flex: none; }
-  .hl li p { margin: 0.2em 0 0; color: var(--muted); font-size: 0.95rem; }
-  .it__note { color: var(--muted); font-style: italic; }
+  .th__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
+  .btn--lg { padding: 1em 1.8em; font-size: 1.08rem; }
+  .th__price { margin: 0; color: rgb(255 255 255 / 0.85); }
+  .th__price strong { font-family: var(--display); font-size: 1.6rem; color: #fff; }
+  .th__thumbs { position: absolute; right: 16px; bottom: 40px; display: flex; gap: 8px; align-items: stretch; }
+  .th__thumb, .th__more { border: 2px solid rgb(255 255 255 / 0.8); border-radius: 12px; overflow: hidden; padding: 0; cursor: pointer; background: rgb(0 0 0 / 0.4); }
+  .th__thumb img { width: 110px; height: 76px; object-fit: cover; display: block; transition: transform 0.4s; }
+  .th__thumb:hover img { transform: scale(1.08); }
+  .th__more { color: #fff; font-weight: 700; padding: 0 14px; font-size: 0.85rem; }
+  @keyframes th-zoom { from { transform: scale(1.12); } to { transform: scale(1); } }
+
+  /* Highlights */
+  .hl__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .hl__list li { background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.1); border-radius: var(--radius); padding: 22px 20px; }
+  .hl__icon { display: block; font-size: 2.2rem; margin-bottom: 10px; }
+  .hl__list strong { font-family: var(--display); font-size: 1.1rem; color: var(--lantern); }
+  .hl__list p { margin: 0.4em 0 0; color: #d8d0c2; font-size: 0.95rem; }
+
+  /* Timeline bar */
+  .tl-bar { list-style: none; padding: 0; margin: 12px 0 48px; display: flex; gap: 4px; }
+  .tl-bar li { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tl-bar__seg { height: 10px; border-radius: 999px; background: var(--shu); }
+  .tl-bar li:nth-child(2n) .tl-bar__seg { background: var(--lantern); }
+  .tl-bar__label { font-size: 0.8rem; font-weight: 700; line-height: 1.3; color: var(--ink-2); }
+  .tl-bar__label em { display: block; font-style: normal; font-weight: 400; color: var(--muted); }
+
+  /* Story chapters */
+  .chapters { display: grid; gap: 64px; }
+  .ch { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; }
+  .ch:nth-child(even) .ch__media { order: 2; }
+  .ch__media { position: relative; margin: 0; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 4 / 3; }
+  .ch__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .ch:hover .ch__media img { transform: scale(1.05); }
+  .ch__num { position: absolute; left: 18px; bottom: 6px; font-family: var(--display); font-size: 4.5rem; line-height: 1; color: #fff; text-shadow: 0 4px 24px rgb(0 0 0 / 0.5); }
+  .ch__kicker { margin: 0 0 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shu); }
+  .ch__text h3 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+  .ch__text p { color: var(--ink-2); font-size: 1.02rem; }
+  .story__end { margin-top: 48px; padding: 18px 22px; border-radius: 14px; background: var(--card); border: 1px dashed var(--line); font-weight: 600; }
+
+  /* Gallery */
+  .gal__grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 180px; grid-auto-flow: dense; gap: 10px; }
+  .gal__item { position: relative; padding: 0; border: 0; border-radius: 14px; overflow: hidden; cursor: zoom-in; background: var(--night-3); }
+  .gal__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+  .gal__item:hover img { transform: scale(1.06); }
+  .gal__item--big { grid-column: span 2; grid-row: span 2; }
+  .gal__item--tall { grid-row: span 2; }
+  .lb { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; }
+  .lb::backdrop { background: rgb(8 8 18 / 0.92); }
+  .lb figure { margin: 0; height: 100%; display: grid; place-items: center; align-content: center; gap: 12px; padding: 60px 70px; }
+  .lb img { max-width: 100%; max-height: 80vh; border-radius: 12px; }
+  .lb figcaption { color: #ddd; font-size: 0.9rem; text-align: center; }
+  .lb__close, .lb__nav { position: fixed; z-index: 2; background: rgb(255 255 255 / 0.12); color: #fff; border: 0; border-radius: 50%; width: 48px; height: 48px; font-size: 1.8rem; cursor: pointer; }
+  .lb__close { top: 16px; right: 16px; }
+  .lb__prev { left: 12px; top: 50%; }
+  .lb__next { right: 12px; top: 50%; }
+
+  /* Reviews */
+  .tr__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .tr__item { margin: 0; padding: 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .tr__stars { color: var(--lantern); letter-spacing: 2px; }
+  .tr__item blockquote { margin: 10px 0; font-family: var(--display); font-size: 1.1rem; line-height: 1.5; }
+  .tr__item figcaption { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+  /* Plan & book */
+  .plan__grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
+  .plan__main { display: grid; gap: 20px; }
   .facts { padding: 20px 22px; }
-  .facts h2 { font-size: 1.2rem; }
-  .facts dl, .notes { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; }
-  .facts dt, .notes dt { font-weight: 700; }
-  .facts dd, .notes dd { margin: 0; color: var(--ink-2); }
-  .mp__name { font-size: 1.05rem; }
+  .facts dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; }
+  .facts dt { font-weight: 700; }
+  .facts dd { margin: 0; color: var(--ink-2); }
+  .mp { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+  .mp__img { width: 100%; height: 100%; object-fit: cover; min-height: 220px; }
+  .mp__body { padding: 20px 22px; }
+  .mp__body h3 { font-size: 1.2rem; }
   .mp__look { color: var(--muted); }
-  @media (max-width: 600px) { .facts dl, .notes { grid-template-columns: 1fr; gap: 2px; } .facts dd, .notes dd { margin-bottom: 10px; } }
-  .it { list-style: none; padding: 0; counter-reset: s; }
-  .it li { position: relative; padding: 0 0 18px 44px; counter-increment: s; border-left: 2px dashed var(--line); margin-left: 15px; }
-  .it li::before { content: counter(s); position: absolute; left: -16px; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--shu); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
-  .it li:last-child { border-left-color: transparent; }
-  .it h3 { font-family: var(--body); font-weight: 700; font-size: 1.05rem; margin: 0.2em 0; }
-  .inc { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .inc h2 { font-size: 1.3rem; }
+  .mp:not(:has(.mp__img)) { grid-template-columns: 1fr; }
+  .notes h3 { font-size: 1.2rem; }
+  .notes details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
+  .notes summary { font-weight: 700; cursor: pointer; }
+  .notes details p { margin: 0.5em 0 0; color: var(--ink-2); }
   .tags { display: flex; flex-wrap: wrap; gap: 8px; }
   .tags a { text-decoration: none; }
+
+  /* Final CTA */
+  .fin { position: relative; min-height: 420px; display: grid; place-items: center; text-align: center; color: #fff; overflow: hidden; background: var(--night); }
+  .fin__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
+  .fin__in { position: relative; padding: 72px 16px; }
+  .fin__jp { font-family: var(--display); color: var(--lantern); font-size: 1.3rem; letter-spacing: 0.2em; margin: 0; }
+  .fin h2 { font-size: clamp(1.8rem, 4vw, 3rem); margin: 0.2em 0; }
+  .fin__price { color: rgb(255 255 255 / 0.85); margin-bottom: 1.2em; }
+
   @media (max-width: 900px) {
-    .tl { grid-template-columns: 1fr; gap: 8px; }
-    .inc { grid-template-columns: 1fr; }
+    .th__thumbs { position: static; margin-top: 22px; }
+    .th__thumb img { width: 84px; height: 60px; }
+    .ch { grid-template-columns: 1fr; gap: 18px; }
+    .ch:nth-child(even) .ch__media { order: 0; }
+    .ch__num { font-size: 3.2rem; }
+    .chapters { gap: 44px; }
+    .tl-bar { flex-direction: column; gap: 10px; }
+    .tl-bar li { flex: none !important; flex-direction: row; align-items: center; gap: 12px; }
+    .tl-bar__seg { width: 10px; height: 28px; flex: none; }
+    .gal__grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+    .plan__grid { grid-template-columns: 1fr; }
+    .mp { grid-template-columns: 1fr; }
     :global(body) { padding-bottom: 76px; }
   }
+  @media (prefers-reduced-motion: reduce) { .th__img { animation: none; } }
 </style>

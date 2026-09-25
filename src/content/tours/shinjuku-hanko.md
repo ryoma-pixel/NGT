@@ -1,6 +1,7 @@
 ---
 title: "Make Your Own “Hanko” Seal & Local Shopping Walk"
 shortTitle: "Make Your Own Hanko Seal"
+hook: "Leave Tokyo with your name in kanji, carved into a seal you will use for life."
 summary: "Get a meaningful Kanji name chosen just for you, order your own Japanese “hanko” seal and explore Shinjuku’s local shops while it is carved."
 area: Shinjuku
 themes: [Culture, Shopping, JapaneseCustoms, Walk]
@@ -13,6 +14,8 @@ meetingPoint:
   name: "Busta Shinjuku (under the main signboard)"
   access: "Right outside the JR Shinjuku Station South Exit, or turn left immediately after the Koshu-kaido Exit."
   lookFor: "Your friendly guide holding a NINJA GO TOURS logo or sign."
+  image: "/images/tours/shinjuku-hanko/meeting.webp"
+  imageAlt: "The Ninja guide pointing to the Busta Shinjuku sign"
   mapUrl: "https://www.google.com/maps/search/?api=1&query=Busta+Shinjuku"
 highlights:
   - { icon: "🖌️", title: "Discover your Kanji identity", text: "We translate you, not just sounds. Share your personality and hobbies, and we craft a beautiful, meaningful Kanji name that suits you." }
@@ -32,17 +35,38 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-LS1ZU"
 order: 3
 draft: false
+story:
+- title: Discover your Kanji identity
+  text: We start with a fun, interactive naming workshop. In Japan, names are chosen carefully for their meaning and stroke count. Instead of a simple translation, your guide asks about your personality, favorite things in nature and hobbies, then uses traditional Japanese naming culture to suggest a unique Kanji name that captures who you are.
+  image: /images/tours/shinjuku-hanko/story-1.webp
+  imageAlt: Kanji names carved as red hanko stamp impressions
+- title: Order your authentic hanko
+  text: Next, we visit a specialist hanko shop. Choosing from materials like classic wood or sleek titanium can be tricky on your own, but your guide translates and supports you through every step of the custom order so your express order goes smoothly.
+  image: /images/tours/shinjuku-hanko/story-2.webp
+  imageAlt: Rows of hanko seals on display in a specialist shop
+- title: Dive into Shinjuku’s local side
+  text: While your seal is being carved, we stroll through Shinjuku’s deep local side. Your guide takes you to unique shops chosen for your interests, places you would never find in a standard guidebook.
+  image: /images/tours/shinjuku-hanko/story-3.webp
+  imageAlt: Colorful daruma dolls in a Shinjuku shop
+- title: A retro coffee break & the grand reveal
+  text: Before we part, your guide gives you a handmade “Retro Restaurant & Cafe Map.” Relax at a classic *jun-kissa* (retro coffee shop) or grab a bite while the final touches are put on your seal, then pick up your freshly made hanko at the shop and keep exploring with confidence.
+  image: /images/tours/shinjuku-hanko/story-4.webp
+  imageAlt: A retro coffee shop on a Shinjuku side street
+gallery:
+- src: /images/tours/shinjuku-hanko/gallery-1.webp
+  alt: Hanko cases in many colors
+- src: /images/tours/shinjuku-hanko/gallery-2.webp
+  alt: A kanji dictionary open on the table
+- src: /images/tours/shinjuku-hanko/gallery-3.webp
+  alt: Japanese chopsticks lined up in a shop
+- src: /images/tours/shinjuku-hanko/gallery-4.webp
+  alt: Japanese folding fans on display
+- src: /images/tours/shinjuku-hanko/gallery-5.webp
+  alt: The Kinokuniya building in Shinjuku
+- src: /images/tours/shinjuku-hanko/gallery-6.webp
+  alt: Shelves of retro Japanese goods
+- src: /images/tours/shinjuku-hanko/gallery-7.webp
+  alt: A Shinjuku shopping street
+- src: /images/tours/shinjuku-hanko/gallery-8.webp
+  alt: A narrow shopping lane in Shinjuku 3-chome
 ---
-## What you’ll experience
-
-### 1. Discover your Kanji identity
-We start with a fun, interactive naming workshop. In Japan, names are chosen carefully for their meaning and stroke count. Instead of a simple translation, your guide asks about your personality, favorite things in nature and hobbies, then uses traditional Japanese naming culture to suggest a unique Kanji name that captures who you are.
-
-### 2. Order your authentic hanko
-Next, we visit a specialist hanko shop. Choosing from materials like classic wood or sleek titanium can be tricky on your own, but your guide translates and supports you through every step of the custom order so your express order goes smoothly.
-
-### 3. Dive into Shinjuku’s local side
-While your seal is being carved, we stroll through Shinjuku’s deep local side. Your guide takes you to unique shops chosen for your interests, places you would never find in a standard guidebook.
-
-### 4. A retro coffee break & the grand reveal
-Before we part, your guide gives you a handmade “Retro Restaurant & Cafe Map.” Relax at a classic *jun-kissa* (retro coffee shop) or grab a bite while the final touches are put on your seal, then pick up your freshly made hanko at the shop and keep exploring with confidence.

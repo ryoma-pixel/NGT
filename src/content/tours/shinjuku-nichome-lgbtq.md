@@ -1,6 +1,7 @@
 ---
 title: "Shinjuku Nichome: LGBTQ+ Culture & Nightlife Walk"
 shortTitle: "Nichome LGBTQ+ Culture & Nightlife"
+hook: "Tokyo’s rainbow district, told by someone who knows its stories."
 summary: "Walk Tokyo’s LGBTQ+ neighborhood with a local guide, learn its history and today’s realities, and get trusted tips for your night out."
 area: Shinjuku
 themes: [Nightlife, History, Culture, Walk]
@@ -36,17 +37,30 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-9THS7"
 order: 6
 draft: false
+story:
+- title: Walking the history of “Rainbow Town”
+  text: We begin in Shinjuku-sanchome and head to the heart of Nichome. The streets feel open, but local norms can be confusing for first-time visitors. Along the way we point out community landmarks, such as an HIV support center and Japan’s first permanent LGBTQ+ center, and share how solidarity shaped the neighborhood.
+  image: /images/tours/shinjuku-nichome-lgbtq/story-1.webp
+  imageAlt: A rainbow flag outside a bar in Shinjuku Nichome
+- title: LGBTQ+ life in Japan today
+  text: Your guide adds deeper context. Japan’s history, social norms and pace of change differ from Western countries, and we discuss the current realities of LGBTQ+ life here, its challenges, progress and nuances, which standard sightseeing tours often skip.
+  image: /images/tours/shinjuku-nichome-lgbtq/story-2.webp
+  imageAlt: A colorful cafe entrance in Shinjuku 2-chome
+- title: Diversity around Golden Gai & Kabukicho
+  text: Next, walk the narrow alleys of Golden Gai, long a refuge for artists, writers and minorities. Then head toward Tokyu Kabukicho Tower to discuss modern perspectives on gender diversity, including Japan’s approach to gender-neutral facilities and the public reaction to them.
+  image: /images/tours/shinjuku-nichome-lgbtq/story-3.webp
+  imageAlt: The Golden Gai sign lit up at night
+- title: Your passport to the night
+  text: The tour ends right by the nightlife. Your guide shares a curated list of foreigner-friendly mix bars and venues with drag performances, so you are ready to step through the *noren* curtains with confidence.
+  image: /images/tours/shinjuku-nichome-lgbtq/story-4.webp
+  imageAlt: A lively Shinjuku nightlife alley
+gallery:
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-1.webp
+  alt: A rainbow flag in the Nichome streets
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-2.webp
+  alt: A quiet street in Shinjuku Nichome
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-3.webp
+  alt: Warm lights in a narrow Shinjuku alley
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-4.webp
+  alt: Kabukicho neon at night
 ---
-## What you’ll experience
-
-### 1. Walking the history of “Rainbow Town”
-We begin in Shinjuku-sanchome and head to the heart of Nichome. The streets feel open, but local norms can be confusing for first-time visitors. Along the way we point out community landmarks, such as an HIV support center and Japan’s first permanent LGBTQ+ center, and share how solidarity shaped the neighborhood.
-
-### 2. LGBTQ+ life in Japan today
-Your guide adds deeper context. Japan’s history, social norms and pace of change differ from Western countries, and we discuss the current realities of LGBTQ+ life here, its challenges, progress and nuances, which standard sightseeing tours often skip.
-
-### 3. Diversity around Golden Gai & Kabukicho
-Next, walk the narrow alleys of Golden Gai, long a refuge for artists, writers and minorities. Then head toward Tokyu Kabukicho Tower to discuss modern perspectives on gender diversity, including Japan’s approach to gender-neutral facilities and the public reaction to them.
-
-### 4. Your passport to the night
-The tour ends right by the nightlife. Your guide shares a curated list of foreigner-friendly mix bars and venues with drag performances, so you are ready to step through the *noren* curtains with confidence.

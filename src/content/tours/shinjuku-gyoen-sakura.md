@@ -1,6 +1,7 @@
 ---
 title: "Shinjuku Gyoen: Sakura, Sweets & Ninja Photo Walk"
 shortTitle: "Gyoen Sakura, Sweets & Photos"
+hook: "Sweets in hand, blossoms overhead, and photos you will want to frame."
 summary: "Start with Japanese sweets, step into a garden once home to samurai lords and let your Ninja guide capture your best cherry blossom photos."
 area: Shinjuku
 themes: [FourSeasons, Food, History, Walk]
@@ -37,17 +38,38 @@ notes:
 bookingUrl: "https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-P7QAY"
 order: 7
 draft: false
+story:
+- title: A sweet start to your photo walk
+  text: We meet in front of Oiwake Dango, one of Shinjuku’s most loved traditional sweet shops. Pick your favorite dango or sakura mochi to enjoy along the way. Japan has a saying, “dumplings over flowers,” meaning the treats matter as much as the view. Skip the formal rules and start your hanami like a local, sweets in hand.
+  image: /images/tours/shinjuku-gyoen-sakura/story-1.webp
+  imageAlt: Sakura mochi on a glass plate with cherry blossoms
+- title: Step into the shogun’s garden
+  text: Leave the busy streets behind and enter Shinjuku Gyoen, a peaceful urban oasis once home to high-ranking samurai, where samurai-era atmosphere meets carefully designed garden beauty.
+  image: /images/tours/shinjuku-gyoen-sakura/story-2.webp
+  imageAlt: A pond in Shinjuku Gyoen framed by cherry trees
+- title: 'The perfect shot: red bridge & cherry blossoms'
+  text: The highlight is the Japanese Garden, where the iconic Taiko Bridge and cherry blossoms make a stunning backdrop. Your Ninja guide knows exactly where to stand for natural, professional-looking photos, and keeps things fun with questions like “Why do people gather under cherry trees every spring?”
+  image: /images/tours/shinjuku-gyoen-sakura/story-3.webp
+  imageAlt: Guests crossing the red-railed bridge in the Japanese garden
+- title: Relax under the blossoms
+  text: 'The tour ends with relaxed time beneath the sakura. No picnic mat needed: find a bench or a shady spot and soak in the season while your guide helps you take the best final photos.'
+  image: /images/tours/shinjuku-gyoen-sakura/story-4.webp
+  imageAlt: A huge cherry tree in full bloom
+gallery:
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-1.webp
+  alt: Guests laughing while eating dango
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-2.webp
+  alt: The traditional sweet shop at the meeting point
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-3.webp
+  alt: Guests choosing sweets at the shop counter
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-4.webp
+  alt: Guests and the Ninja guide under cherry blossoms
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-5.webp
+  alt: The guide taking photos of guests in the garden
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-6.webp
+  alt: A guest photographing cherry blossoms
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-7.webp
+  alt: A group photo under the cherry trees
+- src: /images/tours/shinjuku-gyoen-sakura/gallery-8.webp
+  alt: Shinjuku skyline over the garden pond
 ---
-## What you’ll experience
-
-### 1. A sweet start to your photo walk
-We meet in front of Oiwake Dango, one of Shinjuku’s most loved traditional sweet shops. Pick your favorite dango or sakura mochi to enjoy along the way. Japan has a saying, “dumplings over flowers,” meaning the treats matter as much as the view. Skip the formal rules and start your hanami like a local, sweets in hand.
-
-### 2. Step into the shogun’s garden
-Leave the busy streets behind and enter Shinjuku Gyoen, a peaceful urban oasis once home to high-ranking samurai, where samurai-era atmosphere meets carefully designed garden beauty.
-
-### 3. The perfect shot: red bridge & cherry blossoms
-The highlight is the Japanese Garden, where the iconic Taiko Bridge and cherry blossoms make a stunning backdrop. Your Ninja guide knows exactly where to stand for natural, professional-looking photos, and keeps things fun with questions like “Why do people gather under cherry trees every spring?”
-
-### 4. Relax under the blossoms
-The tour ends with relaxed time beneath the sakura. No picnic mat needed: find a bench or a shady spot and soak in the season while your guide helps you take the best final photos.

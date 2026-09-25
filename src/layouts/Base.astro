@@ -19,6 +19,7 @@ const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -54,6 +55,13 @@ const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
       <slot />
     </main>
     <Footer />
+    <script>
+      // Reveal elements marked data-reveal as they scroll into view
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -10% 0px' });
+      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+    </script>
     <script>
       // Analytics: any element with data-track sends an event (GA4 via gtag, or GTM via dataLayer).
       document.addEventListener('click', (e) => {
