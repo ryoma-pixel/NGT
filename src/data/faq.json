@@ -20,6 +20,14 @@
     "a": "Pick a tour, tap “Check availability”, then choose a date and time and complete your booking online. A confirmation email follows."
   },
   {
+    "q": "Can I cancel?",
+    "a": "Yes. Cancellation is free up to 24 hours before the start time. Later cancellations, no-shows and late arrivals who miss the tour are not refunded. If you booked through a booking site, cancel and get your refund there."
+  },
+  {
+    "q": "What if it rains?",
+    "a": "Tours run rain or shine. If we cancel for stormy or dangerous weather, you get a full refund."
+  },
+  {
     "q": "Where do we meet?",
     "a": "Each tour page shows the exact meeting point with a photo and a Google Maps link."
   },
