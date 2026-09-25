@@ -6,6 +6,12 @@
   "instagram": "https://www.instagram.com/ninja_go_ride/",
   "tiktok": "https://www.tiktok.com/@ninja_go_ride",
   "operator": "Kiranah Resort Co., Ltd.",
+  "legalName": "Kiranah Resort Co., Ltd.",
   "gtmId": "",
-  "ga4MeasurementId": ""
+  "ga4MeasurementId": "",
+  "googleBusinessProfile": "",
+  "_notes": {
+    "gtmId": "GTM container ID (GTM-XXXX). Tags load only on ninjagotours.com in production, or on a preview when the URL has ?gtm_debug (GTM Preview adds it).",
+    "googleBusinessProfile": "Google Maps URL of the NINJA GO TOURS Business Profile (Share > Copy link). Used in structured data sameAs."
+  }
 }

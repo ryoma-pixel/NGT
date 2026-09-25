@@ -87,11 +87,18 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'TouristTrip',
+    '@id': new URL(`/tour/${tour.id}#trip`, Astro.site).toString(),
     name: d.title,
+    alternateName: d.shortTitle,
     description: d.summary,
-    ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
-    offers: { '@type': 'AggregateOffer', lowPrice: Math.min(...priceTiers(tour).map((t) => t.pricePerPerson)), highPrice: Math.max(...priceTiers(tour).map((t) => t.pricePerPerson)), priceCurrency: 'JPY', availability: soon ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock', url: new URL(`/tour/${tour.id}`, Astro.site).toString() },
-    provider: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
+    url: new URL(`/tour/${tour.id}`, Astro.site).toString(),
+    // several real photos, so search can pick a good thumbnail
+    image: [d.heroImage, ...photos.map((p) => p.src)].filter(Boolean).slice(0, 6).map((src) => new URL(src!, Astro.site).toString()),
+    touristType: d.themes,
+    ...(d.meetingPoint ? { location: { '@type': 'Place', name: d.meetingPoint.name, address: { '@type': 'PostalAddress', addressLocality: d.area, addressRegion: 'Tokyo', addressCountry: 'JP' }, ...(d.meetingPoint.mapUrl ? { hasMap: d.meetingPoint.mapUrl } : {}) } } : {}),
+    itinerary: { '@type': 'ItemList', numberOfItems: steps.length, itemListElement: steps.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.label })) },
+    offers: { '@type': 'AggregateOffer', lowPrice: Math.min(...priceTiers(tour).map((t) => t.pricePerPerson)), highPrice: Math.max(...priceTiers(tour).map((t) => t.pricePerPerson)), priceCurrency: 'JPY', availability: soon ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock', url: soon ? new URL(`/tour/${tour.id}`, Astro.site).toString() : d.bookingUrl },
+    provider: { '@id': new URL('/#org', Astro.site).toString() },
   },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
 ];

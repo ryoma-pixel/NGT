@@ -1,0 +1,27 @@
+---
+// Site map for people: every page on one screen (the XML sitemaps are for search engines).
+import Base from '../layouts/Base.astro';
+import { getTours, getColumns, AREAS, THEMES, THEME_LABELS } from '../lib/tours';
+const tours = await getTours();
+const columns = (await getColumns()).filter((c) => !c.data.draft);
+const groups = [
+  { h: 'Tours', links: [{ t: 'All tours', u: '/tours' }, ...tours.map((t) => ({ t: t.data.title, u: `/tour/${t.id}` }))] },
+  { h: 'Tours by area', links: AREAS.map((a) => ({ t: `${a} tours`, u: `/area/${a}` })) },
+  { h: 'Tours by theme', links: THEMES.map((th) => ({ t: THEME_LABELS[th], u: `/theme/${th}` })) },
+  { h: 'Column', links: [{ t: 'All columns', u: '/column' }, ...columns.map((c) => ({ t: c.data.title, u: `/column/${c.id}` }))] },
+  { h: 'About', links: [{ t: 'Contact us', u: '/contact' }, { t: 'Terms of Use', u: '/term' }, { t: 'Privacy Policy', u: '/privacy' }, { t: 'Legal Notice', u: '/about' }] },
+];
+---
+<Base title="Site map" description="Every page on the NINJA GO TOURS site: tours by area and theme, Tokyo travel columns, contact and policies.">
+  <section class="section">
+    <div class="wrap prose">
+      <h1>Site map</h1>
+      {groups.map((g) => (
+        <>
+          <h2>{g.h}</h2>
+          <ul>{g.links.map((l) => <li><a href={l.u}>{l.t}</a></li>)}</ul>
+        </>
+      ))}
+    </div>
+  </section>
+</Base>

@@ -3,6 +3,8 @@ import '../styles/global.css';
 import site from '../data/site.json';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import reviews from '../data/reviews.json';
+import { THEME_LABELS } from '../lib/tours';
 
 interface Props {
   title?: string;
@@ -13,13 +15,49 @@ interface Props {
   overlayHeader?: boolean;
   /** Utility pages (404, thank-you) are never indexed */
   noindex?: boolean;
+  /** Breadcrumb trail for search engines; worked out from the URL when not given */
+  crumbs?: { name: string; href: string }[];
 }
-const { title, description = site.description, image, jsonLd, overlayHeader = false, noindex = false } = Astro.props;
+const { title, description = site.description, image = '/images/og.jpg', jsonLd, overlayHeader = false, noindex = false, crumbs } = Astro.props;
 // Long titles (old column headlines) skip the brand suffix so search results cut them less
 const fullTitle = title ? (title.length > 50 ? title : `${title} | ${site.name}`) : `${site.name} | ${site.tagline}`;
 // build.format 'file' makes the build-time path end in .html; the live URL has no extension (/tour/slug)
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/').replace(/(.)\/$/, '$1') || '/', Astro.site);
-const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
+const ogImage = new URL(image, Astro.site).toString();
+const siteUrl = new URL('/', Astro.site).toString();
+const path = canonical.pathname;
+
+// Breadcrumbs (search results show them instead of the raw URL)
+const seg = path.split('/').filter(Boolean);
+const section: Record<string, { name: string; href: string }> = { tour: { name: 'Tours', href: '/tours' }, area: { name: 'Tours', href: '/tours' }, theme: { name: 'Tours', href: '/tours' }, column: { name: 'Column', href: '/column' } };
+const leaf = seg[0] === 'area' ? `${seg[1]} tours` : seg[0] === 'theme' ? THEME_LABELS[seg[1]] ?? seg[1] : (title ?? site.name);
+const trail = crumbs ?? (seg.length === 0 ? [] : [
+  { name: 'Home', href: '/' },
+  ...(seg.length > 1 && section[seg[0]] ? [section[seg[0]]] : []),
+  { name: leaf, href: path },
+]);
+
+// Who runs the site, the same on every page (logo, social profiles, review pages)
+const org = {
+  '@type': ['TravelAgency', 'Organization'],
+  '@id': `${siteUrl}#org`,
+  name: site.name,
+  legalName: site.legalName,
+  url: siteUrl,
+  logo: { '@type': 'ImageObject', url: new URL('/images/brand/icon-512.png', Astro.site).toString(), width: 512, height: 512 },
+  image: new URL('/images/og.jpg', Astro.site).toString(),
+  description: site.description,
+  areaServed: { '@type': 'City', name: 'Tokyo' },
+  sameAs: [site.instagram, site.tiktok, site.googleBusinessProfile, ...reviews.ratings.map((r) => r.url)].filter((u) => u && !u.includes('/maps/search/')),
+};
+const graph = [
+  { '@type': 'WebSite', '@id': `${siteUrl}#website`, url: siteUrl, name: site.name, alternateName: ['NINJA GO TOURS Tokyo', 'Ninja Go Tours'], inLanguage: 'en', publisher: { '@id': `${siteUrl}#org` } },
+  org,
+  ...(trail.length > 1 ? [{ '@type': 'BreadcrumbList', itemListElement: trail.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: new URL(c.href, Astro.site).toString() })) }] : []),
+];
+
+// Page facts for analytics (GA4 custom dimensions via the dataLayer)
+const pageType = seg.length === 0 ? 'home' : seg[0] === 'tour' ? 'tour' : seg[0] === 'column' ? (seg[1] ? 'column' : 'column_list') : seg[0] === 'tours' || seg[0] === 'area' || seg[0] === 'theme' ? 'tour_list' : 'other';
 // Search engines may index the site only on the real domain in production (not on *.netlify.app previews)
 const indexable = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninjagotours\.com/.test(process.env.URL ?? '');
 ---
@@ -36,23 +74,34 @@ const indexable = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninja
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
-    {(!indexable || noindex) && <meta name="robots" content={noindex && indexable ? 'noindex' : 'noindex, nofollow'} />}
-    <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
+    <meta name="twitter:image" content={ogImage} />
+    {(!indexable || noindex)
+      ? <meta name="robots" content={noindex && indexable ? 'noindex' : 'noindex, nofollow'} />
+      : <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="preload" href="/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <script is:inline define:vars={{ pageType, tourId: seg[0] === 'tour' ? seg[1] : undefined }}>
+      window.dataLayer = window.dataLayer || []; window.dataLayer.push({ page_type: pageType, tour_id: tourId });
+    </script>
     {site.gtmId ? (
-      <script is:inline define:vars={{ id: site.gtmId }}>
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',id);
+      <script is:inline define:vars={{ id: site.gtmId, live: indexable }}>
+        if (live || /[?&]gtm_debug=/.test(location.search)) (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',id);
       </script>
     ) : site.ga4MeasurementId ? (
       <>
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${site.ga4MeasurementId}`}></script>
-        <script is:inline define:vars={{ id: site.ga4MeasurementId }}>
-          window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',id);
+        <script is:inline define:vars={{ id: site.ga4MeasurementId, live: indexable }}>
+          if (live) { var g = document.createElement('script'); g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=' + id; document.head.appendChild(g);
+            window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',id,{linker:{domains:['ninjagotours.com','triplabo.com']}}); }
         </script>
       </>
     ) : null}
@@ -134,6 +183,10 @@ const indexable = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninja
         const params: Record<string, string | undefined> = { ...el.dataset };
         const event = params.track;
         delete params.track;
+        // one name for "where on the page" (some buttons say data-where), and the link target for outbound clicks
+        if (params.where && !params.location) { params.location = params.where; delete params.where; }
+        const href = (el as HTMLAnchorElement).href;
+        if (href) { params.link_url = href; params.link_domain = new URL(href, location.href).hostname; }
         const w = window as unknown as { gtag?: (...a: unknown[]) => void; dataLayer?: unknown[] };
         if (typeof w.gtag === 'function') w.gtag('event', event, params);
         else (w.dataLayer = w.dataLayer || []).push({ event, ...params });
