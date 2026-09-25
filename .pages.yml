@@ -177,6 +177,22 @@ content:
     fields:
       - { name: asOf, label: Checked on (YYYY-MM-DD), type: string }
       - { name: note, label: Selection note shown under reviews, type: text }
+      - name: producer
+        label: Produced by (Ninja + Kabuki Tokyo)
+        type: object
+        fields:
+          - { name: name, label: Name, type: string }
+          - { name: url, label: Website, type: string }
+          - { name: about, label: One line about it, type: string }
+          - name: rating
+            label: Rating shown for it
+            type: object
+            fields:
+              - { name: source, label: Site, type: string }
+              - { name: score, label: Score, type: number }
+              - { name: countLabel, label: Number of reviews as shown (e.g. 400+), type: string }
+              - { name: url, label: URL, type: string }
+              - { name: checked, label: Where and when it was checked, type: string }
       - name: ratings
         label: Rating badges
         type: object

@@ -21,6 +21,8 @@ for path in glob.glob('src/**/*.astro', recursive=True) + glob.glob('src/**/*.ts
 chars.update('の一夜刻')  # emaki titles on tour pages: <area>の一夜 / <area>の一刻
 chars.update('壹弐参肆両')  # koban price coins on the home page
 chars.update('任務殿忍ドン！')  # quiz: mission scroll slip, the Lord and the Ninja badges, the DON! when the scroll lands
+chars.update('東京二十三区北')  # home map: title slip and compass
+chars.update('座元')  # home: 'Produced by Ninja + Kabuki Tokyo' (zamoto, the house that runs a kabuki theater)
 chars = sorted(c for c in chars if not c.isascii())
 print(len(chars), 'characters:', ''.join(chars))
 

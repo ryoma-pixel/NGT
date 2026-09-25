@@ -72,7 +72,7 @@ const puffs: [number, number, number, number, number][] = [
           {questions.map((q, i) => (
             <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
               <legend class="qz__q">
-                <span class="qz__say"><small>The Lord asks · 0{i + 1}</small>{q.q}</span>
+                <span class="qz__say"><small><b>殿</b>The Lord asks · 0{i + 1}</small><span class="visually-hidden">{q.q}</span><span class="qz__line" aria-hidden="true" data-type>{q.q}</span></span>
               </legend>
               <div class:list={['qz__opts', { 'qz__opts--two': q.opts.length === 2 }]}>
                 {q.opts.map((o) => (
@@ -86,12 +86,12 @@ const puffs: [number, number, number, number, number][] = [
           ))}
         </div>
         <p class="qz__nod" data-qz-nod hidden>
-          <span class="qz__say qz__say--ninja"><small>Your Ninja</small><span data-qz-nod-t></span></span>
+          <span class="qz__say qz__say--ninja"><small><b>忍</b>Your Ninja</small><span class="qz__line" data-qz-nod-t></span></span>
         </p>
       </div>
 
       <div class="qz__result" data-qz-result hidden>
-        <p class="qz__decree"><span class="qz__say"><small>The Lord</small>It is decided. Untie the scroll, traveler.</span></p>
+        <p class="qz__decree"><span class="qz__say"><small><b>殿</b>The Lord</small><span class="visually-hidden">It is decided. Untie the scroll, traveler.</span><span class="qz__line" aria-hidden="true" data-type>It is decided. Untie the scroll, traveler.</span></span></p>
         <p class="visually-hidden" aria-live="polite" data-qz-status></p>
         <span class="qz__poof" aria-hidden="true">
           <b class="qz__flash"></b>
@@ -131,6 +131,7 @@ const puffs: [number, number, number, number, number][] = [
     </div>
 
     <!-- The stage: the Lord (left) asks, your Ninja (right) nods. Ukiyo-e illustrations, for illustration only. -->
+    <span class="qz__floor" aria-hidden="true"></span>
     <figure class="qz__fig qz__fig--lord" data-qz-lord aria-hidden="true">
       <span class="qz__fig-pic"><img src="/images/characters/lord-480.webp" srcset="/images/characters/lord-480.webp 480w, /images/characters/lord-960.webp 960w" sizes="(max-width: 900px) 46vw, 330px" width="480" height="600" alt="" loading="lazy" decoding="async" /></span>
       <b class="qz__fig-name">殿</b>
@@ -182,6 +183,21 @@ const puffs: [number, number, number, number, number][] = [
     const trail = [...root.querySelectorAll<HTMLElement>('[data-qz-trail]')];
     const lord = root.querySelector<HTMLElement>('[data-qz-lord]')!;
     const ninja = root.querySelector<HTMLElement>('[data-qz-ninja]')!;
+    // who is talking: the other one steps back (phones show both, face to face)
+    const speak = (who: 'lord' | 'ninja') => { root.dataset.speaker = who; };
+    // type a line out letter by letter, like a dialogue window (the full text is also in the page for screen readers)
+    const typing = new WeakMap<HTMLElement, number>();
+    const type = (el: HTMLElement | null | undefined, text?: string) => {
+      if (!el) return 0;
+      const full = text ?? el.dataset.full ?? el.textContent ?? '';
+      el.dataset.full = full;
+      clearInterval(typing.get(el));
+      if (reduce()) { el.textContent = full; return 0; }
+      let n = 0;
+      el.textContent = '';
+      typing.set(el, window.setInterval(() => { n += 1; el.textContent = full.slice(0, n); if (n >= full.length) clearInterval(typing.get(el)); }, 18));
+      return full.length * 18;
+    };
     // restart a one-shot animation class
     const cue = (el: HTMLElement, cls: string) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
     const answers: Record<string, string> = {};
@@ -202,6 +218,8 @@ const puffs: [number, number, number, number, number][] = [
       back.hidden = i === 0;
       paintTrail();
       cue(lord, 'is-speak');
+      speak('lord');
+      type(qs[i]?.querySelector<HTMLElement>('[data-type]'));
       qs[i]?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
     };
 
@@ -226,12 +244,13 @@ const puffs: [number, number, number, number, number][] = [
 
     // Your Ninja nods: "Umu, umu."
     const sayNod = async (key: string) => {
-      nodText.textContent = NOD[key]?.(labels[key]) ?? 'Umu.';
       nod.hidden = false;
+      speak('ninja');
+      const t = type(nodText, NOD[key]?.(labels[key]) ?? 'Umu.');
       nod.classList.remove('is-on'); void nod.offsetWidth; nod.classList.add('is-on');
       ninja.classList.add('is-in');
       cue(ninja, 'is-nod');
-      await wait(1250);
+      await wait(Math.max(1250, t + 500));
       ninja.classList.remove('is-nod');
     };
 
@@ -249,6 +268,9 @@ const puffs: [number, number, number, number, number][] = [
       paintTrail();
       root.classList.add('is-sealed');
       cue(lord, 'is-speak');
+      speak('lord');
+      const decree = result.querySelector<HTMLElement>('.qz__decree [data-type]');
+      if (decree && !reduce()) { const line = decree.dataset.full ?? decree.textContent ?? ''; decree.dataset.full = line; decree.textContent = ''; setTimeout(() => type(decree, line), 900); }
       status.textContent = 'The Lord has sealed your mission in a scroll. Untie it to see it.';
       const r = result.getBoundingClientRect();
       if (r.top < 60 || r.top + 480 > innerHeight) result.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'center' });
@@ -308,6 +330,9 @@ const puffs: [number, number, number, number, number][] = [
       busy = false;
       go(0);
     };
+    speak('lord');
+    const seen = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { type(qs[0]?.querySelector<HTMLElement>('[data-type]')); seen.disconnect(); } }), { threshold: 0.4 });
+    seen.observe(box);
     document.addEventListener('ngt:mission-reset', () => {
       resetQuiz();
       requestAnimationFrame(() => root.scrollIntoView({ behavior: 'instant', block: 'start' }));
@@ -393,6 +418,9 @@ const puffs: [number, number, number, number, number][] = [
   @keyframes qz-fig-puff { 0% { opacity: 0.95; transform: translate(0, 0) scale(0.3); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.5); } }
   .qz__say { position: relative; display: block; background: #fff; border: 2px solid var(--ai); border-radius: 14px; padding: 10px 16px 12px; box-shadow: 0 4px 0 var(--ai); }
   .qz__say::before { content: ''; position: absolute; left: -10px; top: 26px; width: 16px; height: 16px; background: #fff; border-left: 2px solid var(--ai); border-bottom: 2px solid var(--ai); transform: rotate(45deg); }
+  .qz__floor { display: none; }
+  .qz__say small b { font-family: var(--mincho); font-weight: 800; font-size: 0.95rem; letter-spacing: 0; margin-right: 6px; color: inherit; }
+  .qz__line { display: block; min-height: 1.05em; }
   .qz__say small { display: block; font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(31 45 82 / 0.65); margin-bottom: 4px; }
 
   /* Questions */
@@ -507,27 +535,45 @@ const puffs: [number, number, number, number, number][] = [
 
   @media (max-width: 900px) {
     .qz { --floor: 56px; }
-    .qz__in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'head' 'box'; gap: 22px; }
-    .qz__fig--lord, .qz__fig--ninja { grid-row: auto; }
-    .qz__head { display: block; }
-    .qz__lead { margin-bottom: 14px; }
-    .qz__trail { grid-template-columns: repeat(3, 1fr); max-width: none; }
-    /* the Lord stands at the top left, his question beside him; the Ninja steps in at the bottom right only while he speaks */
-    .qz__fig--lord { grid-area: box; align-self: start; justify-self: start; width: 46%; margin: 0 0 0 -16px; }
-    .qz__q { margin-left: 44%; min-height: calc((100vw - 16px) * 0.46 * 1.25 - 40px); display: flex; flex-direction: column; justify-content: flex-end; }
-    .qz__decree { margin-left: 44%; min-height: calc((100vw - 16px) * 0.46 * 1.25 - 30px); display: flex; flex-direction: column; justify-content: flex-end; }
-    .qz__decree ~ .qz__ground { top: calc(470px + var(--decree-h, 70px)); }
-    .qz__fig--ninja { grid-area: box; justify-self: end; width: 40%; margin-right: -16px; }
-    .qz__fig--ninja .qz__fig-pic { opacity: 0; transform: translateX(40px); transition: opacity 0.25s, transform 0.4s cubic-bezier(.3,1.4,.5,1); }
-    .qz__fig--ninja.is-nod .qz__fig-pic, .qz.is-sealed .qz__fig--ninja .qz__fig-pic { opacity: 1; transform: none; }
-    .qz__nod { padding-right: 38%; min-height: 120px; align-items: flex-end; }
-    .qz__fig-name { font-size: 1rem; padding: 5px 3px; }
+    /* Phones: a little stage. The Lord (left) and your Ninja (right) face each other on the boards,
+       the one speaking steps forward, and the line appears in a dialogue window under them. */
+    .qz__in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'head' 'stage' 'box'; gap: 0; }
+    .qz__head { display: block; margin-bottom: 8px; }
+    .qz__floor { display: block; grid-area: stage; align-self: end; position: relative; z-index: 0; height: 26px; margin: 0 -16px;
+      background: repeating-linear-gradient(90deg, rgb(0 0 0 / 0.2) 0 2px, transparent 2px 78px), linear-gradient(180deg, #a06a36, #7a4c22 70%, #5e3a1a); box-shadow: inset 0 3px 0 rgb(255 226 170 / 0.35), 0 -10px 18px -8px rgb(60 30 5 / 0.35); }
+    .qz__fig { grid-area: stage; align-self: end; width: 56%; height: 58vw; margin: 0; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 82%, transparent), linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 82%, transparent), linear-gradient(to right, transparent, #000 10%, #000 90%, transparent); }
+    .qz__fig--lord { justify-self: start; margin-left: -16px; }
+    .qz__fig--ninja { justify-self: end; margin-right: -16px; }
+    .qz__fig-pic, .qz__fig--ninja .qz__fig-pic, .qz__fig--ninja.is-in .qz__fig-pic { opacity: 1; transform: none; transition: opacity 0.35s, transform 0.45s cubic-bezier(.3,1.4,.5,1); animation: none; }
+    /* the one not speaking steps back into the shade */
+    .qz[data-speaker='ninja'] .qz__fig--lord .qz__fig-pic, .qz[data-speaker='lord'] .qz__fig--ninja .qz__fig-pic { opacity: 0.42; transform: translateY(8px) scale(0.96); }
+    .qz__fig-name { top: 16%; font-size: 0.95rem; padding: 5px 3px; }
+    .qz__fig--lord .qz__fig-name { left: 18%; }
+    .qz__fig--ninja .qz__fig-name { right: 18%; }
+    .qz__fig-smoke { bottom: 30%; }
+    /* dialogue window over the edge of the stage */
+    .qz__box { margin-top: -14px; }
+    .qz__ask { position: relative; }
+    .qz__say { border-radius: 10px; padding: 18px 16px 14px; min-height: 84px; box-shadow: 0 4px 0 var(--ai), 0 10px 22px rgb(60 30 5 / 0.25); }
+    .qz__say::before { display: none; }
+    .qz__say small { position: absolute; top: -13px; left: 12px; margin: 0; padding: 3px 10px; border-radius: 4px; background: var(--ai); color: var(--cream); font-size: 0.64rem; }
+    .qz__say--ninja small { left: auto; right: 12px; background: var(--cream); color: #14151f; box-shadow: 0 0 0 2px #14151f; }
+    .qz__q { width: 100%; box-sizing: border-box; }
+    .qz__q .qz__say { font-size: 1.5rem; }
+    .qz__decree .qz__say { font-size: 1.3rem; }
+    /* your Ninja's reply takes over the same window */
+    .qz__nod { position: absolute; z-index: 4; left: 0; right: 0; top: 38px; margin: 0; display: block; }
+    .qz__nod .qz__say--ninja { min-height: 84px; font-size: 1.05rem; }
+    .qz[data-speaker='ninja'] .qz__q .qz__say { visibility: hidden; }
+    .qz__back { top: 2px; }
     .qz__trail-i { flex-direction: column; gap: 4px; padding: 8px 10px; }
     .qz__trail-v { text-align: left; font-size: 0.9rem; }
     .qz__ask { min-height: 0; }
     .qz__opts { grid-template-columns: 1fr 1fr; }
     .qz__opt { flex-direction: column; align-items: flex-start; min-height: 100px; font-size: 1.15rem; padding: 14px; }
-    .qz__q { padding-right: 0; padding-top: 30px; gap: 12px; }
+    .qz__q { padding-right: 0; padding-top: 34px; }
     .qz__scroll { height: 390px; }
     .qz__seal-scroll { width: 124px; margin-left: -62px; height: 360px; top: 15px; }
     .qz__slip-jp { font-size: 1.7rem; }

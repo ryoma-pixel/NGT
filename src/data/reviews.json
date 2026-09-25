@@ -1,6 +1,18 @@
 {
   "asOf": "2026-09-08",
   "note": "Short excerpts from English reviews rated 4–5 stars on Google and Tripadvisor, quoted without edits (shortened with …). Checked on September 8, 2026.",
+  "producer": {
+    "name": "Ninja + Kabuki Tokyo",
+    "url": "https://ninja-kabukitokyo.com/",
+    "about": "the ninja & kabuki live show in Kabukicho, Shinjuku",
+    "rating": {
+      "source": "Tripadvisor",
+      "score": 4.7,
+      "countLabel": "400+",
+      "url": "https://www.tripadvisor.com/AttractionProductReview-g14133667-d28225594-Ninja_Kabuki_Tokyo-Kabukicho_Shinjuku_Tokyo_Tokyo_Prefecture_Kanto.html",
+      "checked": "Official site: 4.7, 416 reviews (January 2026)"
+    }
+  },
   "ratings": [
     {
       "source": "Google",

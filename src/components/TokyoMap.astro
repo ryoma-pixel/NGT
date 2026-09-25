@@ -1,0 +1,284 @@
+---
+// "Tokyo, in one loop": an Edo-print style map of Tokyo's 23 wards and the JR Yamanote Line,
+// with a name plate for each area our walks start in (Shinjuku, Ueno, Asakusa).
+// Ward shapes: Global Map Japan (GSI), simplified (scripts/make-tokyo-map.py). Stations are approximate.
+// Tap a plate or an area card to light it up; each card lists its walks.
+import map from '../data/tokyo-map.json';
+import Kamon from './Kamon.astro';
+import type { Tour } from '../lib/tours';
+interface Props { tours: Tour[] }
+const { tours } = Astro.props;
+
+const INFO: Record<string, { ja: string; line: string; ward: string; plate: [number, number] }> = {
+  Shinjuku: { ja: '新宿', line: 'Neon, hidden shrines & tiny bars', ward: 'shinjuku', plate: [318, 585] },
+  Ueno: { ja: '上野', line: 'Market street & snack auctions', ward: 'taito', plate: [548, 262] },
+  Asakusa: { ja: '浅草', line: 'Temple town & kitchen street', ward: 'taito', plate: [790, 300] },
+};
+const areas = map.areas.map((a) => ({
+  ...a,
+  ...INFO[a.id],
+  tours: tours.filter((t) => t.data.area === a.id),
+}));
+
+// Smooth closed curve through the Yamanote stations (Catmull-Rom -> cubic Bezier)
+const pts = map.yamanote.map((s) => [s.x, s.y]);
+const n = pts.length;
+let loop = `M${pts[0][0]} ${pts[0][1]}`;
+for (let i = 0; i < n; i++) {
+  const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+  const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+  const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+  loop += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0]} ${p2[1]}`;
+}
+loop += 'Z';
+
+// station label placement: outside the loop
+const LABEL: Record<string, [number, number, string]> = {
+  Tokyo: [14, 6, 'start'], Akihabara: [14, 6, 'start'], Ueno: [-14, -8, 'end'], Ikebukuro: [-12, -12, 'end'],
+  Shinjuku: [-14, 22, 'end'], Harajuku: [-14, 6, 'end'], Shibuya: [-14, 8, 'end'], Shinagawa: [14, 18, 'start'],
+};
+const tourWards = new Set(areas.map((a) => a.ward));
+const W = map.width, H = map.height;
+const km5 = map.km * 5;
+---
+<section class="tmap section" id="tokyo" aria-labelledby="tmap-h">
+  <div class="wrap tmap__in">
+    <div class="tmap__text">
+      <p class="eyebrow">Where in Tokyo?</p>
+      <h2 id="tmap-h">Tokyo, in <span class="tmap__o">one loop.</span></h2>
+      <p class="tmap__lead">Tokyo’s center is 23 wards. The green loop is the <b>JR Yamanote Line</b>: it circles the middle in about an hour. Our walks start in Shinjuku and Ueno, both on the loop, and in Asakusa, a short hop from Ueno.</p>
+
+      <ul class="tmap__areas" role="list">
+        {areas.map((a) => (
+          <li class="tmap__area" data-area={a.id}>
+            <button type="button" class="tmap__area-btn" data-area-btn={a.id} aria-pressed="false">
+              <span class="tmap__seal" aria-hidden="true">{a.ja}</span>
+              <span class="tmap__area-t"><strong>{a.id}</strong><small>{a.line}</small></span>
+              <span class="tmap__count">{a.tours.length} {a.tours.length === 1 ? 'walk' : 'walks'}</span>
+            </button>
+            <ul class="tmap__tours" role="list">
+              {a.tours.map((t) => (
+                <li><a href={`/tour/${t.id}`} data-track="click_map_tour" data-tour={t.id}><Kamon name={t.data.kamon} size={26} class="tmap__kamon" /><span>{t.data.shortTitle}</span>{t.data.comingSoon && <em>Soon</em>}</a></li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+
+      <dl class="tmap__hops">
+        <div><dt>Shinjuku <span aria-hidden="true">⇄</span> Ueno</dt><dd>about 25 min · JR Yamanote Line</dd></div>
+        <div><dt>Ueno <span aria-hidden="true">⇄</span> Asakusa</dt><dd>about 5 min · Ginza Line</dd></div>
+      </dl>
+    </div>
+
+    <figure class="tmap__fig" data-tmap>
+      <svg class="tmap__svg" viewBox={`0 40 ${W} ${H - 150}`} data-vb-wide={`0 40 ${W} ${H - 150}`} data-vb-narrow="196 196 700 580" role="img" aria-label="Map of Tokyo's 23 wards with the JR Yamanote Line loop. Walks start in Shinjuku on the west side of the loop, Ueno on the east side, and Asakusa just east of Ueno.">
+        <defs>
+          <pattern id="tm-waves" width="44" height="22" patternUnits="userSpaceOnUse">
+            <path d="M0 22a11 11 0 0 1 22 0a11 11 0 0 1 22 0M0 22a7 7 0 0 1 14 0M22 22a7 7 0 0 1 14 0M-22 22a7 7 0 0 1 14 0M11 11a11 11 0 0 1 22 0" fill="none" stroke="#1f2d52" stroke-opacity=".18" stroke-width="1.4"/>
+          </pattern>
+          <filter id="tm-shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1f2d52" flood-opacity=".22"/></filter>
+        </defs>
+        <!-- Tokyo Bay -->
+        <path class="tmap__bay" d={`M430 520 L${W} 470 L${W} ${H} L430 ${H}Z`} fill="url(#tm-waves)"/>
+        <text class="tmap__bay-t" x="820" y="770">Tokyo Bay</text>
+        <!-- the 23 wards -->
+        <g class="tmap__land" filter="url(#tm-shadow)">
+          {map.wards.map((w) => <path class:list={['tmap__ward', { 'is-tour': tourWards.has(w.id) }]} data-ward={w.id} d={w.d} />)}
+        </g>
+        <g class="tmap__wlabels" aria-hidden="true">
+          {map.wards.filter((w) => !tourWards.has(w.id)).map((w) => <text x={w.x} y={w.y}>{w.en}</text>)}
+        </g>
+        <!-- JR Yamanote Line -->
+        <path class="tmap__loop-case" d={loop} />
+        <path class="tmap__loop" d={loop} pathLength="1" />
+        <g class="tmap__stations" aria-hidden="true">
+          {map.yamanote.map((s) => <circle class:list={['tmap__st', { 'is-major': s.major }]} cx={s.x} cy={s.y} r={s.major ? 6 : 3.4} />)}
+          {map.yamanote.filter((s) => s.major).map((s) => {
+            const [dx, dy, anchor] = LABEL[s.name] ?? [12, 6, 'start'];
+            return <text class="tmap__st-t" x={s.x + dx} y={s.y + dy} text-anchor={anchor}>{s.name}</text>;
+          })}
+        </g>
+        <!-- where the walks start: a dot, a leader line and a name plate -->
+        <g class="tmap__pins">
+          {areas.map((a, i) => (
+            <g class="tmap__pin" data-pin={a.id} style={`--i:${i}`}>
+              <line x1={a.x} y1={a.y} x2={a.plate[0]} y2={a.plate[1]} class="tmap__lead-l" />
+              <circle cx={a.x} cy={a.y} r="9" class="tmap__dot" />
+              <g class="tmap__plate" transform={`translate(${a.plate[0]} ${a.plate[1]})`} tabindex="-1">
+                <g class="tmap__plate-in">
+                  <rect x="-78" y="-50" width="156" height="100" rx="10" />
+                  <text class="tmap__plate-ja" x="0" y="-4" text-anchor="middle">{a.ja}</text>
+                  <text class="tmap__plate-en" x="0" y="32" text-anchor="middle">{a.id.toUpperCase()} · {a.tours.length}</text>
+                </g>
+              </g>
+            </g>
+          ))}
+        </g>
+        <!-- compass, scale and title slip -->
+        <g class="tmap__compass" transform="translate(955 95)" aria-hidden="true">
+          <circle r="34" />
+          <path d="M0 -26 L8 4 L0 -2 L-8 4Z" />
+          <text y="-40" text-anchor="middle">N</text>
+          <text class="tmap__compass-ja" y="24" text-anchor="middle">北</text>
+        </g>
+        <g class="tmap__scale" transform={`translate(70 ${H - 170})`} aria-hidden="true">
+          <path d={`M0 0 H${km5} M0 -8 V8 M${km5} -8 V8 M${km5 / 2} -5 V5`} />
+          <text x={km5 / 2} y="-14" text-anchor="middle">5 km</text>
+        </g>
+        <g class="tmap__slip" transform="translate(58 70)" aria-hidden="true">
+          <rect x="-26" y="-18" width="52" height="226" />
+          <text class="tmap__slip-t" x="0" y="0">東京二十三区</text>
+        </g>
+      </svg>
+      <ul class="tmap__legend" aria-hidden="true">
+        <li><i class="tmap__lg-loop"></i>JR Yamanote Line · one loop ≈ 1 hr</li>
+        <li><i class="tmap__lg-dot"></i>Where the walks start</li>
+        <li><i class="tmap__lg-ward"></i>Tour wards</li>
+      </ul>
+      <figcaption class="tmap__src">Illustrated map. Ward shapes: Global Map Japan (GSI), simplified. Stations and travel times are approximate.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.tmap').forEach((sec) => {
+    const svg = sec.querySelector<SVGSVGElement>('.tmap__svg')!;
+    const fig = sec.querySelector<HTMLElement>('[data-tmap]')!;
+    // phones get a closer crop around the loop
+    const mq = matchMedia('(max-width: 760px)');
+    const setVB = () => svg.setAttribute('viewBox', (mq.matches ? svg.dataset.vbNarrow : svg.dataset.vbWide) || '');
+    setVB(); mq.addEventListener('change', setVB);
+
+    // draw the loop and stamp the plates when the map comes into view
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { fig.classList.add('is-in'); io.disconnect(); } }), { threshold: 0.3 });
+    io.observe(fig);
+
+    const btns = [...sec.querySelectorAll<HTMLButtonElement>('[data-area-btn]')];
+    const setActive = (id: string | null) => {
+      sec.dataset.active = id ?? '';
+      btns.forEach((b) => {
+        const on = b.dataset.areaBtn === id;
+        b.setAttribute('aria-pressed', String(on));
+        b.closest('.tmap__area')!.classList.toggle('is-on', on);
+      });
+      const w = window as unknown as { dataLayer?: unknown[] };
+      if (id) (w.dataLayer = w.dataLayer || []).push({ event: 'map_area', area: id });
+    };
+    btns.forEach((b) => b.addEventListener('click', () => setActive(sec.dataset.active === b.dataset.areaBtn ? null : b.dataset.areaBtn!)));
+    sec.querySelectorAll<SVGGElement>('[data-pin]').forEach((p) => p.addEventListener('click', () => {
+      const id = p.dataset.pin!;
+      setActive(id);
+      if (mq.matches) sec.querySelector(`[data-area="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }));
+    setActive('Shinjuku');
+  });
+</script>
+
+<style>
+  .tmap { background: var(--paper-2) var(--washi); color: var(--ai); border-top: 1px solid rgb(31 45 82 / 0.12); }
+  .tmap .eyebrow { color: var(--ai); }
+  .tmap__in { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr); gap: 32px 40px; align-items: center; }
+  .tmap h2 { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 0.95; margin: 0 0 14px; }
+  .tmap__o { color: transparent; -webkit-text-stroke: 2px var(--ai); }
+  .tmap__lead { margin: 0 0 22px; max-width: 44ch; color: #3e3527; }
+  .tmap__lead b { color: #4e6b1f; }
+
+  /* area cards */
+  .tmap__areas { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 10px; }
+  .tmap__area { border: 2px solid var(--ai); border-radius: 10px; background: #fffaf0; box-shadow: 0 4px 0 var(--ai); overflow: hidden; transition: background 0.25s; }
+  .tmap__area-btn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: none; border: 0; color: inherit; text-align: left; cursor: pointer; }
+  .tmap__seal { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--ai); color: var(--cream); font-family: var(--mincho); font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; writing-mode: vertical-rl; transition: transform 0.35s cubic-bezier(.3,1.6,.5,1); }
+  .tmap__area-t { flex: 1; min-width: 0; }
+  .tmap__area-t strong { display: block; font-family: var(--display); font-weight: 400; font-size: 1.5rem; text-transform: uppercase; line-height: 1; }
+  .tmap__area-t small { font-size: 0.85rem; color: #5a5040; }
+  .tmap__count { flex: none; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border: 1.5px solid var(--ai); border-radius: 999px; }
+  .tmap__tours { list-style: none; margin: 0; padding: 0 14px; display: grid; gap: 2px; max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(.3,.7,.2,1), padding 0.3s; }
+  .tmap__area.is-on .tmap__tours { max-height: 420px; padding: 0 14px 12px; }
+  .tmap__area.is-on { background: #fff; }
+  .tmap__area.is-on .tmap__seal { transform: rotate(-8deg) scale(1.08); background: #4e6b1f; }
+  .tmap__area.is-on .tmap__count { background: var(--ai); color: var(--cream); }
+  .tmap__tours a { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-top: 1px dashed rgb(31 45 82 / 0.25); color: var(--ai); text-decoration: none; font-weight: 700; font-size: 0.95rem; }
+  .tmap__tours a:hover span { text-decoration: underline; }
+  .tmap__tours em { margin-left: auto; font-style: normal; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid currentColor; padding: 1px 6px; border-radius: 999px; }
+  .tmap__tours :global(.tmap__kamon) { --kamon-bg: var(--ai); color: var(--cream); background: var(--ai); border-radius: 50%; }
+
+  .tmap__hops { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tmap__hops div { padding: 10px 12px; border-left: 3px solid #86a83c; background: rgb(255 250 238 / 0.6); }
+  .tmap__hops dt { font-family: var(--display); text-transform: uppercase; font-size: 1.05rem; }
+  .tmap__hops dd { margin: 2px 0 0; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; color: #5a5040; }
+
+  /* the map */
+  .tmap__fig { margin: 0; }
+  .tmap__svg { display: block; width: 100%; height: auto; overflow: hidden; }
+  .tmap__bay { opacity: 0.9; }
+  .tmap__bay-t { font-family: var(--mono); font-weight: 700; font-size: 20px; letter-spacing: 0.3em; text-transform: uppercase; fill: #1f2d52; fill-opacity: 0.45; }
+  .tmap__ward { fill: #f7efdc; stroke: #1f2d52; stroke-width: 1.3; stroke-opacity: 0.55; stroke-linejoin: round; transition: fill 0.35s; }
+  .tmap__ward.is-tour { fill: #f0dfae; }
+  .tmap[data-active='Shinjuku'] .tmap__ward[data-ward='shinjuku'], .tmap[data-active='Ueno'] .tmap__ward[data-ward='taito'], .tmap[data-active='Asakusa'] .tmap__ward[data-ward='taito'] { fill: #e7c465; }
+  .tmap__wlabels text { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; fill: #1f2d52; fill-opacity: 0.42; text-anchor: middle; }
+  .tmap__wlabels text.is-tour { fill-opacity: 0.75; }
+  .tmap__loop-case { fill: none; stroke: #fffaf0; stroke-width: 14; stroke-linejoin: round; }
+  .tmap__loop { fill: none; stroke: #86a83c; stroke-width: 8; stroke-linejoin: round; stroke-linecap: round; }
+  .tmap__st { fill: #fff; stroke: #1f2d52; stroke-width: 1.6; }
+  .tmap__st.is-major { stroke-width: 2.4; }
+  .tmap__st-t { font-family: var(--mono); font-weight: 700; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; fill: #1f2d52; paint-order: stroke; stroke: #f7efdc; stroke-width: 5px; stroke-linejoin: round; }
+  .tmap__loop-t { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; fill: #4e6b1f; text-anchor: middle; paint-order: stroke; stroke: #f7efdc; stroke-width: 5px; }
+  .tmap__lead-l { stroke: #1f2d52; stroke-width: 2; stroke-dasharray: 4 4; }
+  .tmap__dot { fill: #1f2d52; stroke: #fffaf0; stroke-width: 3; }
+  .tmap__pin { cursor: pointer; }
+  .tmap__plate-in { transition: transform 0.35s cubic-bezier(.3,1.6,.5,1); }
+  .tmap__plate rect { fill: #1f2d52; stroke: #e7c465; stroke-width: 3; }
+  .tmap__plate-ja { font-family: var(--mincho); font-weight: 800; font-size: 44px; fill: #f7f0e3; letter-spacing: 0.1em; }
+  .tmap__plate-en { font-family: var(--mono); font-weight: 700; font-size: 18px; letter-spacing: 0.1em; fill: #e7c465; }
+  .tmap[data-active] .tmap__pin { opacity: 0.8; transition: opacity 0.3s; }
+  .tmap[data-active=''] .tmap__pin, .tmap[data-active='Shinjuku'] [data-pin='Shinjuku'], .tmap[data-active='Ueno'] [data-pin='Ueno'], .tmap[data-active='Asakusa'] [data-pin='Asakusa'] { opacity: 1; }
+  .tmap[data-active='Shinjuku'] [data-pin='Shinjuku'] .tmap__plate-in, .tmap[data-active='Ueno'] [data-pin='Ueno'] .tmap__plate-in, .tmap[data-active='Asakusa'] [data-pin='Asakusa'] .tmap__plate-in { transform: scale(1.12); }
+  .tmap[data-active='Shinjuku'] [data-pin='Shinjuku'] rect, .tmap[data-active='Ueno'] [data-pin='Ueno'] rect, .tmap[data-active='Asakusa'] [data-pin='Asakusa'] rect { fill: #4e6b1f; }
+  .tmap__compass circle { fill: #fffaf0; stroke: #1f2d52; stroke-width: 2; }
+  .tmap__compass path { fill: #1f2d52; }
+  .tmap__compass text { font-family: var(--mono); font-weight: 700; font-size: 16px; fill: #1f2d52; }
+  .tmap__compass .tmap__compass-ja { font-family: var(--mincho); font-size: 18px; }
+  .tmap__scale path { stroke: #1f2d52; stroke-width: 2.5; fill: none; }
+  .tmap__scale text { font-family: var(--mono); font-weight: 700; font-size: 15px; fill: #1f2d52; }
+  .tmap__slip rect { fill: #fffaf0; stroke: #1f2d52; stroke-width: 2.5; }
+  .tmap__slip-t { font-family: var(--mincho); font-weight: 800; font-size: 32px; fill: #1f2d52; writing-mode: vertical-rl; letter-spacing: 0.08em; }
+  .tmap__legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tmap__legend li { display: inline-flex; align-items: center; gap: 8px; }
+  .tmap__legend i { display: inline-block; flex: none; }
+  .tmap__lg-loop { width: 26px; height: 6px; border-radius: 3px; background: #86a83c; box-shadow: 0 0 0 2px #fffaf0; }
+  .tmap__lg-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ai); box-shadow: 0 0 0 2px #fffaf0, 0 0 0 3px var(--ai); }
+  .tmap__lg-ward { width: 16px; height: 12px; background: #f0dfae; border: 1px solid rgb(31 45 82 / 0.5); }
+  .tmap__src { margin-top: 8px; font-family: var(--mono); font-size: 0.66rem; color: #6a604e; text-align: right; }
+
+  /* entrance: wards settle, the loop is drawn with a brush, stations pop, plates are stamped */
+  :global(.js) .tmap__fig:not(.is-in) .tmap__land { opacity: 0; }
+  :global(.js) .tmap__fig:not(.is-in) .tmap__loop { stroke-dashoffset: 1; }
+  :global(.js) .tmap__fig:not(.is-in) .tmap__loop-case, :global(.js) .tmap__fig:not(.is-in) .tmap__stations, :global(.js) .tmap__fig:not(.is-in) .tmap__loop-t, :global(.js) .tmap__fig:not(.is-in) .tmap__pin { opacity: 0; }
+  .tmap__land { transition: opacity 0.8s ease; }
+  .tmap__loop { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 2.2s cubic-bezier(.45,.05,.3,1) 0.4s; }
+  .tmap__loop-case { transition: opacity 0.6s 0.4s; }
+  .tmap__stations, .tmap__loop-t { transition: opacity 0.6s 1.9s; }
+  .tmap__fig.is-in .tmap__pin { animation: tmap-stamp 0.55s cubic-bezier(.3,1.5,.5,1) calc(2.3s + var(--i) * 0.22s) backwards; transform-box: fill-box; transform-origin: center; }
+  @keyframes tmap-stamp { 0% { opacity: 0; transform: scale(1.6); } 60% { opacity: 1; } 100% { transform: none; } }
+
+  @media (max-width: 900px) {
+    .tmap__in { grid-template-columns: minmax(0, 1fr); }
+    .tmap__fig { order: -1; }
+    .tmap__text { display: contents; }
+    .tmap__text > .eyebrow, .tmap__text > h2, .tmap__text > .tmap__lead { order: -2; }
+    .tmap__hops { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .tmap__svg { margin: 0 -8px; width: calc(100% + 16px); }
+    .tmap__slip, .tmap__scale { display: none; }
+    .tmap__plate-in { transform: scale(0.86); }
+    .tmap[data-active='Shinjuku'] [data-pin='Shinjuku'] .tmap__plate-in, .tmap[data-active='Ueno'] [data-pin='Ueno'] .tmap__plate-in, .tmap[data-active='Asakusa'] [data-pin='Asakusa'] .tmap__plate-in { transform: scale(0.96); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tmap__land, .tmap__loop, .tmap__loop-case, .tmap__stations, .tmap__loop-t, .tmap__plate-in, .tmap__seal, .tmap__tours { transition: none !important; }
+    .tmap__fig.is-in .tmap__pin { animation: none; }
+    :global(.js) .tmap__fig:not(.is-in) .tmap__land, :global(.js) .tmap__fig:not(.is-in) .tmap__loop-case, :global(.js) .tmap__fig:not(.is-in) .tmap__stations, :global(.js) .tmap__fig:not(.is-in) .tmap__loop-t, :global(.js) .tmap__fig:not(.is-in) .tmap__pin { opacity: 1; }
+    :global(.js) .tmap__fig:not(.is-in) .tmap__loop { stroke-dashoffset: 0; }
+  }
+</style>

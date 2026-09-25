@@ -49,7 +49,7 @@ const price = priceLabel(tour);
     </div>
   )}
   </div>
-  {secret && <button type="button" class="tc__flip" aria-pressed="false" aria-label={`Flip the card to see a secret of ${d.shortTitle}`} data-track="card_flip" data-tour={tour.id}><Icon name="shuriken" size={18} /><span>Flip me</span></button>}
+  {secret && <button type="button" class="tc__flip" aria-pressed="false" aria-label={`Flip me: a secret of ${d.shortTitle}`} data-track="card_flip" data-tour={tour.id}><Icon name="shuriken" size={18} /><span>Flip me</span></button>}
 </article>
 
 <script>

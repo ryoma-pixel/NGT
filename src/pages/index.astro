@@ -8,6 +8,8 @@ import MissionRail from '../components/MissionRail.astro';
 import Emaki from '../components/Emaki.astro';
 import Mist from '../components/Mist.astro';
 import NinjaQuiz from '../components/NinjaQuiz.astro';
+import TokyoMap from '../components/TokyoMap.astro';
+import ProducedBy from '../components/ProducedBy.astro';
 import Reviews from '../components/Reviews.astro';
 import Icon from '../components/Icon.astro';
 import Kamon from '../components/Kamon.astro';
@@ -91,6 +93,11 @@ const firstScroll = scrollTours[firstTour.id];
       <div class="hero__cta">
         <a class="btn btn--primary btn--lg" href="#missions" data-track="click_hero_cta">Choose your mission</a>
       </div>
+      <p class="hero__by">
+        <a href="#produced-by" data-track="click_hero_producer"><img src="/images/brand/nkt-mark-white.webp" width="240" height="230" alt="" /><span><small>Produced by</small>Ninja + Kabuki Tokyo</span></a>
+        {google && <span class="hero__rate"><b>{google.score.toFixed(1)}</b><i aria-hidden="true">★★★★★</i><small>Google · {google.count} reviews</small></span>}
+        <span class="hero__rate"><b>{reviews.producer.rating.score.toFixed(1)}</b><i aria-hidden="true">★★★★★</i><small>{reviews.producer.rating.source} · Ninja + Kabuki Tokyo</small></span>
+      </p>
       <div class="hero__talk dlg" aria-hidden="true" data-dlg='[["YOU","Where do locals go?"],["NINJA","Follow me. A shrine hides behind the neon."]]'>
         <p class="dlg__who" data-dlg-who>YOU</p>
         <p class="dlg__txt" data-dlg-txt></p>
@@ -118,6 +125,8 @@ const firstScroll = scrollTours[firstTour.id];
     <MissionRail tours={tours} />
     <div class="wrap"><NextStep lead="Can’t pick one?" label="Let the scroll decide" href="#quiz" where="home_missions" /></div>
   </section>
+
+  <TokyoMap tours={tours} />
 
   <NinjaQuiz tours={tours} />
 
@@ -149,6 +158,8 @@ const firstScroll = scrollTours[firstTour.id];
       <div data-reveal style="--d:300ms"><strong><span data-count="1">0</span></strong><span>local guide leads the way</span></div>
     </div>
   </section>
+
+  <ProducedBy />
 
   <Reviews />
 
@@ -262,6 +273,17 @@ const firstScroll = scrollTours[firstTour.id];
   .hero__lead { font-size: clamp(1.1rem, 1.8vw, 1.4rem); max-width: 30em; color: rgb(255 255 255 / 0.92); animation: fade-in 1s ease 1.5s both; }
   .hero__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; margin-top: 22px; animation: fade-in 1s ease 1.7s both; }
   .btn--lg { padding: 1.05em 1.9em; font-size: 1.1rem; }
+  /* who is behind it, and what guests say: right under the call to action */
+  .hero__by { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin: 22px 0 0; animation: fade-in 1s ease 1.9s both; }
+  .hero__by a { display: inline-flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; padding-right: 22px; border-right: 1px solid rgb(255 255 255 / 0.35); }
+  .hero__by img { width: 44px; height: auto; }
+  .hero__by a span { display: flex; flex-direction: column; font-family: var(--display); font-size: 1.15rem; text-transform: uppercase; line-height: 1.05; }
+  .hero__by small { font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; color: rgb(255 255 255 / 0.75); text-transform: uppercase; }
+  .hero__by a:hover span { text-decoration: underline; }
+  .hero__rate { display: inline-grid; grid-template-columns: auto auto; column-gap: 8px; align-items: center; }
+  .hero__rate b { grid-row: span 2; font-family: var(--display); font-weight: 400; font-size: 2rem; line-height: 1; }
+  .hero__rate i { font-style: normal; color: #e7c465; font-size: 0.8rem; letter-spacing: 0.1em; }
+  .hero__rate small { font-size: 0.62rem; }
   .hero__talk { position: absolute; right: 16px; bottom: 110px; width: min(340px, 30vw); }
   /* RPG-style dialogue window */
   .dlg { background: rgb(13 15 28 / 0.84); color: var(--cream); border: 2px solid var(--cream); box-shadow: inset 0 0 0 4px var(--night), inset 0 0 0 5px rgb(247 240 227 / 0.45), 0 12px 30px rgb(0 0 0 / 0.4); padding: 18px 18px 22px; min-height: 104px; animation: pop 0.5s 2s both; }
@@ -360,14 +382,18 @@ const firstScroll = scrollTours[firstTour.id];
     .go { align-items: end; padding-bottom: 56px; }
     .go__seal { right: auto; left: 16px; top: 90px; margin-top: 0; width: 120px; height: 120px; }
     .facts { justify-content: flex-start; }
+    .hero__by { gap: 12px 18px; margin-top: 18px; }
+    .hero__by a { flex: 1 0 100%; border-right: 0; padding-right: 0; }
+    .hero__rate b { font-size: 1.6rem; }
   }
   /* Returning visitors skip the intro, so start the hero animations sooner */
   :global(html:not(.intro)) .hero :global(.hero__title) { --d0: 120ms !important; }
   :global(html:not(.intro)) .hero__lead { animation-delay: 0.6s; }
   :global(html:not(.intro)) .hero__cta { animation-delay: 0.8s; }
+  :global(html:not(.intro)) .hero__by { animation-delay: 1s; }
   :global(html:not(.intro)) .hero__kicker { animation-delay: 0.1s; }
   @media (prefers-reduced-motion: reduce) {
-    .hero__kicker, .hero__lead, .hero__cta, .dlg, .dlg__next, .hero__scroll span { animation: none; }
+    .hero__kicker, .hero__lead, .hero__cta, .hero__by, .dlg, .dlg__next, .hero__scroll span { animation: none; }
     :global(.js) .coins:not(.is-in) .koban { opacity: 1; transform: none; }
     .coins .koban { transition: none; }
     .koban--best::after { animation: none; }
