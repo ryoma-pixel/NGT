@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Make the quiz character portraits (Portrait.astro) from a source illustration.
+"""Make the quiz stage characters (the Lord and your Ninja in NinjaQuiz.astro) from a source illustration.
 
 Usage: python3 scripts/make-character.py <lord|ninja> <source image> [left top right bottom] [--flip]
 The optional crop box is in fractions of the source (default: the whole image), trimmed to 4:5 around its centre.
 --flip mirrors the picture so the character faces their speech bubble (the Ninja stands to the right of his).
-Writes public/images/characters/<who>-240.webp and -480.webp.
+Writes public/images/characters/<who>-480.webp and -960.webp.
 """
 import sys
 from pathlib import Path
@@ -28,6 +28,6 @@ if flip:
     crop = crop.transpose(Image.FLIP_LEFT_RIGHT)
 out = Path(__file__).resolve().parent.parent / 'public/images/characters'
 out.mkdir(parents=True, exist_ok=True)
-for width in (240, 480):
-    crop.resize((width, width * 5 // 4), Image.LANCZOS).save(out / f'{who}-{width}.webp', 'WEBP', quality=82, method=6)
+for width in (480, 960):
+    crop.resize((width, width * 5 // 4), Image.LANCZOS).save(out / f'{who}-{width}.webp', 'WEBP', quality=82 if width < 900 else 70, method=6)
     print(out / f'{who}-{width}.webp')

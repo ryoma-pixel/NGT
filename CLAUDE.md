@@ -150,7 +150,7 @@
   - 絵巻の見出し横と最後に「↺ Ask again」「Try another mission」：絵巻が隠れ、診断が1問目から出直す（`ngt:mission-reset`）。上の「Let the scroll decide」リンク（`#quiz`）でも診断に戻る。
   - 動きを減らす設定では、煙とドン！なしで絵巻に切り替わる（横スワイプの帯）。
 - **殿と忍者のやりとり**：質問は殿の吹き出し（「The Lord asks · 01」）。答えると忍者が頷きながら返事をする（「Umu, umu. Asakusa. Noted.」など）。結果は殿の「It is decided. Untie the scroll, traveler.」。
-  - 殿・忍者は浮世絵風の肖像（`Portrait.astro`：額＋縦書きの名札。殿は質問のたびに身を乗り出し、忍者は額の中で2回頷く）。画像は `public/images/characters/<lord|ninja>-240/480.webp`、`python3 scripts/make-character.py <lord|ninja> <元画像> [左 上 右 下]` で作る。
+  - 殿・忍者は**舞台型**（2026-09-25 ご本人選択「枠ではなくダイナミックに」→案A）：診断の欄を浮世絵の紙色（`#d2b27f`＋和紙の粒子）にし、PCは左に殿・右に忍者を欄の高さいっぱいに立たせ（絵の縁は紙にぼかし込み、床に立つ）、中央に見出し・回答欄・質問を置く。殿は質問のたびに身を乗り出し、忍者は最初は影の中（半透明）→答えると煙と一緒に踏み出して2回頷く。スマホは殿が左上に大きく立ち、その右に質問の吹き出し。忍者は頷く間と巻物の場面だけ右下に出る。選択肢はPCで2×2の横長カード。名札（殿・忍）は縦書きの題箋。画像は `public/images/characters/<lord|ninja>-480/960.webp`（遅延読み込み）、`python3 scripts/make-character.py <lord|ninja> <元画像> [左 上 右 下] [--flip]` で作る。
   - イラストのトーン（2026-09-25 ご本人指定）：浮世絵の役者絵（墨の黒・生成り・セピア・くすんだ金、雲の文様、渦巻く煙）。Pinterest の参考画像（志楽画 ICHIRAKU STUDIO など）は他人の作品のため**そのまま使わない**。Canva の画像生成（文章の指示だけ、参考画像なし）で作った将軍・忍者の下絵をご本人がOK（Canva media MAHWMzWSlmA／MAHWM7XYP7E）。作業環境から Canva には接続できないため、ご本人がチャットに添付した元画像（1136×1408）から作成（将軍は顔まわりを切り抜き、忍者は吹き出しの方を向くよう左右反転 `--flip`）。生成画像は著作権が保証されないため、将来は作家への描き下ろし依頼で差し替える案（C案）を提示済み。
 - **浅草ナイト**：行程5場面＋ギャラリー6枚を Drive「素材_2609｜浅草ナイトツアー」から追加（`public/images/tours/asakusa-night-photo-walk/`）。ツアーページにも絵巻が出る。診断の候補にも入れた（準備中は点数を少し下げる。選ばれたら「Launching soon」「Ask about dates」）。
   - 写真は1024pxのストック素材。ライセンスの確認が必要。Adobe Stock の透かしがある I11 は使っていない。
