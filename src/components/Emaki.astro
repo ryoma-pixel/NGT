@@ -8,8 +8,9 @@ import { srcset } from '../lib/img';
 interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
 // closed: the scroll starts rolled up and opens on a tap. switchable: the home page swaps in another tour's scroll
 // when the quiz picks one (listens for the "ngt:mission" event; tour data comes from <script data-emk-tours>).
-// mission: the home page quiz's scroll. Hidden until the guest opens their sealed mission; then it lands with a "DON!",
-// unrolls by itself and carries on into the tour's route. The cover also shows the price and the booking button.
+// mission: the home page quiz's scroll. Hidden until the guest opens their sealed mission; then the quiz turns into it
+// in the same place (behind a smoke bomb), it lands with a "DON!", unrolls by itself and carries on into the tour's route.
+// The cover also shows why it was picked, the price and the booking button; "Ask again" goes back to the quiz.
 interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string; closed?: boolean; switchable?: boolean; mission?: boolean }
 const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour, closed = false, switchable = false, mission = false } = Astro.props;
 
@@ -25,6 +26,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
   <div class="emk__pin">
     <div class="wrap emk__head">
       <p class="eyebrow" data-emk-eyebrow>{eyebrow}</p>
+      {mission && <button type="button" class="emk__again" data-emk-again>↺ Ask again</button>}
       <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / <span data-emk-total>{String(scenes.length).padStart(2, '0')}</span></p>
     </div>
     <div class="emk__stage">
@@ -66,6 +68,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
           <li class="emk__end">
             <p class="emk__end-t">{end.title}</p>
             <a class="btn btn--primary" href={end.href} data-track="click_emaki_book" data-tour={tour} data-emk-end {...(end.external ? { rel: 'noopener' } : {})}>{end.cta}</a>
+            {mission && <p class="emk__end-more"><button type="button" class="emk__again" data-emk-again>↺ Try another mission</button><a href="/tours">or see all tours →</a></p>}
           </li>
         </ol>
       </div>
@@ -160,9 +163,8 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       sec.classList.add('is-opening');
       measure();
       setTimeout(() => sec.classList.remove('is-opening'), 1500);
-      // glide a little way in, so the paper visibly starts to unroll
-      const ahead = Math.min(dist * (sec.hasAttribute('data-emk-mission') ? 0.06 : 0.14), innerHeight * 0.7);
-      setTimeout(() => glide(() => secTop() + ahead, 1100), 650);
+      // glide a little way in, so the paper visibly starts to unroll (the quiz's mission scroll stays put)
+      if (!sec.hasAttribute('data-emk-mission')) setTimeout(() => glide(() => secTop() + Math.min(dist * 0.14, innerHeight * 0.7), 1100), 650);
       const w = window as unknown as { dataLayer?: unknown[] };
       (w.dataLayer = w.dataLayer || []).push({ event: 'emaki_open', tour: sec.dataset.tour });
     };
@@ -219,12 +221,14 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       document.addEventListener('ngt:mission-open', () => {
         sec.hidden = false;
         if (reduce.matches) { sec.scrollIntoView({ block: 'start' }); return; }
+        // it takes the quiz's place: line it up with the top of the screen while the smoke still covers it
         close();
-        glide(secTop, 800);
+        scrollTo({ top: secTop(), behavior: 'instant' });
         sec.classList.remove('is-don'); void sec.offsetWidth;
-        setTimeout(() => sec.classList.add('is-don'), 650);
-        setTimeout(open, 1700);
+        setTimeout(() => sec.classList.add('is-don'), 280);
+        setTimeout(open, 1300);
       });
+      sec.querySelectorAll('[data-emk-again]').forEach((b) => b.addEventListener('click', () => document.dispatchEvent(new CustomEvent('ngt:mission-reset'))));
       document.addEventListener('ngt:mission-reset', () => {
         sec.classList.remove('is-don');
         close();
@@ -327,6 +331,22 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
 
   /* Home quiz scroll (mission): lands with a DON! and never shows its own open button */
   .emk--mission .emk__open { display: none !important; }
+  .emk__again { flex: none; margin-left: auto; background: none; border: 1.5px solid rgb(247 240 227 / 0.5); border-radius: 999px; color: var(--cream); font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; cursor: pointer; }
+  .emk__again:hover { background: var(--cream); color: var(--ai); }
+  .emk__end-more { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .emk__end-more .emk__again { margin: 0; color: var(--ai); border-color: var(--ai); }
+  .emk__end-more .emk__again:hover { background: var(--ai); color: var(--cream); }
+  .emk__end-more a { color: var(--ai); }
+  /* short screens: drop the crest so the booking button always fits on the cover */
+  @media (max-height: 720px), (max-width: 700px) { .emk--mission .emk__cover [data-emk-kamon] { display: none; } }
+  @media (max-height: 680px) { .emk--mission .emk__slip :global(.emk__tate) { display: none; } .emk--mission .emk__hint { display: none; } }
+  @media (max-width: 700px) {
+    .emk--mission .emk__head { flex-wrap: wrap; row-gap: 6px; }
+    .emk--mission .emk__head .eyebrow { flex: 1 0 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .emk--mission .emk__head .emk__again { margin-left: 0; }
+    .emk--mission .emk__count { margin-left: auto; }
+    .emk--mission .emk__cover { gap: 12px; }
+  }
   /* the cover also carries the deal, so it packs tighter; if it still can't fit, it overflows downward, never cuts the title */
   .emk--mission .emk__cover { gap: 14px; justify-content: safe center; padding: 14px 0; }
   .emk--mission .emk__slip { padding: 16px 12px; }

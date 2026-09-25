@@ -1,7 +1,8 @@
 ---
 // "Let the scroll decide": the Lord asks three questions (where, day or night, what you're into) and your Ninja
 // nods along ("Umu, umu"). The answer is not shown right away: a puff of smoke, a sealed mission scroll drops in,
-// and when the guest unties it the big picture scroll below lands with a DON! and unrolls that tour's route.
+// and when the guest unties it a smoke bomb fills the screen; when it clears, the quiz has turned into that tour's
+// picture scroll (the Emaki with `mission`), which lands with a DON! right there and unrolls the route. No page jump.
 // Coming-soon tours can be picked too; their scroll asks the guest to get in touch instead of booking.
 import Icon from './Icon.astro';
 import type { Tour } from '../lib/tours';
@@ -128,11 +129,6 @@ const puffs: [number, number, number, number, number][] = [
         </div>
 
         <p class="qz__tap" aria-hidden="true"><span class="qz__tap-dot"></span>Tap the scroll to untie it</p>
-        <p class="qz__done" data-qz-done>Your mission: <strong data-qz-title></strong><a href="#mission" data-qz-down>Unrolled below <span aria-hidden="true">↓</span></a></p>
-        <div class="qz__after">
-          <button type="button" class="qz__again" data-qz-again>↺ Try again</button>
-          <a class="qz__all" href="/tours">or see all tours →</a>
-        </div>
       </div>
     </div>
   </div>
@@ -177,7 +173,7 @@ const puffs: [number, number, number, number, number][] = [
     const trail = [...root.querySelectorAll<HTMLElement>('[data-qz-trail]')];
     const answers: Record<string, string> = {};
     const labels: Record<string, string> = {};
-    let current = 0, picked: T | undefined, busy = false;
+    let current = 0, picked: T | null = null, busy = false;
 
     const paintTrail = () => trail.forEach((li, k) => {
       const key = li.dataset.qzTrail!;
@@ -230,8 +226,7 @@ const puffs: [number, number, number, number, number][] = [
       box.classList.add('is-done');
       nod.hidden = true;
       result.hidden = false;
-      result.classList.remove('is-open', 'is-poof', 'is-untie');
-      root.querySelector('[data-qz-title]')!.textContent = picked.title;
+      result.classList.remove('is-poof', 'is-untie');
       void result.offsetWidth;
       result.classList.add('is-poof');
       paintTrail();
@@ -245,25 +240,63 @@ const puffs: [number, number, number, number, number][] = [
       busy = false;
     };
 
-    // Untie: the knot and cord come off, the scroll drops away, and the big scroll below lands with a DON!
+    // Smoke bomb: cream smoke bursts out of the scroll and fills the screen; resolves once the screen is covered
+    const bomb = (x: number, y: number) => new Promise<HTMLElement>((done) => {
+      const el = document.createElement('div');
+      el.className = 'qz-bomb';
+      el.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--x', `${x}px`);
+      el.style.setProperty('--y', `${y}px`);
+      const R = Math.hypot(innerWidth, innerHeight);
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2 + (i % 2) * 0.2;
+        const d = R * (0.12 + (i % 3) * 0.16), z = R * (0.42 + (i % 4) * 0.1);
+        const b = document.createElement('i');
+        b.style.cssText = `--tx:${Math.round(Math.cos(a) * d)}px;--ty:${Math.round(Math.sin(a) * d)}px;--z:${Math.round(z)}px;--dl:${(i % 4) * 40}ms`;
+        el.append(b);
+      }
+      document.body.append(el);
+      setTimeout(() => done(el), 640);
+    });
+
+    // Untie: the knot and cord come off, a smoke bomb, and the quiz becomes the mission scroll in the same place
     openBtn.addEventListener('click', async () => {
-      if (!picked || result.classList.contains('is-open')) return;
+      if (!picked || result.classList.contains('is-untie')) return;
       result.classList.add('is-untie');
-      await wait(450);
-      result.classList.add('is-open');
-      root.classList.remove('is-sealed');
-      status.textContent = `Your mission: ${picked.title}. ${picked.tagline}. It unrolls below.`;
+      await wait(420);
+      const r = openBtn.getBoundingClientRect();
+      const smoke = reduce() ? null : await bomb(r.left + r.width / 2, r.top + r.height / 2);
       document.dispatchEvent(new CustomEvent('ngt:mission', { detail: { id: picked.id, why: `For ${Object.values(labels).join(' · ')}` } }));
-      await wait(250);
+      root.hidden = true;
       document.dispatchEvent(new CustomEvent('ngt:mission-open'));
+      if (smoke) { smoke.classList.add('is-clear'); setTimeout(() => smoke.remove(), 1200); }
       track('quiz_open', { tour: picked.id });
     });
 
-    root.querySelector<HTMLAnchorElement>('[data-qz-down]')?.addEventListener('click', (e) => {
-      const target = document.getElementById('mission-scroll');
-      if (!target || target.hidden) return;
-      e.preventDefault();
-      target.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' });
+    // "Ask again" (on the mission scroll) brings the quiz back to question one
+    const resetQuiz = () => {
+      root.hidden = false;
+      result.classList.remove('is-poof', 'is-untie');
+      result.hidden = true;
+      root.classList.remove('is-sealed');
+      box.classList.remove('is-done');
+      ask.classList.remove('is-leaving');
+      nod.hidden = true;
+      Object.keys(answers).forEach((k) => { delete answers[k]; delete labels[k]; });
+      qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
+      status.textContent = '';
+      picked = null;
+      busy = false;
+      go(0);
+    };
+    document.addEventListener('ngt:mission-reset', () => {
+      resetQuiz();
+      requestAnimationFrame(() => root.scrollIntoView({ behavior: 'instant', block: 'start' }));
+    });
+    // links to #quiz (e.g. "Let the scroll decide") bring it back if it has turned into the mission scroll
+    document.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest('a[href="#quiz"]');
+      if (a && root.hidden) { e.preventDefault(); document.dispatchEvent(new CustomEvent('ngt:mission-reset')); }
     });
 
     qs.forEach((q, i) => q.addEventListener('click', async (e) => {
@@ -282,21 +315,6 @@ const puffs: [number, number, number, number, number][] = [
 
     back.addEventListener('click', () => { if (current > 0 && !busy) { nod.hidden = true; go(current - 1); } });
 
-    root.querySelector('[data-qz-again]')!.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('ngt:mission-reset'));
-      result.classList.remove('is-open', 'is-poof', 'is-untie');
-      result.hidden = true;
-      root.classList.remove('is-sealed');
-      box.classList.remove('is-done');
-      ask.classList.remove('is-leaving');
-      nod.hidden = true;
-      Object.keys(answers).forEach((k) => { delete answers[k]; delete labels[k]; });
-      qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
-      status.textContent = '';
-      busy = false;
-      go(0);
-      root.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' });
-    });
   });
 </script>
 
@@ -411,21 +429,19 @@ const puffs: [number, number, number, number, number][] = [
   .qz__result.is-untie .qz__cord-l { transform: translateX(-60px); opacity: 0; }
   .qz__result.is-untie .qz__cord-r { transform: translateX(60px); opacity: 0; }
   .qz__result.is-untie .qz__seal-scroll { animation: none; }
-  /* 3) away it goes: the scroll dives down toward the big scroll below, and the stage folds up */
-  .qz__result.is-open .qz__seal-scroll { opacity: 0; transform: translateY(160px) scale(0.6) rotate(8deg); pointer-events: none; transition: opacity 0.45s 0.1s, transform 0.55s cubic-bezier(.6,0,.8,.4); }
-  .qz__result.is-open .qz__scroll { height: 0; transition: height 0.6s cubic-bezier(.65,0,.25,1) 0.3s; }
-  .qz__result.is-open .qz__decree, .qz__result.is-open .qz__tap, .qz__result.is-open .qz__ground { display: none; }
-
-  .qz__done { display: none; margin: 0; align-self: stretch; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; }
-  .qz__done strong { display: block; font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 3.4vw, 2.6rem); line-height: 1; margin: 8px 0 14px; }
-  .qz__done a { display: inline-flex; align-items: center; gap: 8px; color: var(--ai); border: 2px solid var(--ai); border-radius: 999px; padding: 10px 16px; text-decoration: none; }
-  .qz__done a span { display: inline-block; animation: qz-down 1.4s ease-in-out infinite; }
-  @keyframes qz-down { 50% { transform: translateY(4px); } }
-  .qz__result.is-open .qz__done { display: block; animation: qz-say 0.45s cubic-bezier(.3,1.5,.5,1) 0.5s both; }
-  .qz__after { display: none; align-items: center; gap: 18px; }
-  .qz__result.is-open .qz__after { display: flex; }
-  .qz__again { background: none; border: 0; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
-  .qz__all { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ai); }
+  /* 3) untied: the cord and knot fall away, then the smoke bomb takes over (the quiz turns into the mission scroll) */
+  .qz[hidden] { display: none !important; }
+  :global(.qz-bomb) { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+  :global(.qz-bomb::before) { content: ''; position: absolute; inset: 0; background: #efe7d6; opacity: 0; animation: qz-bomb-fill 0.3s ease 0.32s forwards; }
+  :global(.qz-bomb i) { position: absolute; left: calc(var(--x) - var(--z) / 2); top: calc(var(--y) - var(--z) / 2); width: var(--z); height: var(--z); border-radius: 50%; opacity: 0;
+    background: radial-gradient(circle at 40% 38%, #fffdf7, #f3ecdc 42%, rgb(226 216 196 / 0.92) 60%, rgb(226 216 196 / 0) 71%);
+    animation: qz-bomb-in 0.56s cubic-bezier(.15,.8,.3,1) var(--dl) forwards; }
+  :global(.qz-bomb.is-clear::before) { animation: qz-bomb-unfill 0.45s ease forwards; }
+  :global(.qz-bomb.is-clear i) { animation: qz-bomb-out 0.95s cubic-bezier(.2,.6,.3,1) forwards; }
+  @keyframes qz-bomb-fill { to { opacity: 1; } }
+  @keyframes qz-bomb-unfill { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes qz-bomb-in { from { opacity: 0.9; transform: translate(0, 0) scale(0.08); } to { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1); } }
+  @keyframes qz-bomb-out { from { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1); } to { opacity: 0; transform: translate(calc(var(--tx) * 1.7), calc(var(--ty) * 1.7 - 60px)) scale(1.35); } }
 
   /* ---- Poof: a flash ring, a dense core and billows that drift up and fade (transform + opacity only) ---- */
   .qz__poof { position: absolute; z-index: 6; left: 50%; top: 300px; width: 0; height: 0; pointer-events: none; }
@@ -459,7 +475,7 @@ const puffs: [number, number, number, number, number][] = [
   }
   @media (prefers-reduced-motion: reduce) {
     .qz__steps, .qz__seal-scroll, .qz__ask, .qz__cord-l, .qz__cord-r, .qz__knot, .qz__ground, .qz__scroll { transition: none !important; }
-    .qz__result.is-poof .qz__poof i, .qz__result.is-poof .qz__flash, .qz__result.is-poof .qz__seal-scroll, .qz__tap-dot, .qz__done a span,
-    .qz__opt.is-picked, .qz__nod.is-on .qz__say--ninja, .qz__nod.is-on .qz__who--ninja, .qz__result.is-poof .qz__decree, .qz__result.is-open .qz__done { animation: none !important; }
+    .qz__result.is-poof .qz__poof i, .qz__result.is-poof .qz__flash, .qz__result.is-poof .qz__seal-scroll, .qz__tap-dot,
+    .qz__opt.is-picked, .qz__nod.is-on .qz__say--ninja, .qz__nod.is-on .qz__who--ninja, .qz__result.is-poof .qz__decree { animation: none !important; }
   }
 </style>
