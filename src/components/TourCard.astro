@@ -18,7 +18,7 @@ const price = priceLabel(tour);
   <div class="tc__inner">
   <a href={`/tour/${tour.id}`} class="tc__link tc__face" data-track="click_tour_card" data-tour={tour.id}>
     {d.heroImage
-      ? <img class="tc__img" src={d.heroImage} srcset={srcset(d.heroImage, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={d.heroAlt ?? ''} loading="lazy" width="700" height="438" />
+      ? <img class="tc__img" src={d.heroImage} srcset={srcset(d.heroImage, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={d.heroAlt ?? ''} loading="lazy" decoding="async" width="700" height="438" />
       : <div class="tc__img tc__ph" aria-hidden="true"></div>}
     <div class="tc__shade" aria-hidden="true"></div>
     <Kamon name={d.kamon} size={46} class="tc__crest" />
@@ -33,7 +33,7 @@ const price = priceLabel(tour);
   </a>
   {secret && (
     <div class="tc__face tc__back" aria-hidden="true" data-back>
-      <img class="tc__img" src={secret.src} srcset={srcset(secret.src, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={secret.alt} loading="lazy" width="700" height="875" />
+      <img class="tc__img" src={secret.src} srcset={srcset(secret.src, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={secret.alt} loading="lazy" decoding="async" width="700" height="875" />
       <div class="tc__shade tc__shade--back" aria-hidden="true"></div>
       <div class="tc__pat" aria-hidden="true" style={`background-image:${patternBg(d.pattern, '#f7f0e3', 1.2)}`}></div>
       <div class="tc__body">

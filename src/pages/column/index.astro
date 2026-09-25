@@ -11,7 +11,7 @@ const columns = await getColumns();
       <div class="grid grid--3">
         {columns.map((c) => (
           <a class="card col" href={`/column/${c.id}`}>
-            {c.data.heroImage && <img src={c.data.heroImage} alt="" loading="lazy" width="640" height="400" />}
+            {c.data.heroImage && <img src={c.data.heroImage} alt="" loading="lazy" decoding="async" width="640" height="400" />}
             <div class="col__b">
               {c.data.draft && <span class="badge badge--draft">DRAFT</span>}
               <h2>{c.data.title}</h2>

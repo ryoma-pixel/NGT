@@ -148,6 +148,10 @@ const indexable = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninja
       }, { rootMargin: '0px 0px -12% 0px' });
       document.querySelectorAll('[data-reveal],[data-wipe],[data-stamp],[data-count]').forEach((el) => io.observe(el));
 
+      // Pause endless animations in sections that are off screen (saves the phone's GPU while scrolling)
+      const off = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('is-offscreen', !e.isIntersecting)), { rootMargin: '200px 0px' });
+      document.querySelectorAll('main > section, main > div > section, .ftr').forEach((el) => off.observe(el));
+
       const hdr = document.querySelector('.hdr');
       if (hdr) {
         const onScroll = () => hdr.classList.toggle('is-scrolled', scrollY > 40);

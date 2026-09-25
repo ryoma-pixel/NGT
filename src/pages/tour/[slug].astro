@@ -141,7 +141,7 @@ const jsonLd = [
         <div class="th__thumbs">
           {heroThumbs.map((g, i) => (
             <button type="button" class="th__thumb" data-open-gallery={i} aria-label={`Open photo: ${g.alt}`}>
-              <img src={g.src} srcset={srcset(g.src, 1400)} sizes="160px" alt="" width="160" height="110" loading="lazy" />
+              <img src={g.src} srcset={srcset(g.src, 1400)} sizes="160px" alt="" width="160" height="110" loading="lazy" decoding="async" />
             </button>
           ))}
           {heroMore > 0 && <button type="button" class="th__more" data-open-gallery={heroThumbs.length} aria-label={`See all ${photos.length} photos`}>+{heroMore}<small>photos</small></button>}
@@ -210,7 +210,7 @@ const jsonLd = [
         <div class="gal__grid" data-gal>
           {photos.map((g, i) => (
             <button type="button" class={`gal__item gal__item--${galLayout[i]}`} data-open-gallery={i} aria-label={`Open photo: ${g.alt}`} hidden={i >= galFirst}>
-              <img src={g.src} srcset={srcset(g.src, 2048)} sizes={galLayout[i] === 's' ? '(max-width: 700px) 50vw, 25vw' : '(max-width: 700px) 100vw, 50vw'} alt={g.alt} width="1100" height="733" loading="lazy" />
+              <img src={g.src} srcset={srcset(g.src, 2048)} sizes={galLayout[i] === 's' ? '(max-width: 700px) 50vw, 25vw' : '(max-width: 700px) 100vw, 50vw'} alt={g.alt} width="1100" height="733" loading="lazy" decoding="async" />
             </button>
           ))}
         </div>
@@ -235,7 +235,7 @@ const jsonLd = [
         <button type="button" class="lb__nav lb__next" aria-label="Next photo">›</button>
         <div class="lb__thumbs">
           {photos.map((g, i) => (
-            <button type="button" class="lb__thumb" data-go={i} aria-label={`Photo ${i + 1}`}><img src={srcset(g.src) ? g.src.replace(/\.webp$/, '-640.webp') : g.src} alt="" loading="lazy" width="96" height="64" /></button>
+            <button type="button" class="lb__thumb" data-go={i} aria-label={`Photo ${i + 1}`}><img src={srcset(g.src) ? g.src.replace(/\.webp$/, '-640.webp') : g.src} alt="" loading="lazy" decoding="async" width="96" height="64" /></button>
           ))}
         </div>
       </dialog>
@@ -283,7 +283,7 @@ const jsonLd = [
           <div class:list={['mpw', { 'mpw--two': d.meetingPoint?.image && d.meetingPoint?.mapEmbed }]}>
             {d.meetingPoint?.image && (
               <figure class="mp">
-                <img src={d.meetingPoint.image} srcset={srcset(d.meetingPoint.image, 2048)} sizes="(max-width: 900px) 92vw, 360px" alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" />
+                <img src={d.meetingPoint.image} srcset={srcset(d.meetingPoint.image, 2048)} sizes="(max-width: 900px) 92vw, 360px" alt={d.meetingPoint.imageAlt ?? ''} width="1000" height="667" loading="lazy" decoding="async" />
                 <figcaption><Icon name="pin" size={18} /> Meeting point: {d.meetingPoint.name}</figcaption>
               </figure>
             )}
@@ -321,11 +321,11 @@ const jsonLd = [
 
   <!-- 7. Last push -->
   <section class="fin">
-    {finale && <img class="fin__img" src={finale} srcset={srcset(finale, 1400)} sizes="100vw" alt="" width="1400" height="1050" loading="lazy" />}
+    {finale && <img class="fin__img" src={finale} srcset={srcset(finale, 1400)} sizes="100vw" alt="" width="1400" height="1050" loading="lazy" decoding="async" />}
     <Mist strength={0.8} />
     <div class="wrap fin__in">
       <Tate text="いざ出陣" class="tate--inline" />
-      <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" />
+      <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" decoding="async" />
       <Split text={d.noCostume ? 'Your guide is ready.' : 'Your Ninja is ready.'} />
       <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track={ctaTrack} data-location="final" data-tour={tour.id}>{ctaLabel}</a>
     </div>

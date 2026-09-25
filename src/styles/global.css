@@ -147,3 +147,11 @@ table.price td:last-child, table.price th:last-child { text-align: right; }
 @keyframes call-breathe { 0%, 60%, 100% { transform: none; } 75% { transform: scale(1.045); } 88% { transform: scale(0.99); } }
 @keyframes call-sheen { 0%, 55% { transform: translateX(-130%); } 90%, 100% { transform: translateX(130%); } }
 @media (prefers-reduced-motion: reduce) { .btn--call, .btn--call::after { animation: none; } }
+
+/* Smooth scrolling on phones:
+   - endless animations (mist, breathing buttons, slow zooms) pause while their section is off screen (Base.astro marks it)
+   - no frosted-glass blur on touch screens: the blur is recomputed on every scroll frame */
+.is-offscreen, .is-offscreen *, .is-offscreen *::before, .is-offscreen *::after { animation-play-state: paused !important; }
+@media (hover: none) {
+  .hdr, .hdr--overlay.is-scrolled, .sbar, .tc__feat li, .th__meta li { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}

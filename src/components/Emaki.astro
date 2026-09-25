@@ -55,7 +55,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
               <span class="emk__haze emk__haze--bot" aria-hidden="true" style={`--dl:${-i * 1.7 - 3}s`}></span>
               <div class="emk__kin">
               <figure class="emk__fig">
-                <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 40vw" alt={s.alt} width="1400" height="1050" loading="lazy" data-emk-img />
+                <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 40vw" alt={s.alt} width="1400" height="1050" loading="lazy" decoding="async" data-emk-img />
               </figure>
               </div>
               <div class="emk__txt">
@@ -121,27 +121,31 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       startX = sw * (sw < 700 ? 0.12 : 0.42);
       dist = Math.max(0, startX + track.scrollWidth - sw * 0.9);
       sec.style.height = `${dist + innerHeight}px`;
+      // Measure the scenes once here, not on every scroll frame (reading positions each frame made phones stutter)
+      geo = { mid: sw / 2, pl: paper.offsetLeft, cs: scenes.map((sc) => ({ l: sc.offsetLeft, w: sc.offsetWidth })), parallax: sw >= 700 };
       update();
     };
+    let geo = { mid: 0, pl: 0, cs: [] as { l: number; w: number }[], parallax: false };
     const update = () => {
       ticking = false;
       if (!sec.classList.contains('is-pinned')) return;
+      if (geo.cs.length !== scenes.length) { measure(); return; }
       const r = sec.getBoundingClientRect();
-      const total = sec.offsetHeight - innerHeight;
+      const total = dist;
       const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
       const x = startX - p * dist;
       track.style.transform = `translate3d(${x}px,0,0)`;
       if (grain) grain.style.transform = `translate3d(0,${(p * dist * 0.35) % 60}px,0)`;
-      const mid = stage.clientWidth / 2;
-      const pl = paper.offsetLeft;
+      const { mid, pl, cs, parallax } = geo;
       let active = 0, lit = -1, best = Infinity;
-      scenes.forEach((s, i) => {
-        const c = x + s.offsetLeft + pl + s.offsetWidth / 2;
-        if (c < mid + s.offsetWidth / 2) active = i + 1;
+      cs.forEach((g, i) => {
+        const c = x + g.l + pl + g.w / 2;
+        if (c < mid + g.w / 2) active = i + 1;
         const d = Math.abs(c - mid);
-        if (d < best && d < s.offsetWidth * 0.6) { best = d; lit = i; }
+        if (d < best && d < g.w * 0.6) { best = d; lit = i; }
+        // a slight drift of each photo inside its frame; skipped on phones to keep scrolling smooth
         const img = imgs[i];
-        if (img) img.style.transform = `translate3d(${(c - mid) * -0.06}px,0,0) scale(1.12)`;
+        if (img && parallax) img.style.transform = `translate3d(${(c - mid) * -0.06}px,0,0) scale(1.12)`;
       });
       if (count) count.textContent = String(active).padStart(2, '0');
       // The scene in the middle turns from ink-black to colour
@@ -292,6 +296,8 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       radial-gradient(ellipse 22% 20% at 16% 58%, rgb(252 249 240 / 0.85), rgb(252 249 240 / 0) 70%),
       radial-gradient(ellipse 46% 24% at 50% 66%, rgb(160 142 110 / 0.28), rgb(160 142 110 / 0) 72%); }
   .emk__haze--top { top: 0; }
+  /* phones: the mist stays still (ten moving mist layers inside a moving scroll were too much for phone GPUs) */
+  @media (max-width: 699px) { .emk__haze { animation: none; } }
   .emk__haze--bot { bottom: 0; left: auto; right: -34%; transform: scaleX(-1); animation-name: haze-r; }
   @keyframes haze { from { transform: translate3d(-18px, 0, 0) scale(1); } to { transform: translate3d(22px, -6px, 0) scale(1.06); } }
   @keyframes haze-r { from { transform: scaleX(-1) translate3d(-18px, 0, 0); } to { transform: scaleX(-1) translate3d(22px, 6px, 0) scale(1.06); } }
@@ -321,7 +327,8 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
   .emk__kin { position: relative; padding: 16px; background: linear-gradient(120deg, rgb(255 246 214 / 0.35), transparent 35%, rgb(255 240 200 / 0.25) 60%, transparent 80%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect x='0' y='0' width='30' height='30' fill='%23e8cc7c'/%3E%3Crect x='30' y='0' width='30' height='30' fill='%23d3ae58'/%3E%3Crect x='60' y='0' width='30' height='30' fill='%23e8cc7c'/%3E%3Crect x='90' y='0' width='30' height='30' fill='%23e8cc7c'/%3E%3Crect x='0' y='30' width='30' height='30' fill='%23d3ae58'/%3E%3Crect x='30' y='30' width='30' height='30' fill='%23d3ae58'/%3E%3Crect x='60' y='30' width='30' height='30' fill='%23e2c270'/%3E%3Crect x='90' y='30' width='30' height='30' fill='%23e2c270'/%3E%3Crect x='0' y='60' width='30' height='30' fill='%23d3ae58'/%3E%3Crect x='30' y='60' width='30' height='30' fill='%23e8cc7c'/%3E%3Crect x='60' y='60' width='30' height='30' fill='%23dcbb66'/%3E%3Crect x='90' y='60' width='30' height='30' fill='%23d3ae58'/%3E%3Crect x='0' y='90' width='30' height='30' fill='%23e2c270'/%3E%3Crect x='30' y='90' width='30' height='30' fill='%23d8b560'/%3E%3Crect x='60' y='90' width='30' height='30' fill='%23e8cc7c'/%3E%3Crect x='90' y='90' width='30' height='30' fill='%23cfa94f'/%3E%3Cpath d='M0 0V120M0 0H120' stroke='%23a07a2c' stroke-opacity='.35' stroke-width='1'/%3E%3Cpath d='M30 0V120M0 30H120' stroke='%23a07a2c' stroke-opacity='.35' stroke-width='1'/%3E%3Cpath d='M60 0V120M0 60H120' stroke='%23a07a2c' stroke-opacity='.35' stroke-width='1'/%3E%3Cpath d='M90 0V120M0 90H120' stroke='%23a07a2c' stroke-opacity='.35' stroke-width='1'/%3E%3C/svg%3E"); box-shadow: 0 1px 0 #a07a2c, 0 14px 30px rgb(60 40 10 / 0.3); }
   .emk__kin::before { content: ''; position: absolute; inset: 7px; border: 1px solid rgb(120 84 24 / 0.45); pointer-events: none; }
   .emk__fig { position: relative; margin: 0; height: clamp(180px, 36vh, 380px); overflow: hidden; box-shadow: 0 0 0 1px rgb(80 55 15 / 0.5); }
-  .emk__fig img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); will-change: transform; }
+  .emk__fig img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); }
+  @media (min-width: 700px) { .emk.is-pinned .emk__fig img { will-change: transform; } }
   .emk.is-pinned .emk__fig img { filter: grayscale(1) contrast(1.12) brightness(0.92); transition: filter 0.8s ease; }
   .emk.is-pinned .emk__scene.is-lit .emk__fig img { filter: none; }
   .emk__txt h3 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); text-transform: uppercase; line-height: 1; margin: 6px 0 8px; color: var(--ai); }
