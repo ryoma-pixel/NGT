@@ -68,7 +68,8 @@ const { scenes, cover, end, kamon } = Astro.props;
     const count = sec.querySelector('[data-emk-count]');
     const scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')];
     const imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]'));
-    let startX = 0, dist = 0, ticking = false;
+    let startX = 0, dist = 0, ticking = false, lastLit = -2;
+    const paperLeft = () => track.querySelector<HTMLElement>('.emk__paper')!.offsetLeft;
 
     const measure = () => {
       sec.classList.add('is-pinned');
@@ -87,14 +88,19 @@ const { scenes, cover, end, kamon } = Astro.props;
       track.style.transform = `translate3d(${x}px,0,0)`;
       if (grain) grain.style.transform = `translate3d(0,${(p * dist * 0.35) % 60}px,0)`;
       const mid = stage.clientWidth / 2;
-      let active = 0;
+      const pl = paperLeft();
+      let active = 0, lit = -1, best = Infinity;
       scenes.forEach((s, i) => {
-        const c = x + s.offsetLeft + track.querySelector<HTMLElement>('.emk__paper')!.offsetLeft + s.offsetWidth / 2;
+        const c = x + s.offsetLeft + pl + s.offsetWidth / 2;
         if (c < mid + s.offsetWidth / 2) active = i + 1;
+        const d = Math.abs(c - mid);
+        if (d < best && d < s.offsetWidth * 0.6) { best = d; lit = i; }
         const img = imgs[i];
         if (img) img.style.transform = `translate3d(${(c - mid) * -0.06}px,0,0) scale(1.12)`;
       });
       if (count) count.textContent = String(active).padStart(2, '0');
+      // The scene in the middle turns from ink-black to colour
+      if (lit !== lastLit) { lastLit = lit; scenes.forEach((s, i) => s.classList.toggle('is-lit', i === lit)); }
     };
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     measure();
@@ -169,6 +175,8 @@ const { scenes, cover, end, kamon } = Astro.props;
   .emk__kin::before { content: ''; position: absolute; inset: 7px; border: 1px solid rgb(120 84 24 / 0.45); pointer-events: none; }
   .emk__fig { position: relative; margin: 0; height: clamp(180px, 36vh, 380px); overflow: hidden; box-shadow: 0 0 0 1px rgb(80 55 15 / 0.5); }
   .emk__fig img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); will-change: transform; }
+  .emk.is-pinned .emk__fig img { filter: grayscale(1) contrast(1.12) brightness(0.92); transition: filter 0.8s ease; }
+  .emk.is-pinned .emk__scene.is-lit .emk__fig img { filter: none; }
   .emk__txt h3 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); text-transform: uppercase; line-height: 1; margin: 6px 0 8px; color: var(--ai); }
   .emk__txt p { margin: 0; color: #4a4336; }
   .emk__txt .emk__kicker { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--ai); border: 1.5px solid var(--ai); padding: 3px 8px; }
@@ -194,5 +202,5 @@ const { scenes, cover, end, kamon } = Astro.props;
     .emk.is-pinned .emk__roller { right: 0; width: 26px; }
     .emk.is-pinned .emk__stage::after { width: 13px; }
   }
-  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze { animation: none; } .emk__fig img { transition: none; } }
 </style>
