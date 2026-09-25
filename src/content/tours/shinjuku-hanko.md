@@ -1,6 +1,7 @@
 ---
 title: Make Your Own “Hanko” Seal & Local Shopping Walk
 shortTitle: Make Your Own Hanko Seal
+seoTitle: "Make Your Own Hanko Seal Tour, Shinjuku"
 hook: Leave Tokyo with your name in kanji, carved into a seal you will use for life.
 summary: Get a meaningful kanji name chosen just for you, order your own Japanese “hanko” seal and explore Shinjuku’s local shops while it is carved.
 area: Shinjuku

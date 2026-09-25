@@ -1,6 +1,7 @@
 ---
 title: Ueno Ameyoko! “The First 60 Minutes in Tokyo” to Master Local Rules
 shortTitle: 'Ueno Ameyoko: Your First 60 Minutes'
+seoTitle: "Ueno Ameyoko Market Walking Tour"
 hook: Hand over ¥1,000, shout your bid and win a mountain of snacks at Ameyoko’s street auction.
 summary: Ask your local friend anything, try Ameyoko’s street auction, scout the izakaya under the tracks and learn shrine etiquette at Ueno Toshogu.
 area: Ueno

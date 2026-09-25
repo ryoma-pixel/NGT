@@ -1,6 +1,7 @@
 ---
 title: 'Golden Gai: Back Alleys & Nightlife with a Ninja'
 shortTitle: Golden Gai Back Alleys & Nightlife
+seoTitle: "Golden Gai Bar Alley Tour in Shinjuku"
 hook: 280 tiny doors. One friendly Ninja who knows which ones to open.
 summary: Try a Shinto ritual at Hanazono Shrine, crack the code of Golden Gai’s 280+ tiny bars and finish under Kabukicho’s neon, all with a Ninja guide.
 area: Shinjuku

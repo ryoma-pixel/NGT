@@ -97,7 +97,7 @@ const jsonLd = [
 ];
 const reels = getReels(await getTours(), tour.id);
 ---
-<Base title={d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd} overlayHeader>
+<Base title={d.seoTitle ?? d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd} overlayHeader>
   <!-- 1. Hero: one big promise -->
   <section class="th">
     {d.heroImage && <img class="th__img" src={d.heroImage} srcset={srcset(d.heroImage, 1600)} sizes="100vw" alt={d.heroAlt ?? ''} width="1600" height="1000" fetchpriority="high" />}
@@ -145,7 +145,7 @@ const reels = getReels(await getTours(), tour.id);
             </li>
           ))}
         </ul>
-        <NextStep dark lead={d.themes.includes('Nightlife') ? 'Sounds like your kind of night?' : 'Sounds like your kind of adventure?'} label="Check dates" href={ctaHref} where="tour_features" tour={tour.id} external={!soon} />
+        <NextStep dark lead={d.themes.includes('Nightlife') ? 'Sounds like your kind of night?' : 'Sounds like your kind of adventure?'} label={ctaLabel} href={ctaHref} where="tour_features" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}
@@ -178,7 +178,7 @@ const reels = getReels(await getTours(), tour.id);
       kamon={d.kamon}
       cover={{ title: d.tagline ?? d.shortTitle, sub: `${d.shortTitle} · ${d.durationMinutes} min`, tate: `${AREA_JP[d.area]}の${d.themes.includes('Nightlife') ? '一夜' : '一刻'}` }}
       scenes={d.story.filter((c) => c.image).map((c, n) => ({ kicker: `Side quest ${pad(n + 1)}`, title: c.title, text: c.text, image: c.image!, alt: c.imageAlt ?? '' }))}
-      end={{ title: 'Your turn.', cta: soon ? 'Ask about dates' : 'See available times', href: soon ? ctaHref : d.bookingUrl!, external: !soon }}
+      end={{ title: 'Your turn.', cta: ctaLabel, href: soon ? ctaHref : d.bookingUrl!, external: !soon }}
     />
   )}
 
@@ -229,7 +229,7 @@ const reels = getReels(await getTours(), tour.id);
         <p class="eyebrow">Straight from Instagram</p>
         <h2>See it for real</h2>
         <ReelRail reels={reels} />
-        <NextStep lead="Your turn to film it." label="Check availability" href={ctaHref} where="tour_reels" tour={tour.id} external={!soon} />
+        <NextStep lead="Your turn to film it." label={ctaLabel} href={ctaHref} where="tour_reels" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}
@@ -248,7 +248,7 @@ const reels = getReels(await getTours(), tour.id);
             </figure>
           ))}
         </div>
-        <NextStep lead="Join them." label="Book your date" href={ctaHref} where="tour_reviews" tour={tour.id} external={!soon} />
+        <NextStep lead="Join them." label={ctaLabel} href={ctaHref} where="tour_reviews" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}

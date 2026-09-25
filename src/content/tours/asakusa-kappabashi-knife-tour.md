@@ -1,6 +1,7 @@
 ---
 title: 'Asakusa & Kappabashi: Authentic Japanese Knife & Tableware Tour with a Local'
 shortTitle: Kappabashi Knife & Tableware Hunt
+seoTitle: "Kappabashi Knife & Tableware Tour, Tokyo"
 hook: The street where Japan’s chefs shop, and where you will find your knife.
 summary: A short walk from Senso-ji, hunt for your ultimate Japanese knife, find tableware from a few hundred yen and discover Kiriko cut glass with a local guide.
 area: Asakusa

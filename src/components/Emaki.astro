@@ -42,7 +42,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
             <div class="emk__deal">
               <p class="emk__why" data-emk-why></p>
               <p class="emk__price" data-emk-price></p>
-              <a class="btn btn--primary btn--call" data-emk-book data-track="click_quiz_book">Book this mission</a>
+              <a class="btn btn--primary btn--call" data-emk-book data-track="click_quiz_book">Check availability</a>
             </div>
           )}
           <p class="emk__hint" aria-hidden="true">Scroll to unroll →</p>
@@ -192,7 +192,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
         const price = sec.querySelector('[data-emk-price]');
         if (price) price.innerHTML = t.price ?? '';
         const book = sec.querySelector<HTMLAnchorElement>('[data-emk-book]');
-        if (book) { book.href = t.href; book.textContent = t.soon ? 'Ask about dates' : 'Book this mission'; book.dataset.tour = t.id; }
+        if (book) { book.href = t.href; book.textContent = t.soon ? 'Ask about dates' : 'Check availability'; book.dataset.tour = t.id; }
         if (sec.dataset.tour === t.id && sec.dataset.filled) return;
         sec.dataset.filled = '1';
         sec.dataset.tour = t.id;

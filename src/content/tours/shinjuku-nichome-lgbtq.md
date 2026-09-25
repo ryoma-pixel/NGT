@@ -1,6 +1,7 @@
 ---
 title: 'Shinjuku Nichome: LGBTQ+ Culture & Nightlife Walk'
 shortTitle: Nichome LGBTQ+ Culture & Nightlife
+seoTitle: "Shinjuku Nichome LGBTQ+ Walking Tour"
 hook: Tokyo’s rainbow district, told by someone who knows its stories.
 summary: Walk Tokyo’s LGBTQ+ neighborhood with a local guide, learn its history and today’s realities, and get trusted tips for your night out.
 area: Shinjuku

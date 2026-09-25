@@ -3,6 +3,7 @@
 # Shown as "Coming soon" until bookingUrl is set. Add story photos from Drive (素材_2609｜浅草ナイトツアー) to get the picture scroll.
 title: "Asakusa After Dark: A Photogenic Night Walk"
 shortTitle: "Asakusa Night Photo Walk"
+seoTitle: "Asakusa Night Photo Walk Tour, Tokyo"
 hook: "The lanterns glow, the crowds are gone, and your guide knows where to stand for the shot."
 summary: "Walk lit-up Senso-ji, Kaminarimon and Asakusa Shrine after the day crowds leave, with a local guide who helps you take the best photos of the night."
 area: Asakusa

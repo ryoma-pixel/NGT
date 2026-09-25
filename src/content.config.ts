@@ -11,6 +11,8 @@ const tours = defineCollection({
     title: z.string(),
     // Short name used on cards and the booking bar
     shortTitle: z.string(),
+    // Title shown in search results (under ~43 characters so " | NINJA GO TOURS" still fits in 60). Falls back to title.
+    seoTitle: z.string().optional(),
     summary: z.string(),
     area: z.enum(['Shinjuku', 'Ueno', 'Asakusa', 'Osaka']),
     themes: z.array(z.enum(['Entertainment', 'Culture', 'Food', 'Shopping', 'Nightlife', 'FourSeasons', 'E-Scooter', 'History', 'JapaneseCustoms', 'Walk'])).default([]),

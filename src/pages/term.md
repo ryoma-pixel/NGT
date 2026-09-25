@@ -21,15 +21,15 @@ Other travellers may book the same date and time, so you may share a Tour with o
 ### 3. Fees and Payment
 
 Fees are shown on the official website and the booking page. For walking tours, the fee per adult (13 and older) depends on the number of adults in your booking.  
-Children aged 12 and under join free of charge, regardless of how many, and must be accompanied by an adult.  
-Unless stated otherwise, fees do not include transportation to and from the meeting point, food and drinks, optional purchases (for example a personal seal or a knife), or other personal expenses. Materials fees are included only where the tour page says so.  
+On walking tours, children aged 12 and under join free of charge, regardless of how many, and must be accompanied by an adult. The E-Scooter tour is an exception: it is for ages 16 and over (see Part B).  
+Unless stated otherwise, fees do not include transportation to and from the meeting point, food and drinks, optional purchases (for example a personal seal or a knife), or other personal expenses.  
 Payment is made by the methods offered on the booking website or OTA. Fees are charged in Japanese yen; amounts shown in other currencies are approximate.
 
 ### 4. Cancellation and Refunds
 
 Cancellations made up to 24 hours before the start of the Tour are free of charge.  
-Cancellations made less than 24 hours before the start, late arrival, and no-shows are charged 100% of the fee, and no refund is given.  
-Tours run in light rain. If the Company cancels a Tour because of severe weather, safety concerns or other reasons attributable to the Company, the full fee is refunded.  
+Tours start on time and cannot wait for late guests. Cancellations made less than 24 hours before the start, late arrivals who miss the Tour, and no-shows are charged 100% of the fee, and no refund is given.  
+Tours run in light rain. If the Company cancels a Tour (for example because of severe weather or safety concerns), the full fee is refunded.  
 No refund is given if you leave the Tour partway through at your own choice.  
 Refunds are made using the same method as the payment. Bookings made through an OTA are refunded through that OTA.
 
@@ -38,7 +38,7 @@ Refunds are made using the same method as the payment. Bookings made through an 
 Please arrive at the meeting point on time. The Tour starts and ends at the scheduled times.  
 Please wear comfortable clothes and shoes suitable for walking.  
 Please follow the guide’s instructions and local rules and manners at shrines, temples, shops and bars.  
-Alcohol is served only to guests aged 20 or older, in line with Japanese law. Drinks you order at bars or restaurants are paid by you unless the tour page states otherwise.  
+Only guests aged 20 or older may drink alcohol, in line with Japanese law. The Company does not serve alcohol. Drinks you order at bars or restaurants are paid by you unless the tour page states otherwise.  
 You are responsible for your own belongings. The Company is not liable for loss or theft.
 
 ### 6. Prohibited Acts

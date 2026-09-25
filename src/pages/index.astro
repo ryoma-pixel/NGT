@@ -56,7 +56,7 @@ const scrollTours = Object.fromEntries(
         title: d.tagline ?? d.shortTitle,
         sub: `${d.shortTitle} · ${d.durationMinutes} min`,
         tate: `${AREA_JP[d.area]}の${d.themes.includes('Nightlife') ? '一夜' : '一刻'}`,
-        cta: soon ? 'Ask about dates' : 'Book this mission',
+        cta: soon ? 'Ask about dates' : 'Check availability',
         href: soon ? `/contact?tour=${t.id}` : d.bookingUrl!,
         scenes: d.story.filter((c) => c.image).map((c, n) => ({ kicker: `Scene ${pad2(n + 1)}`, title: c.title, text: c.text, image: c.image!, srcset: srcset(c.image!, 1400), alt: c.imageAlt ?? '' })),
       }];

@@ -1,6 +1,7 @@
 ---
 title: 'Shinjuku Gyoen: Sakura, Sweets & Ninja Photo Walk'
 shortTitle: Gyoen Sakura, Sweets & Photos
+seoTitle: "Shinjuku Gyoen Cherry Blossom Tour"
 hook: Sweets in hand, blossoms overhead, and photos you will want to frame.
 summary: Start with Japanese sweets, step into a garden once home to samurai lords and let your Ninja guide capture your best cherry blossom photos.
 area: Shinjuku

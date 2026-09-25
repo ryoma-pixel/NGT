@@ -1,6 +1,7 @@
 ---
 title: Shinjuku’s Secret Shrine & Neon Backstreets with a Ninja
 shortTitle: Secret Shrine & Neon Backstreets
+seoTitle: "Shinjuku Secret Shrine & Neon Night Tour"
 hook: Tonight, the neon hides a secret. Your Ninja knows the way in.
 summary: Explore Kabukicho with a modern-day Ninja, then slip behind the neon to a hidden shrine, retro Golden Gai and the quiet of Hanazono Shrine.
 area: Shinjuku

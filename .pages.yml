@@ -13,6 +13,7 @@ content:
     fields:
       - { name: title, label: Title (full), type: string, required: true }
       - { name: shortTitle, label: Short title (cards), type: string, required: true }
+      - { name: seoTitle, label: Search title (Google, max ~43 characters), type: string }
       - { name: summary, label: Summary (1-2 sentences), type: text, required: true }
       - name: area
         label: Area

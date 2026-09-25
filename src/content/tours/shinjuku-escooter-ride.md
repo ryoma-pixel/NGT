@@ -1,6 +1,7 @@
 ---
 title: E-Scooter & Walking Tour with a Ninja Guide
 shortTitle: E-Scooter & Walking Tour
+seoTitle: "Shinjuku E-Scooter & Walking Tour"
 hook: Glide between Shinjuku’s skyscrapers with a Ninja leading the way.
 summary: Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then explore Kabukicho on foot with photos and videos included.
 area: Shinjuku
