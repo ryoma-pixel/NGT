@@ -230,6 +230,14 @@
   - LINKTIVITY側の要修正（サイトでは直せない）：**上野アメ横のキャンセル規定が「予約後のキャンセル・変更不可」**（他は24時間前まで無料）。
   - 要確認：営業時間の表記がサイトの開始時刻と違う（ゴールデン街・二丁目 17:00–22:00、秘境神社 17:00–21:30、新宿御苑 10:30–18:00。サイトは開始時刻の幅として17:00–21:00／10:30–16:00）。ゴールデン街はLINKTIVITYの行程も合計65分。
 
+## 2026-09-25 公開前設定（SEO・AIO・計測）
+- 公開準備ノート（PDFのチェック項目の状況＋GTM・GA4・サーチコンソール・GBP・広告・Netlifyの手順）：https://claude.ai/artifact/Cxk63CHE1jun5qHxZaVd3V （非公開）。外部サービスの本番設定はオーナー許諾（翌週水曜）の後。
+- 開始時刻：LINKTIVITYの「営業時間」は最終開始（ご本人確認）。秘境神社 17:00–21:30、ゴールデン街・二丁目 17:00–22:00 に合わせた。新宿御苑は予約画面が18:00だが、御苑の最終入園（春は17:00前後）に間に合わないため、サイトは16:00のまま → LINKTIVITY側を16:30程度に直すよう提案。
+- NKTのGoogle評価：4.8・4,939件（2026-09-25 ご本人の検索画面）→「4,900+」。
+- 実装：全ページに WebSite＋Organization（TravelAgency、ロゴ、sameAs）＋BreadcrumbList（`Base.astro` の `@graph`）。ツアーは TouristTrip に写真6枚・集合場所・行程・予約URL。og:image を全ページ（既定は `/images/og.jpg`）、本番のみ `max-image-preview:large`。ファビコン 48/96/192＋favicon.ico。`/llms.txt`（AI向けのサイト案内、ツアー・FAQ・料金のデータから自動生成）、`/image-sitemap.xml`、`robots.txt` でAIクローラーを明示的に許可（ご本人OK）、HTMLサイトマップ `/site-map`（フッター）。
+- 計測：`site.json` の `gtmId` を入れるとGTMが動く。**本番ドメインでのみ読み込み**、確認用URLではGTMのプレビュー（`?gtm_debug`）の時だけ。dataLayer に `page_type`・`tour_id`、クリックイベントに `link_url`・`link_domain`・`location`（`data-where` も `location` に統一）。予約完了は計測不可（LINKTIVITY側にタグ不可）→ 予約画面へのクリック（`click_book`／`click_quiz_book`／`click_emaki_book` → GTMで `booking_click`）をキーイベントに。GTMはご本人が管理、広告タグはIGLOOOから受け取りご本人が設置。
+- `site.json` の `googleBusinessProfile` にGBPのURLを入れると構造化データの sameAs に入る（未設定）。
+
 ## 旧サイトから見つかった問題（要対応）
 - ~~利用規約・プライバシーポリシーが NINJA GO RIDE 専用~~ → 2026-09-25 ウォークツアー向けに書き直し（法務確認待ち）。ウォークツアー（子ども・キャンセル規定など）を対象にした規約がない。改訂は法務確認のうえ行う（文面は勝手に書き換えない）。
 - 特商法表記のサービスURL・メールアドレスが旧ドメイン（ninja-kabukitokyo.com / info_ninja-go-ride@…）のまま。
@@ -249,7 +257,7 @@
 
 ## 残作業（v1 公開の前に必須）
 - [x] キャンセル規定（24時間前まで無料、以降・不参加・遅刻で参加できない場合は返金なし、OTA経由はOTAで返金）と雨天（決行、荒天中止は全額返金）を全体FAQに追加（2026-09-25 校正時。規約の確定内容と同じ）。
-- [ ] GTM か GA4 のIDを `site.json` に設定する。予約エンジン（`ars-ninjagoride.triplabo.com`）とのクロスドメイン計測を GA4 側で設定し、キーイベントを「予約完了」に定義し直す。
+- [ ] GTM のIDを `site.json` に設定する（ご本人が管理、オーナー許諾後）。予約完了は計測できないため、キーイベントは予約画面へのクリック（`booking_click`）。
 - [ ] 価格の同時切替：LINKTIVITY で公式の段階制料金とOTAの上乗せ価格を**サイト公開と同じ日に**反映する。人数別の料金をOTAで設定できない場合は、人数別プランに分ける。
 - [x] 子ども料金：12歳以下は何人でも無料で確定（2026-09-25）。
 - [x] 相乗りと人数別料金の整合：**A（表現で対応、料金はそのまま）に決定**（2026-09-25 ご本人「ほぼ相乗りはない」）。FAQは「Rarely. Most tours run with just your party…」。
