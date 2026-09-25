@@ -27,15 +27,15 @@ const { overlay = false } = Astro.props;
   .hdr__logo { display: flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; }
   .hdr__mark { width: 48px; height: 48px; border-radius: 50%; transition: transform 0.4s cubic-bezier(.2,.7,.2,1); }
   .hdr__logo:hover .hdr__mark { transform: rotate(-12deg); }
-  .hdr__name { font-family: var(--display); font-weight: 400; font-size: 1.05rem; color: var(--cream); letter-spacing: 0.06em; }
-  .hdr__nav { display: flex; gap: 22px; margin-left: auto; font-weight: 600; font-size: 0.95rem; }
+  .hdr__name { font-family: var(--display); font-weight: 400; font-size: 1.25rem; color: var(--cream); letter-spacing: 0.04em; }
+  .hdr__nav { display: flex; gap: 22px; margin-left: auto; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .hdr__nav a { text-decoration: none; color: rgb(247 240 227 / 0.85); }
   .hdr__nav a:hover { color: var(--lantern); }
-  .hdr__cta { padding: 0.6em 1.1em; font-size: 0.9rem; box-shadow: 0 3px 0 var(--shu-dark); white-space: nowrap; }
+  .hdr__cta { padding: 0.6em 1.1em; font-size: 0.9rem; box-shadow: 0 3px 0 var(--book-dark); white-space: nowrap; }
   @media (max-width: 720px) {
     .hdr__nav { display: none; }
     .hdr__cta { margin-left: auto; }
-    .hdr__name { font-size: 0.82rem; letter-spacing: 0.02em; }
+    .hdr__name { font-size: 1.05rem; letter-spacing: 0.02em; }
     .hdr__cta { padding: 0.55em 0.9em; font-size: 0.85rem; }
     .hdr__mark { width: 42px; height: 42px; }
   }

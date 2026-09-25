@@ -3,7 +3,7 @@ import reviews from '../data/reviews.json';
 ---
 <section class="section rv" id="reviews">
   <div class="wrap">
-    <p class="eyebrow"><span class="jp">お客様の声</span> Guest voices</p>
+    <p class="eyebrow">Guest voices</p>
     <h2 class="rv__h">Smiles from our guests</h2>
     <ul class="rv__scores">
       {reviews.ratings.map((r) => (
@@ -31,12 +31,13 @@ import reviews from '../data/reviews.json';
   .rv__h { font-size: clamp(2rem, 4.8vw, 3.6rem); }
   .rv__scores a { display: flex; align-items: baseline; gap: 10px; padding: 14px 20px; border-radius: 14px; background: var(--night); color: var(--cream); text-decoration: none; transition: transform 0.2s; }
   .rv__scores a:hover { transform: translateY(-3px); }
-  .rv__scores strong { font-family: var(--display); font-size: 1.6rem; color: var(--lantern); }
+  .rv__scores strong { font-family: var(--display); font-size: 1.8rem; color: var(--cream); }
   .rv__scores span:last-child { font-size: 0.85rem; opacity: 0.8; }
-  .rv__stars { color: var(--lantern); letter-spacing: 2px; }
+  .rv__stars { color: var(--ai); letter-spacing: 2px; }
+  .rv__scores .rv__stars { color: var(--cream); }
   .rv__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
   .rv__item { margin: 0; padding: 26px; border-radius: var(--radius); background: var(--card); color: var(--ink); display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); position: relative; }
-  .rv__item::before { content: '“'; position: absolute; right: 18px; top: -6px; font-family: var(--display); font-size: 5rem; color: rgb(226 70 43 / 0.15); line-height: 1; }
+  .rv__item::before { content: '“'; position: absolute; right: 18px; top: -6px; font-family: var(--display); font-size: 5rem; color: rgb(31 45 82 / 0.12); line-height: 1; }
   .rv__item blockquote { margin: 0; font-size: 1.05rem; line-height: 1.55; flex: 1; }
   .rv__item figcaption { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
   .rv__note { margin-top: 18px; font-size: 0.8rem; color: var(--muted); }

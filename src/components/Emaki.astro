@@ -1,0 +1,171 @@
+---
+// Picture scroll (emaki): scrolling down unrolls a paper scroll sideways out of the roller on the right.
+// Real tour photos, separated by golden "suyari-gasumi" clouds. Without JS or with reduced motion it is a plain sideways list.
+import { srcset } from '../lib/img';
+interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
+interface Props { scenes: Scene[]; cover: { title: string; sub: string }; end: { title: string; cta: string; href: string } }
+const { scenes, cover, end } = Astro.props;
+
+// A band of cloud "pills" stacked like the mist in old picture scrolls
+const cloud = (seed: number) => {
+  const r = (n: number) => ((Math.sin(seed * 9.7 + n * 3.1) + 1) / 2);
+  const pills = [0, 1, 2].map((k) => ({ x: 10 + r(k) * 90, y: 8 + k * 22, w: 180 + r(k + 5) * 140, h: 26 }));
+  return pills;
+};
+---
+<section class="emk" data-emaki aria-label="A night with your Ninja, told as a picture scroll">
+  <div class="emk__pin">
+    <div class="wrap emk__head">
+      <p class="eyebrow">A night with your Ninja</p>
+      <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / {String(scenes.length).padStart(2, '0')}</p>
+    </div>
+    <div class="emk__stage">
+      <div class="emk__track" data-emk-track>
+        <div class="emk__cover">
+          <div class="emk__slip">
+            <h2 class="emk__slip-t">{cover.title}</h2>
+            <p class="emk__slip-s">{cover.sub}</p>
+          </div>
+          <p class="emk__hint" aria-hidden="true">Scroll to unroll →</p>
+        </div>
+        <ol class="emk__paper">
+          {scenes.map((s, i) => (
+            <li class:list={['emk__scene', { 'emk__scene--low': i % 2 === 1 }]} data-emk-scene>
+              <svg class="emk__cloud emk__cloud--top" viewBox="0 0 440 80" preserveAspectRatio="none" aria-hidden="true">
+                {cloud(i + 1).map((p) => <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="13" />)}
+              </svg>
+              <figure class="emk__fig">
+                <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 40vw" alt={s.alt} width="1400" height="1050" loading="lazy" data-emk-img />
+              </figure>
+              <div class="emk__txt">
+                <p class="emk__kicker">{s.kicker}</p>
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
+              </div>
+              <svg class="emk__cloud emk__cloud--bot" viewBox="0 0 440 80" preserveAspectRatio="none" aria-hidden="true">
+                {cloud(i + 7).map((p) => <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="13" />)}
+              </svg>
+            </li>
+          ))}
+          <li class="emk__end">
+            <p class="emk__end-t">{end.title}</p>
+            <a class="btn btn--primary" href={end.href} data-track="click_emaki_book">{end.cta}</a>
+          </li>
+        </ol>
+      </div>
+      <div class="emk__roller" aria-hidden="true"><span data-emk-grain></span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  document.querySelectorAll<HTMLElement>('[data-emaki]').forEach((sec) => {
+    if (reduce.matches) return;
+    const track = sec.querySelector<HTMLElement>('[data-emk-track]')!;
+    const stage = track.parentElement!;
+    const grain = sec.querySelector<HTMLElement>('[data-emk-grain]');
+    const count = sec.querySelector('[data-emk-count]');
+    const scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')];
+    const imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]'));
+    let startX = 0, dist = 0, ticking = false;
+
+    const measure = () => {
+      sec.classList.add('is-pinned');
+      const sw = stage.clientWidth;
+      startX = sw * (sw < 700 ? 0.12 : 0.42);
+      dist = Math.max(0, startX + track.scrollWidth - sw * 0.9);
+      sec.style.height = `${dist + innerHeight}px`;
+      update();
+    };
+    const update = () => {
+      ticking = false;
+      const r = sec.getBoundingClientRect();
+      const total = sec.offsetHeight - innerHeight;
+      const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
+      const x = startX - p * dist;
+      track.style.transform = `translate3d(${x}px,0,0)`;
+      if (grain) grain.style.transform = `translate3d(0,${(p * dist * 0.35) % 60}px,0)`;
+      const mid = stage.clientWidth / 2;
+      let active = 0;
+      scenes.forEach((s, i) => {
+        const c = x + s.offsetLeft + track.querySelector<HTMLElement>('.emk__paper')!.offsetLeft + s.offsetWidth / 2;
+        if (c < mid + s.offsetWidth / 2) active = i + 1;
+        const img = imgs[i];
+        if (img) img.style.transform = `translate3d(${(c - mid) * -0.06}px,0,0) scale(1.12)`;
+      });
+      if (count) count.textContent = String(active).padStart(2, '0');
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    measure();
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', measure);
+    addEventListener('load', measure);
+  });
+</script>
+
+<style>
+  .emk { position: relative; background: var(--night) var(--seigaiha); color: var(--cream); }
+  .emk__pin { padding: 56px 0 40px; }
+  .emk.is-pinned .emk__pin { position: sticky; top: 0; height: 100svh; padding: 84px 0 28px; display: flex; flex-direction: column; overflow: hidden; }
+  .emk .eyebrow { color: rgb(247 240 227 / 0.8); }
+  .emk__head { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
+  .emk__count { margin: 0; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; color: rgb(247 240 227 / 0.6); }
+  .emk__count span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--cream); }
+  .emk__stage { position: relative; flex: 1; min-height: 0; overflow-x: auto; scrollbar-width: none; margin-top: 8px; }
+  .emk.is-pinned .emk__stage { overflow: hidden; }
+  /* The part of the paper still wound on the roller stays hidden */
+  .emk.is-pinned .emk__stage::after { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: calc(4vw + 17px); background: var(--night); z-index: 2; }
+  .emk__track { display: flex; height: 100%; width: max-content; will-change: transform; }
+
+  /* Cover: navy silk with a title slip, like the outside of a real scroll */
+  .emk__cover { position: relative; flex: none; width: min(34vw, 380px); min-height: 460px; background: var(--ai) var(--seigaiha); border-radius: 10px 0 0 10px; box-shadow: inset -18px 0 24px -12px rgb(0 0 0 / 0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px; }
+  .emk__slip { width: 58%; background: var(--cream); color: var(--ai); padding: 22px 14px; text-align: center; box-shadow: 0 6px 18px rgb(0 0 0 / 0.35); border: 1px solid #d9cdb3; }
+  .emk__slip-t { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height: 1; margin: 0 0 10px; }
+  .emk__slip-s { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
+  .emk__hint { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(247 240 227 / 0.75); margin: 0; animation: nudge 1.6s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateX(8px); } }
+
+  /* Washi paper */
+  .emk__paper { list-style: none; margin: 0; padding: 0 60px 0 30px; display: flex; align-items: stretch; color: var(--ai);
+    background:
+      radial-gradient(circle at 20% 30%, rgb(160 130 80 / 0.07), transparent 40%),
+      radial-gradient(circle at 70% 80%, rgb(160 130 80 / 0.06), transparent 45%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      #f3ead6;
+    box-shadow: 0 30px 70px rgb(0 0 0 / 0.5); border-top: 6px solid #e6d8b9; border-bottom: 6px solid #e6d8b9; }
+  .emk__scene { position: relative; flex: none; width: min(44vw, 560px); padding: 4vh 34px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+  .emk__scene--low { flex-direction: column-reverse; }
+  .emk__fig { position: relative; margin: 0; height: clamp(200px, 40vh, 420px); overflow: hidden; border-radius: 3px; box-shadow: 0 2px 0 #d8c9a6, 0 14px 30px rgb(60 40 10 / 0.25); }
+  .emk__fig img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); will-change: transform; }
+  .emk__txt h3 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); text-transform: uppercase; line-height: 1; margin: 6px 0 8px; color: var(--ai); }
+  .emk__txt p { margin: 0; color: #4a4336; }
+  .emk__txt .emk__kicker { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--ai); border: 1.5px solid var(--ai); padding: 3px 8px; }
+  .emk__cloud { position: absolute; left: -60px; width: calc(100% + 120px); height: 70px; z-index: 2; pointer-events: none; }
+  .emk__cloud rect { fill: #e0cb97; stroke: #c9ad6c; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+  .emk__cloud--top { top: -8px; }
+  .emk__cloud--bot { bottom: -8px; }
+  .emk__scene:nth-child(odd) .emk__cloud--bot, .emk__scene:nth-child(even) .emk__cloud--top { opacity: 0.55; }
+  .emk__end { flex: none; width: min(40vw, 460px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; padding: 0 40px; }
+  .emk__end-t { font-family: var(--display); text-transform: uppercase; font-size: clamp(2.6rem, 5vw, 4.4rem); line-height: 0.95; margin: 0; color: var(--ai); }
+
+  /* Wooden roller the paper comes out of */
+  .emk__roller { display: none; }
+  .emk.is-pinned .emk__roller { display: block; position: absolute; right: 4vw; top: -14px; bottom: -14px; width: 34px; border-radius: 17px; overflow: hidden; z-index: 3;
+    background: linear-gradient(90deg, #3b2412, #7a4f2a 35%, #a8743f 50%, #6d4424 70%, #2e1b0c); box-shadow: -14px 0 24px rgb(0 0 0 / 0.45); }
+  .emk__roller span { position: absolute; left: 0; right: 0; top: -60px; bottom: -60px; background: repeating-linear-gradient(180deg, rgb(0 0 0 / 0.18) 0 2px, transparent 2px 12px, rgb(255 255 255 / 0.06) 12px 13px, transparent 13px 30px); }
+  .emk.is-pinned .emk__roller::before, .emk.is-pinned .emk__roller::after { content: ''; position: absolute; left: 3px; right: 3px; height: 20px; background: var(--ai); border-radius: 6px; }
+  .emk.is-pinned .emk__roller::before { top: 0; }
+  .emk.is-pinned .emk__roller::after { bottom: 0; }
+
+  @media (max-width: 700px) {
+    .emk.is-pinned .emk__pin { padding-top: 76px; }
+    .emk__cover { width: 72vw; min-height: 0; }
+    .emk__scene { width: 80vw; padding: 3vh 18px; }
+    .emk__fig { height: 34svh; }
+    .emk__end { width: 76vw; }
+    .emk.is-pinned .emk__roller { right: 0; width: 26px; }
+    .emk.is-pinned .emk__stage::after { width: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .emk__hint { animation: none; } }
+</style>

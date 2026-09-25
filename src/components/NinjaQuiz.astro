@@ -1,0 +1,233 @@
+---
+// "Which mission is yours?" Three quick picks, then a scroll unrolls with the matching tour and the price for the group size.
+import Icon from './Icon.astro';
+import { priceTiers, type Tour } from '../lib/tours';
+import type { IconName } from './icons';
+interface Props { tours: Tour[] }
+const { tours } = Astro.props;
+
+const data = tours.map((t) => {
+  const d = t.data;
+  const times = d.startTimes ?? '';
+  const night = d.themes.includes('Nightlife') || /night/i.test(times);
+  const day = !d.themes.includes('Nightlife') || /day/i.test(times);
+  const img = d.heroImage?.replace(/\.webp$/, '-640.webp');
+  return {
+    id: t.id, title: d.shortTitle, tagline: d.tagline ?? '', img, alt: d.heroAlt ?? '',
+    themes: d.themes, icons: d.features.map((f) => f.icon), night, day, seasonal: d.themes.includes('FourSeasons'),
+    tiers: priceTiers(t).map((x) => [x.minGuests, x.pricePerPerson]),
+  };
+});
+
+type Opt = { v: string; icon: IconName; label: string };
+const questions: { key: string; q: string; opts: Opt[] }[] = [
+  { key: 'time', q: 'When do you strike?', opts: [
+    { v: 'day', icon: 'city', label: 'By day' },
+    { v: 'night', icon: 'lantern', label: 'By night' },
+  ] },
+  { key: 'skill', q: 'Pick your ninjutsu', opts: [
+    { v: 'hidden', icon: 'torii', label: 'Find hidden places' },
+    { v: 'eat', icon: 'bowl', label: 'Eat & drink' },
+    { v: 'make', icon: 'stamp', label: 'Make & shop' },
+    { v: 'ride', icon: 'scooter', label: 'Ride' },
+  ] },
+  { key: 'squad', q: 'Your squad?', opts: [
+    { v: '1', icon: 'mask', label: 'Solo' },
+    { v: '2', icon: 'group', label: '2 of us' },
+    { v: '3', icon: 'group', label: '3 of us' },
+    { v: '4', icon: 'group', label: '4 or more' },
+  ] },
+];
+---
+<section class="qz" id="quiz" data-quiz>
+  <div class="wrap qz__in">
+    <div class="qz__head">
+      <p class="eyebrow">Can’t choose?</p>
+      <h2>Let the scroll <span class="qz__o">decide.</span></h2>
+      <p class="qz__progress" aria-hidden="true"><span data-qz-step>1</span> / 3</p>
+    </div>
+
+    <div class="qz__box">
+      <div class="qz__steps" data-qz-steps>
+        {questions.map((q, i) => (
+          <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
+            <legend class="qz__q"><span class="qz__n">0{i + 1}</span>{q.q}</legend>
+            <div class="qz__opts">
+              {q.opts.map((o) => (
+                <button type="button" class="qz__opt" data-v={o.v}>
+                  <Icon name={o.icon} size={30} />
+                  <span>{o.label}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+      </div>
+
+      <div class="qz__result" data-qz-result hidden>
+        <div class="qz__scroll">
+          <span class="qz__rod qz__rod--l" aria-hidden="true"></span>
+          <div class="qz__paper" aria-live="polite">
+            <img class="qz__img" data-qz-img alt="" width="640" height="400" />
+            <div class="qz__body">
+              <p class="qz__seal" aria-hidden="true">Your mission</p>
+              <h3 class="qz__title" data-qz-title></h3>
+              <p class="qz__tag" data-qz-tag></p>
+              <p class="qz__price" data-qz-price></p>
+              <div class="qz__cta">
+                <a class="btn btn--primary" data-qz-book data-track="click_quiz_book">Book this mission</a>
+                <a class="qz__more" data-qz-more data-track="click_quiz_details">See the mission →</a>
+              </div>
+            </div>
+          </div>
+          <span class="qz__rod qz__rod--r" aria-hidden="true"></span>
+        </div>
+        <button type="button" class="qz__again" data-qz-again>↺ Try again</button>
+      </div>
+    </div>
+  </div>
+  <script type="application/json" data-qz-data set:html={JSON.stringify(data)} />
+</section>
+
+<script>
+  type T = { id: string; title: string; tagline: string; img?: string; alt: string; themes: string[]; icons: string[]; night: boolean; day: boolean; seasonal: boolean; tiers: [number, number][] };
+  // Each answer scores tours by their themes and by the icons on their "What you'll do" list
+  const SKILL: Record<string, { themes: Record<string, number>; icons: string[] }> = {
+    hidden: { themes: { History: 2, Entertainment: 2, Culture: 1 }, icons: ['torii', 'lantern'] },
+    eat: { themes: { Food: 3, Nightlife: 2 }, icons: ['sake', 'glass', 'bowl', 'dango', 'cup'] },
+    make: { themes: { JapaneseCustoms: 2, Shopping: 2 }, icons: ['stamp', 'knife', 'brush', 'bag'] },
+    ride: { themes: { 'E-Scooter': 6 }, icons: ['scooter'] },
+  };
+  const track = (event: string, params: Record<string, unknown> = {}) => {
+    const w = window as unknown as { gtag?: (...a: unknown[]) => void; dataLayer?: unknown[] };
+    if (typeof w.gtag === 'function') w.gtag('event', event, params);
+    else (w.dataLayer = w.dataLayer || []).push({ event, ...params });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-quiz]').forEach((root) => {
+    const tours: T[] = JSON.parse(root.querySelector('[data-qz-data]')!.textContent || '[]');
+    const steps = root.querySelector<HTMLElement>('[data-qz-steps]')!;
+    const qs = [...root.querySelectorAll<HTMLFieldSetElement>('[data-qz-q]')];
+    const result = root.querySelector<HTMLElement>('[data-qz-result]')!;
+    const stepNo = root.querySelector('[data-qz-step]');
+    const answers: Record<string, string> = {};
+
+    const go = (i: number) => {
+      steps.style.transform = `translateX(${-100 * i}%)`;
+      qs.forEach((q, k) => { q.disabled = k !== i; q.toggleAttribute('aria-hidden', k !== i); });
+      if (stepNo) stepNo.textContent = String(Math.min(i + 1, 3));
+      qs[i]?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    };
+
+    const pick = () => {
+      const want = SKILL[answers.skill] ?? { themes: {}, icons: [] };
+      let best: T | undefined; let bestScore = -Infinity;
+      tours.forEach((t) => {
+        let s = 0;
+        s += (answers.time === 'night' ? t.night : t.day) ? 4 : -4;
+        t.themes.forEach((th) => { s += want.themes[th] ?? 0; });
+        s += t.icons.filter((ic) => want.icons.includes(ic)).length * 2;
+        if (answers.skill !== 'ride' && t.themes.includes('E-Scooter')) s -= 3;
+        if (t.seasonal) s -= 1;
+        if (s > bestScore) { bestScore = s; best = t; }
+      });
+      return best!;
+    };
+
+    const show = () => {
+      const t = pick();
+      const n = Number(answers.squad);
+      const tier = [...t.tiers].reverse().find(([min]) => n >= min) ?? t.tiers[0];
+      const yen = (v: number) => `¥${v.toLocaleString('en-US')}`;
+      const img = root.querySelector<HTMLImageElement>('[data-qz-img]')!;
+      if (t.img) { img.src = t.img; img.alt = t.alt; }
+      root.querySelector('[data-qz-title]')!.textContent = t.title;
+      root.querySelector('[data-qz-tag]')!.textContent = t.tagline;
+      root.querySelector('[data-qz-price]')!.textContent = `${yen(tier[1])} per person${t.tiers.length > 1 ? ` · ${n === 4 ? '4+ guests' : n === 1 ? 'solo' : `${n} guests`}` : ''}`;
+      const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
+      const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
+      book.href = `/tour/${t.id}#book`; book.dataset.tour = t.id;
+      more.href = `/tour/${t.id}`; more.dataset.tour = t.id;
+      steps.parentElement!.classList.add('is-done');
+      result.hidden = false;
+      const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
+      root.style.setProperty('--half', `${scroll.offsetWidth / 2 - 22}px`);
+      requestAnimationFrame(() => requestAnimationFrame(() => result.classList.add('is-open')));
+      track('quiz_complete', { tour: t.id, time: answers.time, skill: answers.skill, squad: answers.squad });
+    };
+
+    qs.forEach((q, i) => q.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.qz__opt');
+      if (!b) return;
+      answers[q.dataset.qzQ!] = b.dataset.v!;
+      q.querySelectorAll('.qz__opt').forEach((o) => o.classList.toggle('is-picked', o === b));
+      if (i < qs.length - 1) setTimeout(() => go(i + 1), 220);
+      else setTimeout(show, 220);
+    }));
+
+    root.querySelector('[data-qz-again]')!.addEventListener('click', () => {
+      result.classList.remove('is-open');
+      result.hidden = true;
+      steps.parentElement!.classList.remove('is-done');
+      qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
+      go(0);
+    });
+  });
+</script>
+
+<style>
+  /* Needs JS to work, so it only appears when scripts run */
+  .qz { display: none; }
+  :global(.js) .qz { display: block; }
+  .qz { background: var(--ai) var(--seigaiha); color: var(--cream); padding: 72px 0; overflow: hidden; }
+  .qz .eyebrow { color: rgb(247 240 227 / 0.8); }
+  .qz__in { display: grid; grid-template-columns: 1fr 1.6fr; gap: 32px 56px; align-items: center; }
+  .qz__head h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 0.95; margin: 0 0 16px; }
+  .qz__o { color: transparent; -webkit-text-stroke: 2px var(--cream); }
+  .qz__progress { font-family: var(--mono); font-weight: 700; letter-spacing: 0.1em; margin: 0; color: rgb(247 240 227 / 0.7); }
+  .qz__progress span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--cream); }
+
+  .qz__box { position: relative; overflow: hidden; min-height: 330px; }
+  .qz__steps { display: flex; transition: transform 0.55s cubic-bezier(.7,0,.2,1), opacity 0.3s; }
+  .qz__box.is-done { min-height: 0; }
+  .qz__box.is-done .qz__steps { display: none; }
+  .qz__step { flex: none; width: 100%; border: 0; margin: 0; padding: 0; min-width: 0; }
+  .qz__q { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1; margin-bottom: 18px; padding: 0; display: flex; gap: 14px; align-items: baseline; }
+  .qz__n { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; border: 1.5px solid currentColor; padding: 2px 6px; }
+  .qz__opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .qz__opt { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; min-height: 118px; background: rgb(247 240 227 / 0.06); color: var(--cream); border: 1.5px solid rgb(247 240 227 / 0.35); border-radius: 4px; cursor: pointer; font-family: var(--display); font-size: 1.35rem; text-transform: uppercase; text-align: left; line-height: 1; transition: background 0.2s, color 0.2s, transform 0.2s; }
+  .qz__opt:hover, .qz__opt:focus-visible { background: rgb(247 240 227 / 0.14); transform: translateY(-3px); }
+  .qz__opt.is-picked { background: var(--cream); color: var(--ai); }
+
+  /* Result: the scroll opens from the middle */
+  .qz__result[hidden] { display: none; }
+  .qz__result { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  .qz__scroll { position: relative; width: 100%; display: flex; align-items: stretch; }
+  .qz__rod { position: relative; z-index: 2; flex: none; width: 22px; margin: -10px 0; border-radius: 11px; background: linear-gradient(90deg, #3b2412, #a8743f 50%, #2e1b0c); box-shadow: 0 8px 18px rgb(0 0 0 / 0.4); transition: transform 0.9s cubic-bezier(.7,0,.2,1); }
+  .qz__rod--l { transform: translateX(calc(var(--half, 300px))); }
+  .qz__rod--r { transform: translateX(calc(var(--half, 300px) * -1)); }
+  .qz__paper { flex: 1; min-width: 0; display: grid; grid-template-columns: 0.9fr 1fr; background: #f3ead6; color: var(--ai); clip-path: inset(0 50% 0 50%); transition: clip-path 0.9s cubic-bezier(.7,0,.2,1); }
+  .qz__result.is-open .qz__rod { transform: none; }
+  .qz__result.is-open .qz__paper { clip-path: inset(0 0 0 0); }
+  .qz__img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; }
+  .qz__body { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
+  .qz__seal { align-self: flex-start; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1.5px solid var(--ai); padding: 3px 8px; margin: 0 0 4px; transform: rotate(-3deg); }
+  .qz__title { font-size: clamp(1.6rem, 2.6vw, 2.2rem); text-transform: uppercase; line-height: 1; margin: 0; }
+  .qz__tag { margin: 0; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; }
+  .qz__price { margin: 6px 0 8px; font-family: var(--display); font-size: 1.5rem; }
+  .qz__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: auto; }
+  .qz__more { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+  .qz__again { background: none; border: 0; color: var(--cream); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
+
+  @media (max-width: 900px) {
+    .qz__in { grid-template-columns: 1fr; }
+    .qz__box { min-height: 0; }
+    .qz__paper { grid-template-columns: 1fr; }
+    .qz__img { min-height: 0; height: 150px; }
+    .qz__opts { grid-template-columns: 1fr 1fr; }
+    .qz__opt { min-height: 96px; font-size: 1.15rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .qz__steps, .qz__rod, .qz__paper { transition: none; }
+  }
+</style>

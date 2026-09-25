@@ -3,9 +3,9 @@ import Base from '../layouts/Base.astro';
 import HeroSlideshow from '../components/HeroSlideshow.astro';
 import Split from '../components/Split.astro';
 import MissionRail from '../components/MissionRail.astro';
-import NightStory from '../components/NightStory.astro';
+import Emaki from '../components/Emaki.astro';
+import NinjaQuiz from '../components/NinjaQuiz.astro';
 import Reviews from '../components/Reviews.astro';
-import Headband from '../components/Headband.astro';
 import Icon from '../components/Icon.astro';
 import faq from '../data/faq.json';
 import site from '../data/site.json';
@@ -25,7 +25,6 @@ const slides = [
   { src: '/images/hero/goldengai-night.webp', mobile: '/images/hero/goldengai-night-m.webp', alt: 'Two guests and their Ninja guide smiling under the neon of Kabukicho at night', caption: 'Kabukicho · Shinjuku' },
 ];
 
-const bandWords = ['Secret shrines', 'Shinjuku', 'Tiny bars', 'Golden Gai', 'Your name in kanji', 'Ueno', 'Street food', 'Asakusa', 'Chef’s knives', 'Kappabashi'];
 
 // One real hour on the Secret Shrine tour (times follow its itinerary)
 const night = [
@@ -44,6 +43,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     try {
       if (!sessionStorage.getItem('ngt-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
         document.documentElement.classList.add('intro');
+        new Image().src = '/images/brand/logo-light-320.webp';
         sessionStorage.setItem('ngt-intro', '1');
       }
     } catch (e) {}
@@ -72,7 +72,6 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     <a class="hero__scroll" href="#missions" aria-label="Scroll to tours"><span></span></a>
   </section>
 
-  <Headband words={bandWords} />
 
   <section class="section missions" id="missions">
     <div class="wrap missions__head">
@@ -90,6 +89,8 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     <MissionRail tours={tours} />
   </section>
 
+  <NinjaQuiz tours={tours} />
+
   <section class="stats" aria-label="NINJA GO TOURS in numbers">
     <div class="wrap stats__grid">
       <div data-reveal><strong><span data-count="280">0</span>+</strong><span>tiny bars, one Ninja</span></div>
@@ -99,14 +100,13 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     </div>
   </section>
 
-  <section class="section section--dark night" id="night">
-    <div class="wrap">
-      <p class="eyebrow">A night with your Ninja</p>
-      <Split text="Your 60 minutes, | minute by minute." />
-      <NightStory steps={night} />
-      <p class="night__note">Based on the <a href="/tour/shinjuku-secret-shrine">Secret Shrine</a> tour.</p>
-    </div>
-  </section>
+  <div id="night">
+    <Emaki
+      scenes={night}
+      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min' }}
+      end={{ title: 'Your turn.', cta: 'Book this night', href: '/tour/shinjuku-secret-shrine#book' }}
+    />
+  </div>
 
   <Reviews />
 
@@ -182,9 +182,9 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .hero__shade { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 0% 100%, rgb(8 8 18 / 0.9) 0%, rgb(8 8 18 / 0.55) 45%, rgb(8 8 18 / 0) 80%), linear-gradient(0deg, rgb(8 8 18 / 0.6), rgb(8 8 18 / 0) 40%), linear-gradient(180deg, rgb(8 8 18 / 0.45), rgb(8 8 18 / 0) 25%); }
   @keyframes fade-in { from { opacity: 0; transform: translateY(-20px); } }
   .hero__in { position: relative; width: 100%; padding-top: 120px; padding-bottom: 72px; }
-  .hero__kicker { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lantern); margin-bottom: 0.8em; animation: fade-in 1s ease 0.7s both; }
+  .hero__kicker { font-family: var(--mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lantern); margin-bottom: 0.8em; animation: fade-in 1s ease 0.7s both; }
   .hero :global(.hero__title) { font-size: clamp(3.6rem, 12vw, 10rem); line-height: 0.92; letter-spacing: -0.01em; margin-bottom: 0.3em; text-shadow: 0 4px 40px rgb(0 0 0 / 0.35); }
-  .hero :global(.hero__title em) { font-style: normal; color: var(--lantern); }
+  .hero :global(.hero__title em) { font-style: normal; color: transparent; -webkit-text-stroke: 2px var(--cream); }
   .hero__lead { font-size: clamp(1.1rem, 1.8vw, 1.4rem); max-width: 30em; color: rgb(255 255 255 / 0.92); animation: fade-in 1s ease 1.5s both; }
   .hero__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; margin-top: 22px; animation: fade-in 1s ease 1.7s both; }
   .btn--lg { padding: 1.05em 1.9em; font-size: 1.1rem; }
@@ -201,29 +201,25 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   /* Missions */
   .missions { overflow: hidden; }
   .missions__head { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px 48px; align-items: end; margin-bottom: 24px; }
-  .missions__head :global(h2), .night :global(h2), .price :global(h2), .how :global(h2) { font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1; }
+  .missions__head :global(h2), .price :global(h2), .how :global(h2) { font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1; }
 
   .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
-  .facts li { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font-weight: 800; }
+  .facts li { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1.5px solid var(--ai); border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; }
   .facts :global(.icon) { color: var(--shu); }
 
   /* Stats */
   .stats { background: var(--night); color: var(--cream); padding: 48px 0; border-top: 1px solid var(--night-3); }
   .stats__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-  .stats__grid div { display: flex; flex-direction: column; gap: 6px; border-left: 3px solid var(--shu); padding-left: 16px; }
+  .stats__grid div { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid rgb(247 240 227 / 0.5); padding-left: 16px; }
   .stats__grid strong { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1; color: var(--lantern); }
-  .stats__grid span { color: #cfc6b6; font-size: 0.95rem; }
+  .stats__grid span { color: #cfc6b6; font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
-  /* Night story */
-  .night { padding-bottom: 80px; }
-  .night__note { margin-top: 32px; font-size: 0.85rem; color: rgb(247 240 227 / 0.6); }
-  .night__note a { color: var(--lantern); }
 
   /* Price stamps */
   .stamps { list-style: none; padding: 0; margin: 32px 0 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
-  .stamp { aspect-ratio: 1; border-radius: 50%; border: 5px double var(--shu); color: var(--shu); display: grid; place-content: center; text-align: center; gap: 4px; background: radial-gradient(circle, rgb(226 70 43 / 0.06), rgb(226 70 43 / 0.02)); }
+  .stamp { aspect-ratio: 1; border-radius: 50%; border: 5px double var(--shu); color: var(--shu); display: grid; place-content: center; text-align: center; gap: 4px; background: radial-gradient(circle, rgb(31 45 82 / 0.06), rgb(31 45 82 / 0.02)); }
   .stamp strong { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3.2vw, 2.6rem); line-height: 1; }
-  .stamp__who { font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem; }
+  .stamp__who { font-family: var(--mono); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
   .stamp__per { font-size: 0.8rem; opacity: 0.8; }
   .stamp:last-child { background: var(--shu); color: #fff; }
   .price__note { color: var(--muted); font-size: 0.9rem; }
@@ -232,7 +228,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .how__steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .how__steps li { background: var(--card); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); }
   .how__i { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--night); color: var(--lantern); margin-bottom: 14px; transform: rotate(-8deg); }
-  .how__steps strong { font-family: var(--display); font-weight: 400; font-size: 1.35rem; }
+  .how__steps strong { font-family: var(--display); font-weight: 400; font-size: 1.6rem; text-transform: uppercase; }
   .how__steps p { margin: 0.4em 0 0; color: var(--muted); }
 
   /* FAQ */
