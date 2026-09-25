@@ -1,35 +1,50 @@
 ---
-title: "Is Kabukicho Safe at Night? An Honest Guide for First-Time Visitors"
-description: "Is Kabukicho safe at night? Yes, for most visitors. The real risk is touts and overpriced bars, not violence. Here is what to do and what to skip."
-publishedAt: "2026-09-25"
-area: "Shinjuku"
-heroImage: "/images/hero/goldengai-night.webp"
-relatedTours: ["goldengai-nightlife", "shinjuku-secret-shrine"]
+title: Is Kabukicho Safe at Night? An Honest Guide for First-Time Visitors
+description: Is Kabukicho safe at night? Yes, for most visitors. The real risk
+  is touts and overpriced bars, not violence. Here is what to do and what to
+  skip.
+publishedAt: 2026-09-25
+area: Shinjuku
+heroImage: /images/hero/goldengai-night.webp
+relatedTours:
+  - goldengai-nightlife
+  - shinjuku-secret-shrine
 faq:
-  - q: "Is Kabukicho safe for tourists at night?"
-    a: "For most visitors, yes. Violent crime against tourists is rare and police are visible in the district; the main risk is being overcharged after following a street tout into a bar."
-  - q: "Is it OK to walk through Kabukicho alone?"
-    a: "Walking along the main, well-lit streets on your own is generally fine. Be more careful drinking alone late at night, and decline anyone who approaches you with an offer."
-  - q: "What should I do if a bar tries to overcharge me?"
-    a: "Stay calm, ask to see the menu and price list, and do not hand over your card for an amount you did not agree to. If it escalates, call the police on 110 or walk to the nearest koban (police box)."
-  - q: "Is a cover charge a scam?"
-    a: "No. Many small bars in Japan charge a seat or cover fee, often with a small snack. It is normal as long as the bar tells you about it before you order; check the current price at the door."
-  - q: "Can families visit Kabukicho?"
-    a: "Families do visit, especially to see the Godzilla Head, the cinemas and the restaurants along the main streets early in the evening. The back streets lined with host clubs and adult venues are not a place to linger with children."
+  - q: Is Kabukicho safe for tourists at night?
+    a: For most visitors, yes. Violent crime against tourists is rare and police are
+      visible in the district; the main risk is being overcharged after
+      following a street tout into a bar.
+  - q: Is it OK to walk through Kabukicho alone?
+    a: Walking along the main, well-lit streets on your own is generally fine. Be
+      more careful drinking alone late at night, and decline anyone who
+      approaches you with an offer.
+  - q: What should I do if a bar tries to overcharge me?
+    a: Stay calm, ask to see the menu and price list, and do not hand over your card
+      for an amount you did not agree to. If it escalates, call the police on
+      110 or walk to the nearest koban (police box).
+  - q: Is a cover charge a scam?
+    a: No. Many small bars in Japan charge a seat or cover fee, often with a small
+      snack. It is normal as long as the bar tells you about it before you
+      order; check the current price at the door.
+  - q: Can families visit Kabukicho?
+    a: Families do visit, especially to see the Godzilla Head, the cinemas and the
+      restaurants along the main streets early in the evening. The back streets
+      lined with host clubs and adult venues are not a place to linger with
+      children.
 sources:
-  - "https://www.japanlocalexperience.com/guides/is-kabukicho-safe/"
-  - "https://www.luxe-shinjuku.jp/blog/is-kabukicho-safe-at-night-foreigners-guide"
-  - "https://unseen-japan.com/japan-barkers-kabukicho-crime/"
-  - "https://unseen-japan.com/kabukicho-safe-tokyo-nightlife/"
-  - "https://www.tokyoreporter.com/japan-news/breaking/u-s-embassy-issues-drink-spiking-warning-for-roppongi-kabukicho/"
-  - "https://japantravel.navitime.com/en/area/jp/guide/NTJhowto0155-en/"
-  - "https://japantravel.navitime.com/en/area/jp/guide/NTJarea0044-en/"
-  - "https://www.japan.travel/en/plan/hotline/"
-  - "https://en.wikipedia.org/wiki/Godzilla_head"
-  - "https://en.wikipedia.org/wiki/K%C5%8Dban"
-keyword: "is Kabukicho safe at night"
+  - https://www.japanlocalexperience.com/guides/is-kabukicho-safe/
+  - https://www.luxe-shinjuku.jp/blog/is-kabukicho-safe-at-night-foreigners-guide
+  - https://unseen-japan.com/japan-barkers-kabukicho-crime/
+  - https://unseen-japan.com/kabukicho-safe-tokyo-nightlife/
+  - https://www.tokyoreporter.com/japan-news/breaking/u-s-embassy-issues-drink-spiking-warning-for-roppongi-kabukicho/
+  - https://japantravel.navitime.com/en/area/jp/guide/NTJhowto0155-en/
+  - https://japantravel.navitime.com/en/area/jp/guide/NTJarea0044-en/
+  - https://www.japan.travel/en/plan/hotline/
+  - https://en.wikipedia.org/wiki/Godzilla_head
+  - https://en.wikipedia.org/wiki/K%C5%8Dban
+keyword: is Kabukicho safe at night
 generated: true
-draft: true
+draft: false
 ---
 Yes, Kabukicho is safe at night for most visitors, as long as you stay on the busy, well-lit streets and ignore anyone who tries to lead you into a bar. Violent crime against tourists is rare here. The real risk is financial: being talked into a place that hands you a bill far higher than you expected.
 
@@ -91,11 +106,13 @@ If a bill looks wrong, stay calm and ask to see the menu and the price list. Do 
 
 If the situation escalates, these numbers work from any phone in Japan:
 
+
 | Situation | Number |
-|---|---|
+| ------------------------------------------------------------------------- | ------------- |
 | Police | 110 |
 | Ambulance or fire | 119 |
 | Japan Visitor Hotline (JNTO, tourist help in English, Chinese and Korean) | 050-3816-2787 |
+
 
 Local guides note that police may treat an overcharged bill as a dispute between you and the business rather than a crime, so they may not be able to force a refund. Calling 110, or walking to the koban, is still worth doing: a bar that is padding a bill usually does not want the attention. For the hotline's current hours and languages, check the official Japan National Tourism Organization site before your trip.
 
