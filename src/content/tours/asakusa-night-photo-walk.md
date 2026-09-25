@@ -29,6 +29,40 @@ tagline: "Asakusa after dark."
 pattern: seigaiha
 kamon: lantern
 comingSoon: true
+story:
+- title: Tokyo lights up
+  text: Meet your guide and see Senso-ji and the Skytree glow from above.
+  image: /images/tours/asakusa-night-photo-walk/story-1.webp
+  imageAlt: Asakusa at night from above, with the five-story pagoda and Nakamise lit up
+- title: Shutters with secrets
+  text: After closing time, Nakamise's shutters show painted scenes of old Edo.
+  image: /images/tours/asakusa-night-photo-walk/story-2.webp
+  imageAlt: Nakamise shopping street at night with its shutters down
+- title: The temple glows
+  text: Senso-ji and its five-story pagoda, lit against the night sky.
+  image: /images/tours/asakusa-night-photo-walk/story-3.webp
+  imageAlt: The lit-up Hozomon gate and five-story pagoda of Senso-ji at night
+- title: Pull your fortune
+  text: Shake the box, draw a number, open your omikuji.
+  image: /images/tours/asakusa-night-photo-walk/story-4.webp
+  imageAlt: Wooden drawers of omikuji fortune slips
+- title: One last shot
+  text: Your best photo of the night, on lantern-lit Denboin-dori.
+  image: /images/tours/asakusa-night-photo-walk/story-5.webp
+  imageAlt: Denboin-dori street in Asakusa glowing with lanterns in the evening
+gallery:
+- src: /images/tours/asakusa-night-photo-walk/gallery-1.webp
+  alt: Kaminarimon's giant lantern on a rainy night
+- src: /images/tours/asakusa-night-photo-walk/gallery-2.webp
+  alt: Visitors walking toward the lit-up Hozomon gate
+- src: /images/tours/asakusa-night-photo-walk/gallery-3.webp
+  alt: The Kaminarimon lantern framed by Nakamise at night
+- src: /images/tours/asakusa-night-photo-walk/gallery-4.webp
+  alt: Looking up at the red lanterns of Kaminarimon
+- src: /images/tours/asakusa-night-photo-walk/gallery-5.webp
+  alt: A wall of paper lanterns in an Asakusa street
+- src: /images/tours/asakusa-night-photo-walk/gallery-6.webp
+  alt: Tokyo Skytree and the Sumida River at dusk
 features:
   - { icon: lantern, label: "Kaminarimon, no crowds" }
   - { icon: camera, label: "Your own photographer" }

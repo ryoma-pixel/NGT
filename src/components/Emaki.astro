@@ -8,11 +8,20 @@ import { srcset } from '../lib/img';
 interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
 // closed: the scroll starts rolled up and opens on a tap. switchable: the home page swaps in another tour's scroll
 // when the quiz picks one (listens for the "ngt:mission" event; tour data comes from <script data-emk-tours>).
-interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string; closed?: boolean; switchable?: boolean }
-const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour, closed = false, switchable = false } = Astro.props;
+// mission: the home page quiz's scroll. Hidden until the guest opens their sealed mission; then it lands with a "DON!",
+// unrolls by itself and carries on into the tour's route. The cover also shows the price and the booking button.
+interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string; closed?: boolean; switchable?: boolean; mission?: boolean }
+const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour, closed = false, switchable = false, mission = false } = Astro.props;
 
 ---
-<section class="emk" id={id} data-tour={tour} data-emaki data-emk-closed={closed ? '' : undefined} data-emk-switch={switchable ? '' : undefined} aria-label={`${eyebrow}, told as a picture scroll`}>
+<section class:list={['emk', { 'emk--mission': mission }]} id={id} data-tour={tour} data-emaki data-emk-closed={closed ? '' : undefined} data-emk-switch={switchable ? '' : undefined} data-emk-mission={mission ? '' : undefined} hidden={mission} aria-label={`${eyebrow}, told as a picture scroll`}>
+  {mission && (
+    <div class="emk__don" aria-hidden="true">
+      <b class="emk__don-lines"></b>
+      <span class="emk__don-t">ドン！</span>
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => <i style={`--a:${a}deg; --d:${(i % 3) * 30}ms`}></i>)}
+    </div>
+  )}
   <div class="emk__pin">
     <div class="wrap emk__head">
       <p class="eyebrow" data-emk-eyebrow>{eyebrow}</p>
@@ -27,6 +36,13 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
             <p class="emk__slip-s" data-emk-sub>{cover.sub}</p>
           </div>
           <span data-emk-kamon><Kamon name={kamon} size={54} class="emk__kamon" /></span>
+          {mission && (
+            <div class="emk__deal">
+              <p class="emk__why" data-emk-why></p>
+              <p class="emk__price" data-emk-price></p>
+              <a class="btn btn--primary btn--call" data-emk-book data-track="click_quiz_book">Book this mission</a>
+            </div>
+          )}
           <p class="emk__hint" aria-hidden="true">Scroll to unroll →</p>
           {closed && <button type="button" class="emk__open" data-emk-open><span class="emk__open-dot" aria-hidden="true"></span>Tap to unroll</button>}
         </div>
@@ -62,7 +78,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
 </section>
 
 <script>
-  type Tour = { id: string; eyebrow: string; title: string; sub: string; tate: string; cta: string; href: string; scenes: { kicker: string; title: string; text: string; image: string; srcset?: string; alt: string }[] };
+  type Tour = { id: string; eyebrow: string; title: string; sub: string; tate: string; cta: string; href: string; price?: string; soon?: boolean; scenes: { kicker: string; title: string; text: string; image: string; srcset?: string; alt: string }[] };
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   document.querySelectorAll<HTMLElement>('[data-emaki]').forEach((sec) => {
     const track = sec.querySelector<HTMLElement>('[data-emk-track]')!;
@@ -119,6 +135,17 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       // The scene in the middle turns from ink-black to colour
       if (lit !== lastLit) { lastLit = lit; scenes.forEach((s, i) => s.classList.toggle('is-lit', i === lit)); }
     };
+    // scroll that follows a moving target (the quiz above is still folding up while we travel)
+    const glide = (target: () => number, ms: number) => {
+      const y0 = scrollY, t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+        scrollTo({ top: y0 + (target() - y0) * e, behavior: 'instant' });
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    const secTop = () => sec.getBoundingClientRect().top + scrollY;
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
 
     const close = () => {
@@ -134,8 +161,8 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       measure();
       setTimeout(() => sec.classList.remove('is-opening'), 1500);
       // glide a little way in, so the paper visibly starts to unroll
-      const top = sec.getBoundingClientRect().top + scrollY;
-      setTimeout(() => scrollTo({ top: top + Math.min(dist * 0.14, innerHeight * 0.7), behavior: 'smooth' }), 650);
+      const ahead = Math.min(dist * (sec.hasAttribute('data-emk-mission') ? 0.06 : 0.14), innerHeight * 0.7);
+      setTimeout(() => glide(() => secTop() + ahead, 1100), 650);
       const w = window as unknown as { dataLayer?: unknown[] };
       (w.dataLayer = w.dataLayer || []).push({ event: 'emaki_open', tour: sec.dataset.tour });
     };
@@ -145,8 +172,18 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       const data: Record<string, Tour> = JSON.parse(document.querySelector('[data-emk-tours]')?.textContent || '{}');
       const tpl = scenes[0]?.cloneNode(true) as HTMLElement | undefined;
       document.addEventListener('ngt:mission', (e) => {
-        const t = data[(e as CustomEvent<string>).detail];
-        if (!t || !tpl || sec.dataset.tour === t.id) return;
+        const detail = (e as CustomEvent<string | { id: string; why?: string }>).detail;
+        const id = typeof detail === 'string' ? detail : detail.id;
+        const t = data[id];
+        if (!t || !tpl) return;
+        const why = sec.querySelector('[data-emk-why]');
+        if (why) why.textContent = typeof detail === 'string' ? '' : detail.why ?? '';
+        const price = sec.querySelector('[data-emk-price]');
+        if (price) price.innerHTML = t.price ?? '';
+        const book = sec.querySelector<HTMLAnchorElement>('[data-emk-book]');
+        if (book) { book.href = t.href; book.textContent = t.soon ? 'Ask about dates' : 'Book this mission'; book.dataset.tour = t.id; }
+        if (sec.dataset.tour === t.id && sec.dataset.filled) return;
+        sec.dataset.filled = '1';
         sec.dataset.tour = t.id;
         const set = (sel: string, v: string) => { const el = sec.querySelector(sel); if (el) el.textContent = v; };
         set('[data-emk-eyebrow]', t.eyebrow);
@@ -177,6 +214,25 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       });
     }
 
+    // Home quiz: the scroll lands with a DON!, unrolls by itself and carries on into the route
+    if (sec.hasAttribute('data-emk-mission')) {
+      document.addEventListener('ngt:mission-open', () => {
+        sec.hidden = false;
+        if (reduce.matches) { sec.scrollIntoView({ block: 'start' }); return; }
+        close();
+        glide(secTop, 800);
+        sec.classList.remove('is-don'); void sec.offsetWidth;
+        setTimeout(() => sec.classList.add('is-don'), 650);
+        setTimeout(open, 1700);
+      });
+      document.addEventListener('ngt:mission-reset', () => {
+        sec.classList.remove('is-don');
+        close();
+        sec.hidden = true;
+        sec.style.height = '';
+      });
+    }
+
     if (reduce.matches) return;
     if (closedMode) { sec.classList.add('is-closed'); placeClosed(); openBtn?.addEventListener('click', open); }
     else measure();
@@ -197,8 +253,9 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
   .emk__shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse 55% 75% at 50% 50%, transparent 55%, rgb(8 8 18 / 0.55) 100%); }
   .emk.is-pinned .emk__pin { position: sticky; top: 0; height: 100svh; padding: 84px 0 28px; display: flex; flex-direction: column; overflow: hidden; }
   .emk .eyebrow { color: rgb(247 240 227 / 0.8); }
-  .emk__head { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
-  .emk__count { margin: 0; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; color: rgb(247 240 227 / 0.6); }
+  .emk__head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; width: 100%; }
+  .emk__head .eyebrow { min-width: 0; }
+  .emk__count { flex: none; white-space: nowrap; margin: 0; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; color: rgb(247 240 227 / 0.6); }
   .emk__count span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--cream); }
   .emk__stage { position: relative; flex: 1; min-height: 0; overflow-x: auto; scrollbar-width: none; margin-top: 8px; padding: 16px 0; }
   .emk.is-pinned .emk__stage { overflow: hidden; }
@@ -268,6 +325,36 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
   .emk.is-pinned .emk__roller::before { top: 0; }
   .emk.is-pinned .emk__roller::after { bottom: 0; }
 
+  /* Home quiz scroll (mission): lands with a DON! and never shows its own open button */
+  .emk--mission .emk__open { display: none !important; }
+  /* the cover also carries the deal, so it packs tighter; if it still can't fit, it overflows downward, never cuts the title */
+  .emk--mission .emk__cover { gap: 14px; justify-content: safe center; padding: 14px 0; }
+  .emk--mission .emk__slip { padding: 16px 12px; }
+  .emk--mission .emk__slip :global(.emk__tate) { font-size: clamp(1.2rem, 1.7vw, 1.5rem); margin-bottom: 10px; }
+  .emk--mission .emk__cover :global(.emk__kamon) { width: 44px; height: 44px; }
+  .emk__deal { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 78%; text-align: center; }
+  .emk__why { margin: 0; font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(247 240 227 / 0.75); }
+  .emk__price { margin: 0; color: var(--cream); line-height: 1.2; }
+  .emk__price :global(strong) { display: block; font-family: var(--display); font-weight: 400; font-size: 1.7rem; }
+  .emk__price :global(span) { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; color: rgb(247 240 227 / 0.75); }
+  .emk__don { position: absolute; z-index: 9; left: 50%; top: 50svh; width: 0; height: 0; pointer-events: none; }
+  .emk__don-t { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%) scale(0); font-family: var(--mincho); font-weight: 800; font-size: clamp(4.6rem, 15vw, 10rem); line-height: 1; letter-spacing: -0.04em; color: var(--cream); -webkit-text-stroke: 0.14em var(--ai); paint-order: stroke fill; filter: drop-shadow(0 0.06em 0 #f3d27a) drop-shadow(0 18px 30px rgb(0 0 0 / 0.5)); opacity: 0; white-space: nowrap; }
+  /* manga focus lines that burst out around the DON! */
+  .emk__don-lines { position: absolute; left: -90vmax; top: -90vmax; width: 180vmax; height: 180vmax; opacity: 0;
+    background: repeating-conic-gradient(from 0deg, rgb(247 240 227 / 0.55) 0deg 0.7deg, transparent 0.7deg 5deg, rgb(247 240 227 / 0.3) 5deg 5.4deg, transparent 5.4deg 11deg);
+    -webkit-mask: radial-gradient(circle, transparent 14vmax, #000 30vmax, transparent 70vmax); mask: radial-gradient(circle, transparent 14vmax, #000 30vmax, transparent 70vmax); }
+  .emk.is-don .emk__don-lines { animation: don-lines 0.9s ease-out both; }
+  @keyframes don-lines { 0% { opacity: 0; transform: scale(0.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: scale(1.25) rotate(4deg); } }
+  .emk__don i { position: absolute; left: -80px; top: -80px; width: 160px; height: 160px; border-radius: 50%; opacity: 0; background: radial-gradient(circle at 42% 38%, #fff, #e9e3d6 40%, rgb(214 206 190 / 0.6) 58%, transparent 72%); }
+  .emk.is-don .emk__don-t { animation: don-t 1s cubic-bezier(.2,1.6,.4,1) both; }
+  .emk.is-don .emk__don i { animation: don-puff 1.1s cubic-bezier(.15,.7,.3,1) var(--d) both; }
+  .emk.is-don .emk__stage { animation: don-land 0.7s cubic-bezier(.3,1.5,.5,1) both, don-shake 0.4s linear 0.35s; }
+  @keyframes don-t { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.6) rotate(-8deg); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-6deg); } 75% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(-6deg); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2) rotate(-6deg); } }
+  @keyframes don-puff { 0% { opacity: 0.95; transform: rotate(var(--a)) translateX(0) scale(0.3); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(240px) scale(2.4); } }
+  @keyframes don-land { 0% { opacity: 0; transform: translateY(-120px) scale(1.2); } 100% { opacity: 1; transform: none; } }
+  @keyframes don-shake { 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+  .emk--mission:not(.is-don).is-closed .emk__stage { opacity: 0; }
+
   /* Rolled up (closed): cover + roller only, a pulsing "Tap to unroll" button */
   .emk.is-closed .emk__stage { height: min(620px, 80svh); min-height: 460px; overflow: hidden; }
   .emk.is-closed .emk__track { height: 100%; }
@@ -298,5 +385,5 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
     .emk.is-pinned .emk__roller { right: 0; width: 26px; }
     .emk.is-pinned .emk__stage::after { width: 13px; }
   }
-  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze, .emk__open, .emk__open-dot { animation: none; } .emk__fig img { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze, .emk__open, .emk__open-dot { animation: none; } .emk__fig img { transition: none; } .emk__don { display: none; } }
 </style>

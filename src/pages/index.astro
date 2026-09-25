@@ -16,10 +16,9 @@ import faq from '../data/faq.json';
 import site from '../data/site.json';
 import pricing from '../data/pricing.json';
 import reviews from '../data/reviews.json';
-import { getTours, yen, AREA_JP } from '../lib/tours';
+import { getTours, yen, AREA_JP, priceLabel } from '../lib/tours';
+import { usdAmount } from '../lib/fx';
 const tours = await getTours();
-// The home picture scroll tells the Secret Shrine tour, so its button books that tour directly
-const shrineBooking = tours.find((t) => t.id === 'shinjuku-secret-shrine')?.data.bookingUrl ?? '/tour/shinjuku-secret-shrine#book';
 
 const jsonLd = [
   { '@context': 'https://schema.org', '@type': 'TravelAgency', name: site.name, url: Astro.site?.toString(), description: site.description, sameAs: [site.instagram, site.tiktok] },
@@ -33,36 +32,36 @@ const slides = [
 ];
 
 
-// One real hour on the Secret Shrine tour (times follow its itinerary)
-const night = [
-  { kicker: '00–05 min', title: 'Meet under Godzilla', text: 'Say “Konnichiwa!” Your Ninja is waiting.', image: '/images/tours/shinjuku-secret-shrine/story-1.webp', alt: 'The red Kabukicho Ichibangai arch above a busy street' },
-  { kicker: '05–15 min', title: 'Into the neon', text: 'Kabukicho, the town that never sleeps.', image: '/images/tours/shinjuku-secret-shrine/gallery-1.webp', alt: 'A guest walking with the Ninja guide through Kabukicho' },
-  { kicker: '15–30 min', title: 'A shrine nobody sees', text: 'Behind the neon, red gates and silence.', image: '/images/tours/shinjuku-secret-shrine/story-2.webp', alt: 'A Ninja guide with a lantern in a tunnel of red torii gates' },
-  { kicker: '30–55 min', title: '280 tiny bars', text: 'Golden Gai’s alleys, then a wish at Hanazono Shrine.', image: '/images/tours/goldengai-nightlife/story-2.webp', alt: 'Colorful bar signboards crowding a narrow Golden Gai alley' },
-  { kicker: '55–60 min', title: 'Your night starts now', text: 'Photos, plus your Ninja’s dinner picks.', image: '/images/tours/goldengai-nightlife/story-4.webp', alt: 'Guests posing with their Ninja guide under Kabukicho neon' },
-];
 
 const google = reviews.ratings.find((r) => r.source === 'Google');
 
-// Picture-scroll data for every bookable tour, so the scroll below the quiz can show the tour it picked
+// Picture-scroll data for every tour, so the quiz's mission scroll can show the tour it picked
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const scrollTours = Object.fromEntries(
   tours
-    .filter((t) => !t.data.comingSoon && t.data.story.some((c) => c.image))
+    .filter((t) => t.data.story.some((c) => c.image))
     .map((t) => {
       const d = t.data;
+      const pl = priceLabel(t);
+      const soon = d.comingSoon || !d.bookingUrl;
+      const price = soon
+        ? '<strong>Launching soon</strong> <span>Ask us about dates</span>'
+        : `<strong>${pl.amount}</strong> <span>≈US$${usdAmount(pl.jpy[0])}${pl.jpy[1] !== pl.jpy[0] ? `–${usdAmount(pl.jpy[1])}` : ''} ${pl.note}</span>`;
       return [t.id, {
+        price, soon,
         id: t.id,
         eyebrow: `Your mission: ${d.shortTitle}`,
         title: d.tagline ?? d.shortTitle,
         sub: `${d.shortTitle} · ${d.durationMinutes} min`,
         tate: `${AREA_JP[d.area]}の${d.themes.includes('Nightlife') ? '一夜' : '一刻'}`,
-        cta: 'Book this mission',
-        href: d.bookingUrl ?? `/tour/${t.id}#book`,
+        cta: soon ? 'Ask about dates' : 'Book this mission',
+        href: soon ? `/contact?tour=${t.id}` : d.bookingUrl!,
         scenes: d.story.filter((c) => c.image).map((c, n) => ({ kicker: `Scene ${pad2(n + 1)}`, title: c.title, text: c.text, image: c.image!, srcset: srcset(c.image!, 1400), alt: c.imageAlt ?? '' })),
       }];
     }),
 );
+const firstTour = tours.find((t) => t.id === 'shinjuku-secret-shrine') ?? tours[0];
+const firstScroll = scrollTours[firstTour.id];
 ---
 <Base jsonLd={jsonLd} image="/images/og.jpg" overlayHeader>
   <!-- First visit only: sliding doors open onto Tokyo -->
@@ -124,15 +123,19 @@ const scrollTours = Object.fromEntries(
 
 
 
-  <div id="night">
+  <!-- The quiz's mission scroll: hidden until the guest opens their sealed scroll, then lands with a DON! and unrolls the route -->
+  <div id="mission">
     <Emaki
-      scenes={night}
-      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
-      kamon="torii"
-      tour="shinjuku-secret-shrine"
+      id="mission-scroll"
+      scenes={firstScroll.scenes}
+      cover={{ title: firstScroll.title, sub: firstScroll.sub, tate: firstScroll.tate }}
+      kamon={firstTour?.data.kamon}
+      tour={firstScroll.id}
+      eyebrow="Your mission, unrolled"
       closed
       switchable
-      end={{ title: 'Your turn.', cta: 'Book this night', href: shrineBooking, external: true }}
+      mission
+      end={{ title: 'Your turn.', cta: firstScroll.cta, href: firstScroll.href, external: true }}
     />
     <script type="application/json" data-emk-tours set:html={JSON.stringify(scrollTours)} />
     {tours.map((t) => <template data-emk-kamon-tpl={t.id}><Kamon name={t.data.kamon} size={54} class="emk__kamon" /></template>)}
