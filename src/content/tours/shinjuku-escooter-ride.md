@@ -18,11 +18,11 @@ heroAlt: Two guests and a Ninja guide posing with e-scooters in front of Shinjuk
 meetingPoint:
   name: Shinjuku Toho Building 1F (look for the Godzilla Head), next to the Maruhan Pachinko entrance
   access: 3-minute walk from Seibu Shinjuku Station; 9-minute walk from JR Shinjuku Station.
-  lookFor: Your Ninja-themed guide with the e-scooters.
+  lookFor: Look for your Ninja guide with the e-scooters.
   mapUrl: https://www.google.com/maps?q=35.695611,139.701750
   mapEmbed: https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d810.0609458758662!2d139.70111592852027!3d35.69561808742833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzXCsDQxJzQ0LjIiTiAxMznCsDQyJzA2LjMiRQ!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp
 itinerary:
-- title: Meet up & safety briefing (25 min before start)
+- title: Meet up & safety briefing (check-in 25 min before start)
   text: Please arrive exactly at the meeting time (3:05 PM or 6:05 PM) for check-in and safety instructions.
 - title: E-scooter ride (about 40 min)
   text: Ride from Kabukicho to the Tokyo Metropolitan Government Building along wide streets lined with skyscrapers.
@@ -71,7 +71,7 @@ features:
   label: Ninja walking tour
 faq:
 - q: What’s included in the price?
-  a: 5,000 JPY per person, including guide, e-scooter rental, photos and insurance.
+  a: Your guide, e-scooter rental, photos and insurance are included.
 - q: Who can join?
   a: Must be 16 or older and not under the influence of alcohol or drugs. Not suitable during pregnancy or for people with chronic illnesses such as heart disease.
 - q: What shoes do I need?

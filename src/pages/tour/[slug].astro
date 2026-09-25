@@ -55,12 +55,14 @@ const showRanges = clock > 0 && clock <= d.durationMinutes + 30;
 const tiers = priceTiers(tour);
 const priceAnswer = d.fixedPricePerPerson
   ? `${yen(d.fixedPricePerPerson)} per person.`
-  : `${tiers.map((t) => `${t.label}: ${yen(t.pricePerPerson)} each`).join(' · ')}. ${pricing.childPolicy}`;
+  : `${tiers.map((t) => `${t.label}: ${yen(t.pricePerPerson)} per adult`).join(' · ')}. ${pricing.childPolicy}`;
 const faq = [
-  ...(d.meetingPoint ? [{ q: 'Where do we meet?', a: [d.meetingPoint.name, d.meetingPoint.access, d.meetingPoint.lookFor].filter(Boolean).join(' '), map: d.meetingPoint.mapUrl }] : []),
+  ...(d.meetingPoint ? [{ q: 'Where do we meet?', a: [d.meetingPoint.name, d.meetingPoint.access, d.meetingPoint.lookFor].filter(Boolean).map((t) => (/[.!?]$/.test(t!.trim()) ? t!.trim() : `${t!.trim()}.`)).join(' '), map: d.meetingPoint.mapUrl }] : []),
   ...(d.startTimes ? [{ q: 'When does it start?', a: `${d.startTimes}. The tour takes about ${d.durationMinutes} minutes.` }] : []),
   { q: 'How much does it cost?', a: priceAnswer },
-  { q: 'How do I book?', a: `Tap “Check availability”, then pick a date and time and complete your booking online. A confirmation email follows.${d.bookingDeadline ? ` ${d.bookingDeadline}.` : ''}` },
+  soon
+    ? { q: 'How do I book?', a: 'Booking opens soon. Tap “Ask about dates” and tell us when you’d like to go; we’ll email you as soon as booking opens.' }
+    : { q: 'How do I book?', a: `Tap “Check availability”, then pick a date and time and complete your booking online. A confirmation email follows.${d.bookingDeadline ? ` ${d.bookingDeadline}.` : ''}` },
   ...d.faq,
 ];
 
@@ -143,7 +145,7 @@ const reels = getReels(await getTours(), tour.id);
             </li>
           ))}
         </ul>
-        <NextStep dark lead="Sounds like your kind of night?" label="Check dates" href={ctaHref} where="tour_features" tour={tour.id} external={!soon} />
+        <NextStep dark lead={d.themes.includes('Nightlife') ? 'Sounds like your kind of night?' : 'Sounds like your kind of adventure?'} label="Check dates" href={ctaHref} where="tour_features" tour={tour.id} external={!soon} />
       </div>
     </section>
   )}

@@ -1,6 +1,6 @@
 ---
 title: "Free Viewing Guide to Summer Fireworks (Hanabi) Festivals Around Tokyo"
-description: "Tokyo's biggest fireworks festivals have free viewing spots if you know where to stand. Dates, locations and how to dodge the worst crowds. "
+description: "Tokyo's biggest fireworks festivals have free viewing spots if you know where to stand. Dates, locations and how to dodge the worst crowds."
 publishedAt: "2026-06-10"
 area: "Tokyo"
 heroImage: "/images/columns/tokyo-free-fireworks-guide/hero.webp"
@@ -43,9 +43,7 @@ To sit on the grass by the river, make sure to buy a thin vinyl picnic sheet (ca
 
 ![](/images/columns/tokyo-free-fireworks-guide/02.webp)
 
-Buying *Yakisoba* or *Takoyaki* from the food stands at the venue is fun, but the prices can be a bit high. If you want to keep expenses down, the smart local style is to stock up on cheap fried chicken (*Karaage*), rice balls (*Onigiri*), and chilled beer at a supermarket or convenience st
-
-ore before heading to the venue! Convenience stores not only have delicious hot snacks but also a wide variety of snacks starting at around 100 yen, making them perfect affordable additions to accompany your beer.
+Buying *Yakisoba* or *Takoyaki* from the food stands at the venue is fun, but the prices can be a bit high. If you want to keep expenses down, the smart local style is to stock up on cheap fried chicken (*Karaage*), rice balls (*Onigiri*), and chilled beer at a supermarket or convenience store before heading to the venue! Convenience stores not only have delicious hot snacks but also a wide variety of snacks starting at around 100 yen, making them perfect affordable additions to accompany your beer.
 
 **Secure Your Spot While It's Still Light Out**
 

@@ -18,7 +18,7 @@ heroAlt: A rainbow flag outside a bar in Shinjuku Nichome at dusk
 meetingPoint:
   name: In front of Starbucks Coffee (Keio Shinjuku 3-chome Building)
   access: Directly outside Exit C1 of Shinjuku-sanchome Station (subway), or about a 10-minute walk from JR Shinjuku Station.
-  lookFor: Your guide wears smart-casual clothing. For this tour, the guide does not wear a Ninja costume.
+  lookFor: Look for your guide in smart-casual clothing.
   mapUrl: https://www.google.com/maps?cid=17344434654068008268
   mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.4630776326862!2d139.7054001!3d35.6902205!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188d0cf8e1ca63%3A0xf0b3cf6c51b2e54c!2z44K544K_44O844OQ44OD44Kv44K5IOOCs-ODvOODkuODvCDkuqznjovmlrDlrr_kuInkuIHnm67jg5Pjg6vlupc!5e0!3m2!1sen!2sus!4v1770791839637!5m2!1sen!2sus
 itinerary:
@@ -29,7 +29,7 @@ itinerary:
 itineraryNote: The tour ends near WARP SHINJUKU, with personal recommendations for bars and restaurants you can visit right after.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-9THS7
 noCostume: true
-outfit: "Out of respect for the neighbourhood, your guide wears smart-casual clothing."
+outfit: "Out of respect for the neighborhood, your guide wears smart-casual clothing."
 order: 6
 draft: false
 story:
@@ -67,7 +67,7 @@ gallery:
 - src: /images/tours/shinjuku-nichome-lgbtq/gallery-8.webp
   alt: Bar signs stacked along a Nichome building
 - src: /images/tours/shinjuku-nichome-lgbtq/story-2.webp
-  alt: A colorful cafe entrance in Shinjuku 2-chome
+  alt: A colorful café entrance in Shinjuku Nichome
 - src: /images/tours/shinjuku-nichome-lgbtq/story-3.webp
   alt: The Golden Gai sign lit up at night
 tagline: Tokyo’s rainbow district, decoded.
@@ -90,7 +90,7 @@ faq:
 - q: Is it suitable for children?
   a: There is no strict age limit, but parental discretion is advised as the tour covers nightlife areas and adult themes.
 - q: What if it rains?
-  a: The tour runs rain or shine.
+  a: The tour runs rain or shine. If we cancel for stormy weather, you get a full refund.
 quizFor: [lgbtq]
 quizAlso: [nightlife]
 ---

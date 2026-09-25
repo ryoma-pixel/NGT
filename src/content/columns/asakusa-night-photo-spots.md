@@ -1,6 +1,6 @@
 ---
 title: "Escape the Daytime Crowds: The Ultimate Guide to Capturing \"Photobomb-Free\" Miracle Shots in Asakusa at Night"
-description: "7 Asakusa photo spots that empty out after dark, from under Kaminarimon's lantern to Nakamise's shutter art. Plus night-mode phone camera tips. "
+description: "7 Asakusa photo spots that empty out after dark, from under Kaminarimon's lantern to Nakamise's shutter art. Plus night-mode phone camera tips."
 publishedAt: "2026-08-24"
 area: "Asakusa"
 heroImage: "/images/columns/asakusa-night-photo-spots/hero.webp"

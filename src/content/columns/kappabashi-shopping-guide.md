@@ -1,6 +1,6 @@
 ---
 title: "[Tokyo on a Budget] How to Score Authentic Japanese Ceramics & Kitchenware in Kappabashi"
-description: "Skip the Ginza markups. Arita and Mino ceramics from a few hundred yen, plus 3,000 cookie cutters, at Kappabashi's wholesale shops near Asakusa. "
+description: "Skip the Ginza markups. Arita and Mino ceramics from a few hundred yen, plus 3,000 cookie cutters, at Kappabashi's wholesale shops near Asakusa."
 publishedAt: "2026-08-14"
 area: "Asakusa"
 heroImage: "/images/columns/kappabashi-shopping-guide/hero.webp"

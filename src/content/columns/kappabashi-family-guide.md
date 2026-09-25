@@ -1,6 +1,6 @@
 ---
 title: "[A Family Escape in Kappabashi] The Great Yokai Scavenger Hunt"
-description: "Kids worn out by the Senso-ji crowds? Kappabashi is 10 minutes away and full of hidden kappa yokai. Turn a shopping street into a scavenger hunt. "
+description: "Kids worn out by the Senso-ji crowds? Kappabashi is 10 minutes away and full of hidden kappa yokai. Turn a shopping street into a scavenger hunt."
 publishedAt: "2026-08-15"
 area: "Asakusa"
 heroImage: "/images/columns/kappabashi-family-guide/hero.webp"

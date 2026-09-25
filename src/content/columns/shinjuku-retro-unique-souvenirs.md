@@ -1,6 +1,6 @@
 ---
 title: "Anime, Gundam & Showa Rarities: 4 Subculture Shops Near Shinjuku Station"
-description: "Vintage anime cels, Gundam sound-effect records and Naruto rarities. Four subculture shops near Shinjuku Station for collectors who dig deep. "
+description: "Vintage anime cels, Gundam sound-effect records and Naruto rarities. Four subculture shops near Shinjuku Station for collectors who dig deep."
 publishedAt: "2026-06-24"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-retro-unique-souvenirs/hero.webp"
@@ -9,7 +9,7 @@ draft: false
 ---
 Shinjuku, Tokyo, is a city where not only the latest trends but also Japan's deep "subculture" and "retro culture" remain strongly ingrained.
 
-In our previous article, "[Top 10 Recommended Japanese Souvenirs Foreigners Will Love!](/column/best-japan-souvenir-ranking)", we introduced classic, must-buy souvenirs. This time, we present a practical guide for those thinking, "I want a totally unique souvenir that no one else has!" or "I'm looking for retro items unique to Japan."
+In our previous article, "[Why Do Japanese People Buy So Many Snacks? Omiyage Culture & Top Souvenirs](/column/best-japan-souvenir-ranking)", we introduced classic, must-buy souvenirs. This time, we present a practical guide for those thinking, "I want a totally unique souvenir that no one else has!" or "I'm looking for retro items unique to Japan."
 
 From cameras and miniature cars to analog records and curated smoking accessories, we introduce four highly recommended, exceptionally cool, and niche shops hidden in the back alleys and buildings of Shinjuku!
 
@@ -93,7 +93,7 @@ We particularly recommend their collection of "Zippo" lighters as souvenirs. The
 
 What do you think? While classic Japanese sweets and traditional crafts are wonderful, exploring these niche, retro specialty shops is one of the greatest thrills of shopping in Tokyo. On your next sightseeing trip to Shinjuku, be sure to hunt for a "deep Japanese souvenir" that perfectly matches your hobbies!
 
-After browsing other people's collections, make something of your own. A hanko seal carved with your name in kanji — the one Shinjuku souvenir that can't be reproduced.
+After browsing other people's collections, make something of your own. A hanko seal made with your name in kanji — the one Shinjuku souvenir that can't be reproduced.
 
 Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by party size · kids 12 and under free
 

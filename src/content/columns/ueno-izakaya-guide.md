@@ -1,6 +1,6 @@
 ---
 title: "[Ueno Izakaya Survival Guide] Top 3 Under-Track Bars & Local Rules for International Travelers"
-description: "Aiseki, tachinomi, cash-on: the three rules that make Ueno's under-track izakayas easy to walk into. Three beginner-friendly bars, with map pins. "
+description: "Aiseki, tachinomi, cash-on: the three rules that make Ueno's under-track izakayas easy to walk into. Three beginner-friendly bars, with map pins."
 publishedAt: "2026-07-30"
 area: "Ueno"
 heroImage: "/images/columns/ueno-izakaya-guide/hero.webp"

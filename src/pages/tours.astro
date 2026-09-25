@@ -5,12 +5,12 @@ import { getTours, AREAS } from '../lib/tours';
 const tours = await getTours();
 const areas = AREAS.filter((a) => tours.some((t) => t.data.area === a));
 ---
-<Base title="All Ninja Tours & Activities in Tokyo" description="All Ninja-guided walking tours in Shinjuku, Ueno and Asakusa. 60 minutes, kids free. Book direct for the best price.">
+<Base title="All Ninja Tours & Activities in Tokyo" description="All Ninja-guided walking tours in Shinjuku, Ueno and Asakusa. Most take 60 minutes; kids 12 and under free on walking tours. Book direct for the best price.">
   <section class="section">
     <div class="wrap">
       <p class="eyebrow">All tours</p>
       <h1>Pick your Tokyo adventure</h1>
-      <p class="lead">Every tour is around 60 minutes and led by an English-speaking local guide. Kids 12 and under join free.</p>
+      <p class="lead">Most tours take about 60 minutes with an English-speaking local guide. On walking tours, kids 12 and under join free.</p>
       <nav class="chips" aria-label="Filter by area">
         <a class="badge" href="/tours" aria-current="page">All</a>
         {areas.map((a) => <a class="badge" href={`/area/${a}`}>{a}</a>)}

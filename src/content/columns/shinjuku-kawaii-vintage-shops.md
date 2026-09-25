@@ -1,6 +1,6 @@
 ---
 title: "Kawaii & Vintage: 4 Shinjuku Shops for Souvenirs That Aren't Boring"
-description: "Four Shinjuku shops for kawaii character goods and stylish vintage finds — gifts that look nothing like the usual airport souvenirs. "
+description: "Four Shinjuku shops for kawaii character goods and stylish vintage finds — gifts that look nothing like the usual airport souvenirs."
 publishedAt: "2026-06-24"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-kawaii-vintage-shops/hero.webp"
@@ -9,13 +9,13 @@ draft: false
 ---
 Tokyo's Shinjuku is at the forefront of cutting-edge Japanese fashion and the "Kawaii" (cute) culture that is taking the world by storm.
 
-In our previous article, "[Top 10 Recommended Japanese Souvenirs Foreigners Will Love!](/column/best-japan-souvenir-ranking)", we introduced classic souvenirs. This time, we're bringing you a practical guide for those thinking, "I want cute Japanese character goods!" or "I want to buy stylish clothes and yukata cheaply, just like the youth in Tokyo!"
+In our previous article, "[Why Do Japanese People Buy So Many Snacks? Omiyage Culture & Top Souvenirs](/column/best-japan-souvenir-ranking)", we introduced classic souvenirs. This time, we're bringing you a practical guide for those thinking, "I want cute Japanese character goods!" or "I want to buy stylish clothes and yukata cheaply, just like the youth in Tokyo!"
 
 From megastores featuring globally beloved characters to stylish vintage clothing shops capturing the latest Japanese trends, we've carefully selected 4 highly recommended shops where you can fully experience "Kawaii" in Shinjuku!
 
 #### 1. Nishikaigan Ruby’s Shinjuku Store
 
-**Retro & Kawaii! A Hidden Gem for Cheap, Stylish Vintage Clothes and "Yukata~~"~~**
+**Retro & Kawaii! A Hidden Gem for Cheap, Stylish Vintage Clothes and "Yukata"**
 
 ![](/images/columns/shinjuku-kawaii-vintage-shops/01.webp)![](/images/columns/shinjuku-kawaii-vintage-shops/02.webp)
 
@@ -93,7 +93,7 @@ For international Disney fans, the "Japan-exclusive" and "Tokyo-exclusive" desig
 
 What do you think? Shinjuku is overflowing with a mountain of cute souvenirs that fascinate fans from all over the world. From stylish vintage yukata for yourself to character goods you'll want to hand out to friends, please enjoy the ultimate "Kawaii" treasure hunt in the streets of Shinjuku!
 
-Want a souvenir nobody else will be carrying? Carve your own hanko seal with your name in kanji, then walk the local shopping streets with a guide.
+Want a souvenir nobody else will be carrying? Get your own hanko seal made with your name in kanji, then walk the local shopping streets with a guide.
 
 Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by party size · kids 12 and under free
 

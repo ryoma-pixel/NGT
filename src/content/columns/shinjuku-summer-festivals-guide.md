@@ -1,6 +1,6 @@
 ---
 title: "Tokyo's Concrete Jungle Transforms! The Ultimate Guide to Shinjuku Summer Festivals (Matsuri)"
-description: "Each summer Shinjuku's skyscraper district fills with portable shrines and food stalls. Which matsuri to catch, and how to join in politely. "
+description: "Each summer Shinjuku's skyscraper district fills with portable shrines and food stalls. Which matsuri to catch, and how to join in politely."
 publishedAt: "2026-06-08"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-summer-festivals-guide/hero.webp"

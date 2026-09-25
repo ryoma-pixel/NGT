@@ -1,6 +1,6 @@
 ---
 title: "The Ultimate Beginner's Guide to Buying a Japanese Knife in Kappabashi"
-description: "Carbon or stainless? Gallery shop or wholesaler? What to know before buying your first Japanese knife in Kappabashi, including free name engraving. "
+description: "Carbon or stainless? Gallery shop or wholesaler? What to know before buying your first Japanese knife in Kappabashi, including free name engraving."
 publishedAt: "2026-08-09"
 area: "Asakusa"
 heroImage: "/images/columns/kappabashi-japanese-knife-guide/hero.webp"

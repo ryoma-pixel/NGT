@@ -1,6 +1,6 @@
 ---
 title: "Why Is Ginza Called \"Ginza\"? The Silver Mint Hiding Behind Tokyo's Most Expensive Street"
-description: "Why Is Ginza Called \"Ginza\"? The Silver Mint Behind the Name.Ginza's name has nothing to do with luxury — it comes from a shogunate silver mint. Two stone markers on Chuo-dori, five minutes apart, tel"
+description: "Ginza's name has nothing to do with luxury: it comes from a shogunate silver mint. Two stone markers on Chuo-dori, five minutes apart, tell the story."
 publishedAt: "2026-09-08"
 area: "Tokyo"
 heroImage: "/images/columns/why-is-ginza-called-ginza/hero.webp"
@@ -46,4 +46,4 @@ By all means look up at the facades. But knowing about one stone marker at your 
 
 **Featured Tour**
 
-- [**Make Your Own "Hanko" Seal & Local Shopping Walk**](/tour/shinjuku-hanko) — Carve your own personal seal with a craftsman. The same meeting point of officialdom and handwork that gave Ginza its name.
+- [**Make Your Own "Hanko" Seal & Local Shopping Walk**](/tour/shinjuku-hanko) — Choose kanji for your name and order your own seal at a specialist shop. The same meeting point of officialdom and handwork that gave Ginza its name.

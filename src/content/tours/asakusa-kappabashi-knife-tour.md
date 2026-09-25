@@ -2,7 +2,7 @@
 title: 'Asakusa & Kappabashi: Authentic Japanese Knife & Tableware Tour with a Local'
 shortTitle: Kappabashi Knife & Tableware Hunt
 hook: The street where Japan’s chefs shop, and where you will find your knife.
-summary: Just a short walk from Senso-ji, find your ultimate Japanese knife, hunt for tableware from a few dollars and discover Kiriko cut glass with a local guide.
+summary: A short walk from Senso-ji, hunt for your ultimate Japanese knife, find tableware from a few hundred yen and discover Kiriko cut glass with a local guide.
 area: Asakusa
 themes:
 - Shopping
@@ -90,7 +90,7 @@ faq:
 - q: What should I wear?
   a: We walk for about 60 minutes, so please wear comfortable shoes and clothing.
 - q: What if it rains?
-  a: The tour runs in light rain and is cancelled only in stormy weather. Many covered arcades and indoor shops keep you comfortable.
+  a: The tour runs rain or shine, and most stops are inside shops. If we cancel for stormy weather, you get a full refund.
 - q: Can I bring my kids?
   a: Children 12 and under are free. Families are very welcome; children must be accompanied by a guardian.
 quizFor: [shopping]

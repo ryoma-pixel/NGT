@@ -1,6 +1,6 @@
 ---
 title: "Shinjuku Gourmet Guide: 4 Retro Cafes Where You Can Time-Slip to the Showa Era"
-description: "Coffee L'ambre and three more Shinjuku kissaten where the Showa era never ended. What to order, when to go, and how to sit like a regular. "
+description: "Coffee L'ambre and three more Shinjuku kissaten where the Showa era never ended. What to order, when to go, and how to sit like a regular."
 publishedAt: "2026-06-24"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-showa-retro-cafes/hero.webp"
@@ -23,13 +23,11 @@ This time, we have carefully selected 4 must-visit retro cafes in Shinjuku where
 
 Walk down the narrow stairs, and you'll feel like you've entered a medieval European ballroom! In this vast underground space with over 200 seats, rows of bright red velvet sofas line the floor while elegant classical music plays in the background. It’s hard to believe you are in the middle of the metropolis of Shinjuku. It's a must-visit classical music cafe that gives you the illusion of having slipped through time.
 
-- **Theme:** A vast underground classical lounge to forget the hustle and bustle of the city
-- **Store Name:** Meikyoku Coffee Shinjuku L'ambre
-- **Hours:** 9:30
-
 ![](/images/columns/shinjuku-showa-retro-cafes/02.webp)
 
-- AM – 10:30 PM
+- **Theme:** A vast underground classical lounge to forget the hustle and bustle of the city
+- **Store Name:** Meikyoku Coffee Shinjuku L'ambre
+- **Hours:** 9:30 AM – 10:30 PM
 - **Location:** 1F & B1F, 3-31-3 Shinjuku, Shinjuku-ku, Tokyo
 - **Google Maps:** <https://maps.app.goo.gl/HyDij7nRS3oVBZgr9>
 

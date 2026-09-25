@@ -10,8 +10,10 @@ export async function getStaticPaths() {
 const { theme } = Astro.params;
 const { tours } = Astro.props;
 const label = THEME_LABELS[theme];
+// "Walking Tours" already ends in "Tours"
+const named = /(tours|rides)$/i.test(label) ? label : `${label} Tours`;
 ---
-<Base title={`${label} Tours in Tokyo`} description={`${label} tours in Tokyo with a Ninja guide. Around 60 minutes, kids free.`}>
+<Base title={`${named} in Tokyo`} description={`${named} in Tokyo with a local guide from NINJA GO TOURS. Book direct for the best price.`}>
   <section class="section">
     <div class="wrap">
       <p class="eyebrow"><a href="/tours">All tours</a> / {label}</p>

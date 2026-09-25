@@ -7,30 +7,30 @@ Kiranah Resort Co., Ltd. (the “Company”) protects and manages the personal i
 
 ## 1. Personal Information We Collect
 
-・Booking information: name, contact details (such as email address and telephone number), booking details, and payment information. Payments are processed by the booking system or booking site; the Company does not store card numbers.  
-・Messages you send through the contact form, including your name and email address.  
-・Information needed for safety on the E-Scooter tour, such as passport details for identity verification.  
-・Photos and videos taken during a tour.  
-・Website usage data collected with cookies and similar technologies (see Section 6).
+- Booking information: name, contact details (such as email address and telephone number), booking details, and payment information. Payments are processed by the booking system or booking site; the Company does not store card numbers.
+- Messages you send through the contact form, including your name and email address.
+- Information needed for safety on the E-Scooter tour, such as passport details for identity verification.
+- Photos and videos taken during a tour.
+- Website usage data collected with cookies and similar technologies (see Section 6).
 
 ## 2. Purpose of Use
 
-・To take bookings and to operate and provide the Service  
-・To contact Customers about their booking and to answer questions  
-・To verify identity and to contact Customers in emergencies for safety  
-・To process payments and refunds  
-・To analyse use of the Service and the website in order to improve them and develop new services  
-・To publish tour photos and videos on our website, social media and promotional materials (you can ask your guide not to be included)  
-・To comply with laws and regulations
+- To take bookings and to operate and provide the Service
+- To contact Customers about their booking and to answer questions
+- To verify identity and to contact Customers in emergencies for safety
+- To process payments and refunds
+- To analyse use of the Service and the website in order to improve them and develop new services
+- To publish tour photos and videos on our website, social media and promotional materials (you can ask your guide not to be included)
+- To comply with laws and regulations
 
 ## 3. Provision to Third Parties
 
 The Company does not provide personal information to third parties except:  
   
-・With the Customer’s consent  
-・When required by law  
-・When needed to protect a person’s life, body or property and it is difficult to obtain consent  
-・To insurance companies or operating partners where needed for insurance or safety management
+- With the Customer’s consent
+- When required by law
+- When needed to protect a person’s life, body or property and it is difficult to obtain consent
+- To insurance companies or operating partners where needed for insurance or safety management
 
 ## 4. Service Providers
 
@@ -51,7 +51,7 @@ The Company keeps personal information accurate and up to date and takes appropr
 
 ## 8. Requests for Disclosure, Correction or Deletion
 
-If a Customer asks for disclosure, correction, deletion or suspension of use of their personal information, the Company will respond promptly according to applicable laws. Please contact us at the address below.
+If a Customer asks for disclosure, correction, deletion or suspension of use of their personal information, the Company will respond promptly according to applicable laws. Please contact us using the details below.
 
 ## 9. Changes to this Policy
 

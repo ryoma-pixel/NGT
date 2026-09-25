@@ -1,6 +1,6 @@
 ---
 title: "Why Does Japan Use Stamps Instead of Signatures? The \"Hanko\" Culture Popular Among Foreign Tourists"
-description: "Japan still signs with a carved seal, not a pen. What hanko are, why they survive, and where to get your own name carved in Shinjuku. "
+description: "Japan still signs with a carved seal, not a pen. What hanko are, why they survive, and where to get your own name carved in Shinjuku."
 publishedAt: "2026-06-03"
 area: "Tokyo"
 heroImage: "/images/columns/make-hanko-souvenir-japan/hero.webp"
@@ -42,19 +42,18 @@ The experience of creating a Japanese name by matching your first name to *Kanji
 
 Because you can stamp it as your "Japanese-style signature" on letters, artwork, and notebooks after returning home, it is incredibly popular as a practical and supremely cool souvenir.
 
-### Stay Tuned! NINJA GO TOURS' "Hanko Project" is Underway
+### Make Your Own Hanko with NINJA GO TOURS
 
 ![](/images/columns/make-hanko-souvenir-japan/03.webp)
 
 At NINJA GO TOURS, we offer various forms of "Edutainment" (Education + Entertainment) under the theme of making you fall in love with Japan more in just 60 minutes.
 
-Actually, we are currently hard at work preparing a brand-new project: **"Make an original Hanko by choosing Kanji for your name with a NINJA!"**
+On our Shinjuku hanko tour, a guide helps you **choose kanji for your name**, then you order your own hanko at a specialist shop.
 
-Rather than just buying a Hanko, it will be an experience where you can enjoy learning the fun of the language and the depth of the culture—such as "Why this Kanji?"—feeling just like you're hanging out with local friends.
+Rather than just buying a hanko, it is an experience where you can enjoy learning the fun of the language and the depth of the culture—such as "Why this Kanji?"—feeling just like you're hanging out with local friends.
 
-Please look forward to our upcoming updates!
 
-Skip the airport snack aisle. Carve a hanko seal with your own name and take home the one omiyage no shop can sell you.
+Skip the airport snack aisle. Get a hanko seal made with your own name and take home the one omiyage no shop can sell you.
 
 Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by party size · kids 12 and under free
 

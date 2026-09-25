@@ -2,7 +2,7 @@
 title: 'Golden Gai: Back Alleys & Nightlife with a Ninja'
 shortTitle: Golden Gai Back Alleys & Nightlife
 hook: 280 tiny doors. One friendly Ninja who knows which ones to open.
-summary: Crack the code of Golden Gai’s 280+ tiny bars, try a Shinto ritual at Hanazono Shrine and finish under Kabukicho’s neon, all with a Ninja guide.
+summary: Try a Shinto ritual at Hanazono Shrine, crack the code of Golden Gai’s 280+ tiny bars and finish under Kabukicho’s neon, all with a Ninja guide.
 area: Shinjuku
 themes:
 - Nightlife
@@ -16,7 +16,7 @@ heroAlt: Two guests and their Ninja guide smiling under the neon of Kabukicho at
 meetingPoint:
   name: Shinjuku Station – East Exit Police Box (Koban)
   access: Right outside the JR Shinjuku Station East Exit, next to the plaza.
-  lookFor: Your guide wearing a Ninja costume.
+  lookFor: Look for your guide in a Ninja costume.
   mapUrl: https://www.google.com/maps?cid=12278454329469033437
   mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.399534062637!2d139.7011327!3d35.69178459999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd0a97e58d5%3A0xaa65d5289adbdbdd!2z5paw5a6_6K2m5a-f572yIOaWsOWuv-mnheadseWPo-S6pOeVqg!5e0!3m2!1sen!2sus!4v1770788106393!5m2!1sen!2sus
 itinerary:
@@ -38,11 +38,11 @@ story:
   image: /images/tours/goldengai-nightlife/gallery-3.webp
   imageAlt: Guests praying at Hanazono Shrine
 - title: Enter the golden maze
-  text: Step into a wooden maze of 280+ bars that survived post-war Tokyo.
+  text: Step into a wooden maze of 280+ bars born in post-war Tokyo.
   image: /images/tours/goldengai-nightlife/gallery-1.webp
   imageAlt: Guests in happi coats with their Ninja guide in Golden Gai
 - title: Crack the bar code
-  text: Crack the signboards together and learn which doors welcome you.
+  text: Decode the signboards together and learn which doors welcome you.
   image: /images/tours/goldengai-nightlife/gallery-4.webp
   imageAlt: A neon-lit alley in Golden Gai
 - title: Neon & Godzilla
@@ -92,7 +92,7 @@ faq:
 - q: Can I bring my kids?
   a: Children are welcome and must be accompanied by a guardian. A safe way to experience Tokyo’s nightlife area.
 - q: What if it rains?
-  a: Rain or shine. The neon lights look even better in the rain.
+  a: The tour runs rain or shine, and the neon looks even better in the rain. If we cancel for stormy weather, you get a full refund.
 quizFor: [nightlife]
 quizAlso: [shrines]
 ---

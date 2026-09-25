@@ -88,11 +88,11 @@ features:
   label: Godzilla photo op
 faq:
 - q: What’s not included?
-  a: Food and drinks are not included. This is a walking tour and does not include entering bars for drinks or meals during the tour.
+  a: Food and drinks are not included, and we don’t stop in bars or restaurants during the tour.
 - q: What should I wear?
   a: We walk for about 60 minutes, so please wear comfortable walking shoes.
 - q: What if it rains?
-  a: The tour runs in light rain and is cancelled only in stormy weather.
+  a: The tour runs rain or shine. If we cancel for stormy weather, you get a full refund.
 - q: Can I bring my kids?
   a: Children 12 and under are free. Children must be accompanied by a guardian.
 quizFor: [shrines]

@@ -10,7 +10,7 @@ const { tour } = Astro.props;
 const d = tour.data;
 // Back of the card ("donden-gaeshi" revolving wall): another real photo from the tour and its one-line hook
 const secret = d.cardBack
-  ? { src: d.cardBack, alt: '' }
+  ? { src: d.cardBack, alt: `${d.shortTitle}: another scene from the tour` }
   : d.gallery[1] ?? d.gallery[0] ?? (d.heroImage ? { src: d.heroImage, alt: d.heroAlt ?? '' } : undefined);
 const price = priceLabel(tour);
 ---

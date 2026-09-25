@@ -1,6 +1,6 @@
 ---
 title: "Kids Go Free! Top 5 Ninja & Samurai Experiences for Families in Shinjuku"
-description: "Five ninja and samurai experiences in Shinjuku where kids join free. Costumes, shuriken and shows, sorted by age and by how long they take. "
+description: "Five ninja and samurai experiences in Shinjuku where kids join free. Costumes, shuriken and shows, sorted by age and by how long they take."
 publishedAt: "2026-06-03"
 area: "Shinjuku"
 heroImage: "/images/columns/ninja-shinjuku-family/hero.webp"
@@ -13,11 +13,11 @@ This time, we will introduce the best **"Ninja & Samurai experiences"** in the S
 
 **Family Adventure! Top 5 Ninja & Samurai Experiences in Shinjuku**
 
-- [1. Ninja Trick House in Tokyo](#index_llgU0WeD)
-- [2. Ninja + Kabuki Tokyo (Kids 12 & under go FREE)](#index_Xagc0HOL)
-- [3. Samurai Museum](#index_BfEJ8o3U)
-- [4. Sengoku Photo Studio SAMURAI](#index_8VPGUw0J)
-- [5. NINJA GO TOURS (Kids 12 & under go FREE)](#index_WmbUO5Ug)
+- [1. Ninja Trick House in Tokyo](#1-ninja-trick-house-in-tokyo)
+- [2. Ninja + Kabuki Tokyo (Kids 12 & under go FREE)](#2-ninja--kabuki-tokyo-kids-12--under-go-free)
+- [3. Samurai Museum](#3-samurai-museum)
+- [4. Sengoku Photo Studio SAMURAI](#4-sengoku-photo-studio-samurai)
+- [5. NINJA GO TOURS (Kids 12 & under go FREE)](#5-ninja-go-tours-kids-12--under-go-free)
 
 ### 1. Ninja Trick House in Tokyo
 

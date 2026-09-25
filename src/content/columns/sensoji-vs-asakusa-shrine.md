@@ -1,6 +1,6 @@
 ---
 title: "Why is there a Shrine Next to a Temple? Uncovering the Secrets of Japanese \"Shinbutsu-Shugo\" on a Night Walk in Asakusa"
-description: "Why does a Shinto shrine sit inside a Buddhist temple? Asakusa at night explains Shinbutsu-Shugo, torii gates, komainu, and how to pray at each. "
+description: "Why does a Shinto shrine sit inside a Buddhist temple? Asakusa at night explains Shinbutsu-Shugo, torii gates, komainu, and how to pray at each."
 publishedAt: "2026-08-25"
 area: "Asakusa"
 heroImage: "/images/columns/sensoji-vs-asakusa-shrine/hero.webp"

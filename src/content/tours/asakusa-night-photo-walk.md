@@ -13,8 +13,8 @@ heroImage: "/images/tours/asakusa-night-photo-walk.webp"
 heroAlt: "The giant red lantern of Kaminarimon gate lit up at night in Asakusa"
 meetingPoint:
   name: Asakusa Culture Tourist Information Center, 1F entrance (across from Kaminarimon)
-  access: 0–2 minutes from Asakusa Station (Ginza Line / Asakusa Line), Exit 2 or A4.
-  lookFor: Look for the guide dressed in black with a black mask or bandana. This tour’s guides do not wear the full Ninja costume.
+  access: A 1–2 minute walk from Asakusa Station (Ginza Line Exit 2 / Asakusa Line Exit A4).
+  lookFor: Look for your guide dressed in black with a black mask or bandana.
   mapUrl: https://maps.app.goo.gl/yQ8SrMyFZX3RGSKS9
   mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d810!2d139.7965461!3d35.7107074!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188ec1060d67af%3A0x7740294b7ef17d49!2sAsakusa%20Culture%20Tourist%20Information%20Center!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp
 itinerary:
@@ -37,7 +37,7 @@ story:
   image: /images/tours/asakusa-night-photo-walk/gallery-6.webp
   imageAlt: Tokyo Skytree and the Sumida River at dusk
 - title: Shutters with secrets
-  text: After closing time, Nakamise's shutters show painted scenes of old Edo.
+  text: After closing time, Nakamise’s shutters show painted scenes of old Edo.
   image: /images/tours/asakusa-night-photo-walk/story-2.webp
   imageAlt: Nakamise shopping street at night with its shutters down
 - title: The temple glows
@@ -54,7 +54,7 @@ story:
   imageAlt: Denboin-dori street in Asakusa glowing with lanterns in the evening
 gallery:
 - src: /images/tours/asakusa-night-photo-walk/gallery-1.webp
-  alt: Kaminarimon's giant lantern on a rainy night
+  alt: Kaminarimon’s giant lantern on a rainy night
 - src: /images/tours/asakusa-night-photo-walk/gallery-2.webp
   alt: Visitors walking toward the lit-up Hozomon gate
 - src: /images/tours/asakusa-night-photo-walk/gallery-3.webp
@@ -80,7 +80,7 @@ faq:
   - q: Is the omikuji fortune included?
     a: It is optional and not included (about 100–200 JPY).
   - q: What if it rains?
-    a: The tour runs in light rain. It is cancelled only in severe weather.
+    a: The tour runs rain or shine. If we cancel for stormy weather, you get a full refund.
   - q: Can I bring my kids?
     a: Yes. Children 12 and under join free and must be with a guardian.
 order: 9

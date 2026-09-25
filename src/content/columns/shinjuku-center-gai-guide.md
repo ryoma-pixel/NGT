@@ -1,6 +1,6 @@
 ---
 title: "[Shinjuku Deep Nightlife Guide] Master Kabukicho’s Secret Alley \"Omoide no Nukemichi\" (Shinjuku Center Gai)! How to Enjoy & What Makes It Special"
-description: "Omoide no Nukemichi is Kabukicho's narrowest shortcut and its best-kept secret. What to order, what it costs, and how to walk in without hesitating. "
+description: "Omoide no Nukemichi is Kabukicho's narrowest shortcut and its best-kept secret. What to order, what it costs, and how to walk in without hesitating."
 publishedAt: "2026-07-17"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-center-gai-guide/hero.webp"

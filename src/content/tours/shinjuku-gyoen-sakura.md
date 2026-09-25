@@ -35,7 +35,7 @@ story:
   text: Pick dango or sakura mochi at a classic sweet shop.
   image: /images/tours/shinjuku-gyoen-sakura/gallery-1.webp
   imageAlt: Guests laughing while eating dango
-- title: The shogun’s garden
+- title: The lord’s garden
   text: Enter the garden where samurai lords once lived.
   image: /images/tours/shinjuku-gyoen-sakura/story-2.webp
   imageAlt: A pond in Shinjuku Gyoen framed by cherry trees
@@ -51,7 +51,7 @@ gallery:
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-1.webp
   alt: Guests laughing while eating dango
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-2.webp
-  alt: The traditional sweet shop at the meeting point
+  alt: The traditional sweet shop near the meeting point
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-3.webp
   alt: Guests choosing sweets at the shop counter
 - src: /images/tours/shinjuku-gyoen-sakura/gallery-4.webp

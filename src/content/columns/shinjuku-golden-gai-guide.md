@@ -1,6 +1,6 @@
 ---
 title: "[Shinjuku Golden Gai] Why Are the Bars So Tiny? Knowing the History & Rules Makes Your Bar-Hopping 100 Times Better!"
-description: "Why are Golden Gai's bars barely bigger than a closet? The post-war history and unwritten rules that turn 200 closed doors into open ones. "
+description: "Why are Golden Gai's bars barely bigger than a closet? The post-war history and unwritten rules that turn 200 closed doors into open ones."
 publishedAt: "2026-07-20"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-golden-gai-guide/hero.webp"
@@ -61,9 +61,9 @@ If that sounds like you, joining the **"Golden Gai Nightlife Tour"** led by an e
 
 ![](/images/columns/shinjuku-golden-gai-guide/08.webp)
 
-- **Hand-Picked Hidden Gems:** We skip the tourist traps and take you straight into incredible, authentic bars that first-timers usually walk right past.
+- **Hand-Picked Hidden Gems:** We skip the tourist traps and show you which of the tiny bars welcome first-timers, and how to read their signs.
 - **Deep Cultural Insights:** Your English-speaking guide will share fascinating historical trivia and the hidden stories behind the bars you visit.
-- **Bridge the Language Gap:** Your guide acts as your translator and wingman, helping you toast and chat with local masters and regulars like old friends!
+- **Bridge the Language Gap:** Your guide explains the cover charges, the house rules and a few useful phrases, so you can walk in on your own afterwards.
 
 If you're spending a night in Shinjuku, don't just walk down the alleys and take photos. Dive into the safest, deepest, and most unforgettable nightlife experience Tokyo has to offer!
 

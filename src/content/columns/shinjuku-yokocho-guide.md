@@ -1,6 +1,6 @@
 ---
 title: "[Ultimate Guide] Experience Shinjuku at Night! 7 Best Yokocho and Drinking Alleys, From Showa-Retro to Neo-Futuristic"
-description: "Seven Shinjuku drinking alleys, from Showa-retro Omoide Yokocho to neon-futuristic newcomers. Which one suits your night, and how to enter each. "
+description: "Seven Shinjuku drinking alleys, from Showa-retro Omoide Yokocho to neon-futuristic newcomers. Which one suits your night, and how to enter each."
 publishedAt: "2026-07-14"
 area: "Shinjuku"
 heroImage: "/images/columns/shinjuku-yokocho-guide/hero.webp"

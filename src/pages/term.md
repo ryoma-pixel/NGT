@@ -43,11 +43,11 @@ You are responsible for your own belongings. The Company is not liable for loss 
 
 ### 6. Prohibited Acts
 
-・Verbal or physical abuse, or harassment of guides, other guests or local people  
-・Taking photos or videos where it is prohibited, or of people who have not agreed to it  
-・Any act that may cause trouble to other guests, shops, residents or third parties  
-・Any act contrary to public order and morals or applicable laws  
-・Failure to follow the guide’s or the Company’s instructions  
+- Verbal or physical abuse, or harassment of guides, other guests or local people
+- Taking photos or videos where it is prohibited, or of people who have not agreed to it
+- Any act that may cause trouble to other guests, shops, residents or third parties
+- Any act contrary to public order and morals or applicable laws
+- Failure to follow the guide’s or the Company’s instructions
 The Company may refuse or end participation in the event of such acts. In that case no refund is given.
 
 ### 7. Insurance
@@ -58,9 +58,9 @@ The walking tours are not covered by insurance arranged by the Company. Please b
 
 The Company is not liable for damages arising from:  
   
-・Natural disasters, traffic restrictions, or other events beyond the Company’s control;  
-・Accidents, injuries, losses, or theft caused by a guest’s own negligence;  
-・A guest’s health condition.  
+- Natural disasters, traffic restrictions, or other events beyond the Company’s control;
+- Accidents, injuries, losses, or theft caused by a guest’s own negligence;
+- A guest’s health condition.
 This does not limit the Company’s liability where it is caused by the Company’s intent or gross negligence, or where the law does not allow such limitation.
 
 ### 9. Photos and Personal Information
@@ -95,12 +95,12 @@ The E-Scooter tour is a guided tour on electric kick scooters. It includes guidi
 
 Participants must:  
   
-・Be 16 years of age or older  
-・Be able to keep their balance on a bicycle  
-・Understand safety instructions given in English  
-・Not be pregnant  
-・Have no chronic illness such as heart disease, high blood pressure, epilepsy, or vertigo  
-・Not be under the influence of alcohol or drugs  
+- Be 16 years of age or older
+- Be able to keep their balance on a bicycle
+- Understand safety instructions given in English
+- Not be pregnant
+- Have no chronic illness such as heart disease, high blood pressure, epilepsy, or vertigo
+- Not be under the influence of alcohol or drugs
 Participants must show a valid passport for identity verification and sign a waiver and consent form.
 
 ### B3. Safety

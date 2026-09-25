@@ -8,5 +8,6 @@ export default defineConfig({
   site: 'https://ninjagotours.com',
   trailingSlash: 'never',
   build: { format: 'file' },
-  integrations: [sitemap()],
+  // utility pages (404, thank-you) stay out of the sitemap
+  integrations: [sitemap({ filter: (page) => !/\/(404|contact-thanks)$/.test(page) })],
 });

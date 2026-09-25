@@ -78,13 +78,13 @@ features:
   label: Shrine etiquette
 faq:
 - q: How does the snack auction work?
-  a: The Tataki-uri experience is not included. If you want to try it, please bring 1,000 JPY in cash.
+  a: Vendors pile up snacks and call out a price; raise your hand and pay 1,000 JPY in cash to take the pile home. It is optional and not included in the tour.
 - q: Are food and drinks included?
-  a: Food and drinks are not included. This is an orientation walk before dinner.
+  a: Food and drinks are not included. This is an orientation walk, so you’ll know where to eat afterwards.
 - q: Can I bring my kids?
   a: Families can join with peace of mind (children must be accompanied by a guardian). We use flat, stroller-friendly routes and avoid overly crowded spots.
 - q: What if it rains?
-  a: Rain or shine. When it rains, we use the Ameyoko arcades and covered areas under the tracks.
+  a: The tour runs rain or shine, using the covered areas under the tracks. If we cancel for stormy weather, you get a full refund.
 - q: Is there anything to know about late start times?
   a: The last start time is 5:00 PM. Depending on your start time, the shrine’s closing hours (5:30 PM in summer, 4:30 PM in winter) or shop hours may mean you only see Toshogu from outside or cannot join the street auction.
 quizFor: [food]
