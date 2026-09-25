@@ -57,6 +57,7 @@ function readTours(): TourInfo[] {
       const notes: string[] = [];
       if (get('comingSoon') === 'true') notes.push('Coming soon: not bookable yet.');
       if (get('seasonal')) notes.push(`Seasonal: ${get('seasonal')}.`);
+      if (get('noCostume') === 'true') notes.push('The guide does not wear a Ninja costume on this tour.');
       const lookFor = nested('lookFor');
       if (lookFor) notes.push(`Meeting: ${lookFor}`);
       return {
