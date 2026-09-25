@@ -1,0 +1,25 @@
+---
+// Drifting mist / ninja smoke. Two soft layers slide sideways at different speeds (transform only, so it stays smooth).
+interface Props { class?: string; strength?: number }
+const { class: cls, strength = 1 } = Astro.props;
+---
+<div class:list={['mist', cls]} aria-hidden="true" style={`--k:${strength}`}>
+  <span class="mist__l mist__l--a"></span>
+  <span class="mist__l mist__l--b"></span>
+</div>
+
+<style>
+  .mist { position: absolute; left: 0; right: 0; bottom: 0; height: 55%; overflow: hidden; pointer-events: none; z-index: 1; }
+  .mist__l { position: absolute; left: 0; top: 0; bottom: 0; width: 200%; background-repeat: repeat-x; background-size: 50% 100%; opacity: calc(var(--k) * 1); animation: drift linear infinite; will-change: transform; }
+  .mist__l--a { animation-duration: 70s;
+    background-image:
+      radial-gradient(ellipse 30% 45% at 15% 85%, rgb(235 232 240 / 0.30), transparent 70%),
+      radial-gradient(ellipse 35% 35% at 55% 95%, rgb(235 232 240 / 0.24), transparent 70%),
+      radial-gradient(ellipse 25% 40% at 85% 80%, rgb(235 232 240 / 0.26), transparent 70%); }
+  .mist__l--b { animation-duration: 45s; animation-direction: reverse; top: 20%;
+    background-image:
+      radial-gradient(ellipse 28% 38% at 30% 90%, rgb(235 232 240 / 0.22), transparent 70%),
+      radial-gradient(ellipse 30% 30% at 75% 100%, rgb(235 232 240 / 0.18), transparent 70%); }
+  @keyframes drift { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .mist__l { animation: none; } }
+</style>

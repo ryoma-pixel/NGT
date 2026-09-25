@@ -5,7 +5,7 @@ import BookingBox from '../../components/BookingBox.astro';
 import Split from '../../components/Split.astro';
 import Icon from '../../components/Icon.astro';
 import Kamon from '../../components/Kamon.astro';
-import PatternBand from '../../components/PatternBand.astro';
+import Mist from '../../components/Mist.astro';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { getTours, fromPrice, priceTiers, yen, AREA_JP } from '../../lib/tours';
@@ -104,13 +104,11 @@ const jsonLd = [
     </div>
   </section>
 
-  <PatternBand patterns={Array(8).fill(d.pattern)} height={40} />
 
   <!-- 2. What you will do, at a glance -->
   {d.features.length > 0 && (
     <section class="feat">
-      <div class="has-tate wrap">
-        <Tate text="体験" />
+      <div class="wrap">
         <p class="eyebrow">What you’ll do</p>
         <ul class="feat__list">
           {d.features.map((f, i) => (
@@ -127,8 +125,7 @@ const jsonLd = [
   <!-- 3. The 60 minutes, as a story -->
   {d.story.length > 0 && (
     <section class="section story">
-      <div class="has-tate wrap">
-        <Tate text="行程" />
+      <div class="wrap">
         <Split text={`Your ${d.durationMinutes} minutes`} />
         {timeline.length > 1 && (
           <ol class="tl" aria-label="Tour timeline" data-reveal>
@@ -151,6 +148,7 @@ const jsonLd = [
               )}
               <div class="ch__text">
                 <p class="ch__num outline" aria-hidden="true">{pad(i + 1)}</p>
+                <p class="ch__quest">Side quest</p>
                 <h3>{c.title}</h3>
                 <p>{c.text}</p>
               </div>
@@ -164,8 +162,7 @@ const jsonLd = [
   <!-- 4. Photos -->
   {d.gallery.length > 0 && (
     <section class="section section--dark gal">
-      <div class="has-tate wrap">
-        <Tate text="写真" />
+      <div class="wrap">
         <p class="eyebrow">From our tours</p>
         <Split text="See it before you go" />
         <div class="gal__grid">
@@ -189,8 +186,7 @@ const jsonLd = [
   <!-- 5. Guests -->
   {tourReviews.length > 0 && (
     <section class="section tr">
-      <div class="has-tate wrap">
-        <Tate text="評判" />
+      <div class="wrap">
         <p class="eyebrow">From our guests</p>
         <div class="tr__list">
           {tourReviews.map((r) => (
@@ -207,8 +203,7 @@ const jsonLd = [
 
   <!-- 6. Questions answered + booking -->
   <section class="section section--paper2 plan" id="plan">
-    <div class="has-tate wrap plan__grid">
-      <Tate text="問答" />
+    <div class="wrap plan__grid">
       <div class="plan__main">
         <p class="eyebrow">Good to know</p>
         <Split text="Questions? Answered." />
@@ -245,6 +240,7 @@ const jsonLd = [
   <!-- 7. Last push -->
   <section class="fin">
     {finale && <img class="fin__img" src={finale} srcset={srcset(finale, 1400)} sizes="100vw" alt="" width="1400" height="1050" loading="lazy" />}
+    <Mist strength={0.8} />
     <div class="wrap fin__in">
       <Tate text="いざ出陣" class="tate--inline" />
       <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" />
@@ -336,7 +332,6 @@ const jsonLd = [
   /* What you'll do */
   .feat { background: var(--night); color: var(--cream); padding: 44px 0 56px; }
   .feat .eyebrow { color: var(--lantern); }
-  .feat :global(.tate) { color: var(--cream); }
   .tate--area { position: absolute; z-index: 1; right: 4vw; top: 16vh; left: auto; font-size: clamp(2.4rem, 5vw, 4.4rem); color: var(--cream); text-shadow: 0 4px 30px rgb(0 0 0 / 0.5); animation: rise 1.4s cubic-bezier(.2,.8,.2,1) 0.3s both; }
   .fin :global(.tate--inline) { position: static; display: inline-block; color: var(--cream); margin: 0 auto 18px; font-size: 1.5rem; }
   @media (max-width: 700px) { .tate--area { font-size: 2.2rem; top: 84px; right: 14px; } }
@@ -368,6 +363,7 @@ const jsonLd = [
   .ch__num { margin: 0; font-family: var(--display); font-size: clamp(4rem, 9vw, 7.5rem); line-height: 0.9; color: var(--shu); }
   .ch__text h3 { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: 0.2em 0 0.35em; }
   .ch__text p { color: var(--ink-2); font-size: 1.12rem; line-height: 1.6; margin: 0; max-width: 26em; }
+  .ch__text .ch__quest { display: inline-block; margin: 0 0 6px; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; line-height: 1.4; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream); background: var(--ai); padding: 3px 8px; }
 
   /* Gallery */
   .gal :global(h2) { font-size: clamp(2rem, 4.4vw, 3.4rem); }
@@ -419,7 +415,7 @@ const jsonLd = [
   /* Final CTA */
   .fin { position: relative; min-height: 70svh; display: grid; place-items: center; text-align: center; color: #fff; overflow: hidden; background: var(--night); }
   .fin__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
-  .fin__in { position: relative; padding: 72px 16px; }
+  .fin__in { position: relative; z-index: 2; padding: 72px 16px; }
   .fin__seal { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 18px; filter: drop-shadow(0 8px 24px rgb(0 0 0 / 0.5)); }
   .fin :global(h2) { font-size: clamp(2.4rem, 6vw, 5rem); margin: 0.2em 0 0.6em; }
   .more__h { font-size: clamp(1.8rem, 3.6vw, 2.6rem); }

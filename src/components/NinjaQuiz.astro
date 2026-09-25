@@ -1,6 +1,5 @@
 ---
 // "Which mission is yours?" Three quick picks, then a scroll unrolls with the matching tour and the price for the group size.
-import Tate from './Tate.astro';
 import Icon from './Icon.astro';
 import { priceTiers, type Tour } from '../lib/tours';
 import type { IconName } from './icons';
@@ -41,8 +40,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
 ];
 ---
 <section class="qz" id="quiz" data-quiz>
-  <div class="has-tate wrap qz__in">
-    <Tate text="忍術診断" />
+  <div class="wrap qz__in">
     <div class="qz__head">
       <p class="eyebrow">Can’t choose?</p>
       <h2>Let the scroll <span class="qz__o">decide.</span></h2>
@@ -72,7 +70,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
           <div class="qz__paper" aria-live="polite">
             <img class="qz__img" data-qz-img alt="" width="640" height="400" />
             <div class="qz__body">
-              <p class="qz__seal" aria-hidden="true">Your mission</p>
+              <p class="qz__seal" aria-hidden="true">Mission accepted</p>
               <h3 class="qz__title" data-qz-title></h3>
               <p class="qz__tag" data-qz-tag></p>
               <p class="qz__price" data-qz-price></p>
@@ -183,7 +181,6 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   :global(.js) .qz { display: block; }
   .qz { background: var(--ai) var(--seigaiha); color: var(--cream); padding: 72px 0; overflow: hidden; }
   .qz .eyebrow { color: rgb(247 240 227 / 0.8); }
-  .qz :global(.tate) { color: var(--cream); }
   .qz__in { display: grid; grid-template-columns: 1fr 1.6fr; gap: 32px 56px; align-items: center; }
   .qz__head h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 0.95; margin: 0 0 16px; }
   .qz__o { color: transparent; -webkit-text-stroke: 2px var(--cream); }

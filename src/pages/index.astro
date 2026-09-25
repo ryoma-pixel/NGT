@@ -1,12 +1,11 @@
 ---
-import Tate from '../components/Tate.astro';
 import Base from '../layouts/Base.astro';
 import HeroSlideshow from '../components/HeroSlideshow.astro';
 import Split from '../components/Split.astro';
 import MissionRail from '../components/MissionRail.astro';
 import Emaki from '../components/Emaki.astro';
+import Mist from '../components/Mist.astro';
 import NinjaQuiz from '../components/NinjaQuiz.astro';
-import PatternBand from '../components/PatternBand.astro';
 import Reviews from '../components/Reviews.astro';
 import Icon from '../components/Icon.astro';
 import faq from '../data/faq.json';
@@ -30,11 +29,11 @@ const slides = [
 
 // One real hour on the Secret Shrine tour (times follow its itinerary)
 const night = [
-  { kicker: '00–05 min', tate: '集合', title: 'Meet under Godzilla', text: 'Say “Konnichiwa!” Your Ninja is waiting.', image: '/images/tours/shinjuku-secret-shrine/story-1.webp', alt: 'The red Kabukicho Ichibangai arch above a busy street' },
-  { kicker: '05–15 min', tate: '歌舞伎町', title: 'Into the neon', text: 'Kabukicho, the town that never sleeps.', image: '/images/tours/shinjuku-secret-shrine/gallery-1.webp', alt: 'A guest walking with the Ninja guide through Kabukicho' },
-  { kicker: '15–30 min', tate: '秘境', title: 'A shrine nobody sees', text: 'Behind the neon, red gates and silence.', image: '/images/tours/shinjuku-secret-shrine/story-2.webp', alt: 'A Ninja guide with a lantern in a tunnel of red torii gates' },
-  { kicker: '30–55 min', tate: '路地', title: '280 tiny bars', text: 'Golden Gai’s alleys, then a wish at Hanazono Shrine.', image: '/images/tours/goldengai-nightlife/story-2.webp', alt: 'Colorful bar signboards crowding a narrow Golden Gai alley' },
-  { kicker: '55–60 min', tate: '宴', title: 'Your night starts now', text: 'Photos, plus your Ninja’s dinner picks.', image: '/images/tours/goldengai-nightlife/story-4.webp', alt: 'Guests posing with their Ninja guide under Kabukicho neon' },
+  { kicker: '00–05 min', title: 'Meet under Godzilla', text: 'Say “Konnichiwa!” Your Ninja is waiting.', image: '/images/tours/shinjuku-secret-shrine/story-1.webp', alt: 'The red Kabukicho Ichibangai arch above a busy street' },
+  { kicker: '05–15 min', title: 'Into the neon', text: 'Kabukicho, the town that never sleeps.', image: '/images/tours/shinjuku-secret-shrine/gallery-1.webp', alt: 'A guest walking with the Ninja guide through Kabukicho' },
+  { kicker: '15–30 min', title: 'A shrine nobody sees', text: 'Behind the neon, red gates and silence.', image: '/images/tours/shinjuku-secret-shrine/story-2.webp', alt: 'A Ninja guide with a lantern in a tunnel of red torii gates' },
+  { kicker: '30–55 min', title: '280 tiny bars', text: 'Golden Gai’s alleys, then a wish at Hanazono Shrine.', image: '/images/tours/goldengai-nightlife/story-2.webp', alt: 'Colorful bar signboards crowding a narrow Golden Gai alley' },
+  { kicker: '55–60 min', title: 'Your night starts now', text: 'Photos, plus your Ninja’s dinner picks.', image: '/images/tours/goldengai-nightlife/story-4.webp', alt: 'Guests posing with their Ninja guide under Kabukicho neon' },
 ];
 
 const google = reviews.ratings.find((r) => r.source === 'Google');
@@ -59,6 +58,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   <section class="hero">
     <HeroSlideshow slides={slides} />
     <div class="hero__shade" aria-hidden="true"></div>
+    <Mist />
     <div class="wrap hero__in">
       <p class="hero__kicker">Private walking tours · Tokyo</p>
       <Split as="h1" class="hero__title" text="Follow | the *Ninja.*" delay={900} />
@@ -66,20 +66,19 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       <div class="hero__cta">
         <a class="btn btn--primary btn--lg" href="#missions" data-track="click_hero_cta">Choose your mission</a>
       </div>
-      <div class="hero__talk" aria-hidden="true">
-        <p class="bubble bubble--guest">Where do locals go?</p>
-        <p class="bubble bubble--ninja">Follow me! ⛩️</p>
+      <div class="hero__talk dlg" aria-hidden="true" data-dlg='[["YOU","Where do locals go?"],["NINJA","Follow me. A shrine hides behind the neon."]]'>
+        <p class="dlg__who" data-dlg-who>YOU</p>
+        <p class="dlg__txt" data-dlg-txt></p>
+        <span class="dlg__next">▼</span>
       </div>
     </div>
     <a class="hero__scroll" href="#missions" aria-label="Scroll to tours"><span></span></a>
   </section>
 
 
-  <PatternBand patterns={tours.map((t) => t.data.pattern)} />
 
   <section class="section missions" id="missions">
-    <div class="has-tate wrap missions__head">
-      <Tate text="任務" />
+    <div class="wrap missions__head">
       <div>
         <p class="eyebrow">Choose your mission</p>
         <Split text="Pick your | adventure." />
@@ -110,7 +109,6 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       scenes={night}
       cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
       kamon="torii"
-      pattern="uroko"
       end={{ title: 'Your turn.', cta: 'Book this night', href: '/tour/shinjuku-secret-shrine#book' }}
     />
   </div>
@@ -118,8 +116,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   <Reviews />
 
   <section class="section price" id="pricing">
-    <div class="has-tate wrap">
-      <Tate text="料金" />
+    <div class="wrap">
       <p class="eyebrow">Group pricing</p>
       <Split text="Bring friends. | Pay less each." />
       <p class="lead">One private guide. More friends, lower price.</p>
@@ -137,8 +134,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 
   <section class="section section--paper2 how">
-    <div class="has-tate wrap">
-      <Tate text="手順" />
+    <div class="wrap">
       <p class="eyebrow">How it works</p>
       <Split text="Three steps. | Zero stress." />
       <ol class="how__steps">
@@ -150,8 +146,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 
   <section class="section faq" id="faq">
-    <div class="has-tate wrap">
-      <Tate text="問答" />
+    <div class="wrap">
       <p class="eyebrow">FAQ</p>
       <h2>Questions? Answered.</h2>
       <div class="faq__list">
@@ -167,6 +162,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
 
   <section class="go">
     <img class="go__img" src="/images/hero/secret-torii.webp" srcset="/images/hero/secret-torii-640.webp 640w, /images/hero/secret-torii-1024.webp 1024w, /images/hero/secret-torii.webp 2000w" sizes="100vw" alt="" loading="lazy" width="2000" height="1125" />
+    <Mist strength={0.8} />
     <img class="go__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="160" height="160" loading="lazy" />
     <div class="wrap go__in">
       <Split text="Your Ninja | is waiting." />
@@ -175,6 +171,29 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   </section>
 </Base>
 
+
+<script>
+  // Dialogue window: types the lines one after another, like an RPG
+  const dlg = document.querySelector<HTMLElement>('[data-dlg]');
+  if (dlg && getComputedStyle(dlg).display !== 'none') {
+    const lines: [string, string][] = JSON.parse(dlg.dataset.dlg || '[]');
+    const who = dlg.querySelector('[data-dlg-who]')!;
+    const txt = dlg.querySelector('[data-dlg-txt]')!;
+    const last = lines[lines.length - 1];
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { who.textContent = last[0]; txt.textContent = last[1]; }
+    else {
+      const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      (async () => {
+        await wait(document.documentElement.classList.contains('intro') ? 2600 : 900);
+        for (const [w, t] of lines) {
+          who.textContent = w; txt.textContent = '';
+          for (let i = 1; i <= t.length; i++) { txt.textContent = t.slice(0, i); await wait(38); }
+          await wait(1400);
+        }
+      })();
+    }
+  }
+</script>
 <style>
   /* Sliding-door intro (first visit only) */
   .curtain { display: none; }
@@ -191,17 +210,20 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   .hero { position: relative; min-height: 100svh; display: flex; align-items: flex-end; color: #fff; overflow: hidden; }
   .hero__shade { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 0% 100%, rgb(8 8 18 / 0.9) 0%, rgb(8 8 18 / 0.55) 45%, rgb(8 8 18 / 0) 80%), linear-gradient(0deg, rgb(8 8 18 / 0.6), rgb(8 8 18 / 0) 40%), linear-gradient(180deg, rgb(8 8 18 / 0.45), rgb(8 8 18 / 0) 25%); }
   @keyframes fade-in { from { opacity: 0; transform: translateY(-20px); } }
-  .hero__in { position: relative; width: 100%; padding-top: 120px; padding-bottom: 72px; }
+  .hero__in { position: relative; z-index: 2; width: 100%; padding-top: 120px; padding-bottom: 72px; }
   .hero__kicker { font-family: var(--mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lantern); margin-bottom: 0.8em; animation: fade-in 1s ease 0.7s both; }
   .hero :global(.hero__title) { font-size: clamp(3.6rem, 12vw, 10rem); line-height: 0.92; letter-spacing: -0.01em; margin-bottom: 0.3em; text-shadow: 0 4px 40px rgb(0 0 0 / 0.35); }
   .hero :global(.hero__title em) { font-style: normal; color: transparent; -webkit-text-stroke: 2px var(--cream); }
   .hero__lead { font-size: clamp(1.1rem, 1.8vw, 1.4rem); max-width: 30em; color: rgb(255 255 255 / 0.92); animation: fade-in 1s ease 1.5s both; }
   .hero__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; margin-top: 22px; animation: fade-in 1s ease 1.7s both; }
   .btn--lg { padding: 1.05em 1.9em; font-size: 1.1rem; }
-  .hero__talk { position: absolute; right: 16px; bottom: 110px; width: min(260px, 26vw); display: flex; flex-direction: column; gap: 10px; }
-  .bubble { margin: 0; padding: 12px 16px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; box-shadow: 0 8px 24px rgb(0 0 0 / 0.3); animation: pop 0.6s both; }
-  .bubble--guest { background: rgb(255 255 255 / 0.95); color: var(--ink); border-bottom-left-radius: 4px; margin-right: 40px; animation-delay: 2.4s; }
-  .bubble--ninja { background: var(--shu); color: #fff; border-bottom-right-radius: 4px; margin-left: 40px; animation-delay: 3.4s; }
+  .hero__talk { position: absolute; right: 16px; bottom: 110px; width: min(340px, 30vw); }
+  /* RPG-style dialogue window */
+  .dlg { background: rgb(13 15 28 / 0.84); color: var(--cream); border: 2px solid var(--cream); box-shadow: inset 0 0 0 4px var(--night), inset 0 0 0 5px rgb(247 240 227 / 0.45), 0 12px 30px rgb(0 0 0 / 0.4); padding: 18px 18px 22px; min-height: 104px; animation: pop 0.5s 2s both; }
+  .dlg__who { position: absolute; top: -13px; left: 14px; margin: 0; padding: 2px 9px; background: var(--cream); color: var(--night); font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; }
+  .dlg__txt { margin: 0; font-family: var(--mono); font-size: 0.92rem; line-height: 1.5; min-height: 3em; }
+  .dlg__next { position: absolute; right: 12px; bottom: 6px; font-size: 0.7rem; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
   @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: none; } }
   .hero__scroll { position: absolute; left: 50%; bottom: 18px; width: 26px; height: 42px; margin-left: -13px; border: 2px solid rgb(255 255 255 / 0.7); border-radius: 14px; }
   .hero__scroll span { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #fff; animation: scroll-dot 1.8s ease-in-out infinite; }
@@ -280,6 +302,6 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   :global(html:not(.intro)) .hero__cta { animation-delay: 0.8s; }
   :global(html:not(.intro)) .hero__kicker { animation-delay: 0.1s; }
   @media (prefers-reduced-motion: reduce) {
-    .hero__kicker, .hero__lead, .hero__cta, .bubble, .hero__scroll span { animation: none; }
+    .hero__kicker, .hero__lead, .hero__cta, .dlg, .dlg__next, .hero__scroll span { animation: none; }
   }
 </style>

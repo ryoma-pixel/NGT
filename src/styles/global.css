@@ -89,9 +89,7 @@ p { margin: 0 0 1em; }
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 
-/* Vertical Japanese label (Edo-style Mincho), decoration beside section headings */
-.has-tate { position: relative; padding-right: calc(16px + 3.2rem); }
-@media (max-width: 700px) { .has-tate { padding-right: 52px; } }
+/* Vertical Japanese label (Edo-style Mincho): tour hero area name, "いざ出陣", emaki title slip */
 .tate { position: absolute; top: 0; right: 16px; writing-mode: vertical-rl; font-family: var(--mincho); font-weight: 800; font-size: clamp(1.15rem, 1.8vw, 1.6rem); line-height: 1; letter-spacing: 0.28em; color: var(--ai); padding-top: 30px; background: linear-gradient(currentColor, currentColor) center top / 2px 20px no-repeat; pointer-events: none; }
 .section--dark .tate { color: var(--cream); }
 @media (max-width: 700px) { .tate { font-size: 1.05rem; } }
