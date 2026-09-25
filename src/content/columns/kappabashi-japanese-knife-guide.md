@@ -51,6 +51,6 @@ Armed with basic knowledge of Japanese knives, the cutlery shops in Kappabashi a
 
 Ready to actually buy one? We'll walk you into the right shop, translate the specs, and make sure you leave with the knife you really wanted — engraving included.  
   
- Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · from ¥2,500 per person (groups of 4+) · kids 12 and under free   
+ Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · ¥2,500–8,000 per person, by group size · kids 12 and under free   
   
 [→ Book now](/tour/asakusa-kappabashi-knife-tour)

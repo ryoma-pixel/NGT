@@ -1,0 +1,53 @@
+# Writes one column draft a day (scripts/generate-column.ts) and commits it.
+# Drafts are hidden on ninjagotours.com until a person checks the facts and sets draft: false in Pages CMS.
+# Setup: add the ANTHROPIC_API_KEY secret (Settings > Secrets and variables > Actions). Without it the job skips.
+# Optional: repository variable COLUMN_BRANCH = branch to write to (default: the branch the workflow runs on).
+name: Daily column draft
+
+on:
+  schedule:
+    - cron: '53 20 * * *' # 05:53 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-column
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ vars.COLUMN_BRANCH || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write a column draft
+        id: gen
+        run: node scripts/generate-column.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # Make sure the new article builds before it is committed
+      - name: Build check
+        if: steps.gen.outputs.slug != ''
+        run: npm run build
+
+      - name: Commit
+        if: steps.gen.outputs.slug != ''
+        run: |
+          git config user.name "ngt-column-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/columns src/data/column-topics.json
+          git commit -m "Column draft: ${{ steps.gen.outputs.slug }}"
+          git push origin HEAD:${{ vars.COLUMN_BRANCH || github.ref_name }}

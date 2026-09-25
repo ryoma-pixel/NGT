@@ -80,6 +80,16 @@
 - 1024px程度のストック風画像（浅草 I 系、上野 G 系など）は大きく表示すると粗い。高解像度版かAdobe Stockで差し替える。
 - 口コミ：Drive の「NGT_英語口コミ一覧_20260908」に実際のレビューがある。掲載できる範囲を確認してから使う（捏造しない）。
 
+## コラムの自動生成（2026-09-25 ご本人依頼「SEO・AIO対策で1日1本」）
+- 仕組み：GitHub Actions（`.github/workflows/daily-column.yml`、毎日 05:53 JST）が `scripts/generate-column.ts` を実行 → 下書き（`draft: true`・`generated: true`）を `src/content/columns/` にコミット → 人が Pages CMS で事実確認して `draft: false` にすると公開。**自動では公開しない**。
+- 手順：①ネタ帳 `src/data/column-topics.json` の先頭を使う（Pages CMS の「Column topics」で編集可。空になったら Claude が既存記事と重ならない題を選ぶ）②Claude（`claude-opus-5`）がウェブ検索で調べて出典つきメモを作る ③メモだけを根拠に、構造化出力（JSON）で本文・FAQ・関連ツアー・出典を書く ④ビルドが通ったらコミット。
+- AIO向けの形：冒頭2〜3文で検索の問いに直接答える／質問形の見出し／FAQ（`faq` → FAQPage構造化データ）／Article構造化データ／出典の一覧（`sources`）／関連ツアーへの内部リンク1〜2本。料金・割引は本文に書かせない（ツアーページが正）。価格らしき記述があればActionsのSummaryに「Check」と出る。
+- 安全装置：未確認の下書きが7本（`COLUMN_MAX_PENDING`）たまると生成を止める。APIキーがなければ何もせず終了。Claude が断った場合はサーバー側フォールバック（`fallbacks: "default"`、beta `server-side-fallback-2026-07-01`）で別モデルが引き継ぐ。
+- 必要な設定：GitHub の Settings > Secrets and variables > Actions に `ANTHROPIC_API_KEY`。書き込み先ブランチを変えるときは変数 `COLUMN_BRANCH`（未設定なら実行したブランチ＝現在のデフォルトブランチ）。
+- 費用（推測）：1本あたり 約$0.3〜0.8（検索結果の読み込み＋執筆、Opus 5 は入力$5・出力$25／100万トークン、検索は$10／1,000回）→ 月 約$10〜25。実績は Actions のログに出るトークン数で確認する。
+- 下書き確認のチェック項目：営業時間・料金・日付などの数字を出典で確認／ツアーの説明がツアーページと一致（衣装の有無、Coming soon）／同じ題の既存記事と重複していないか／写真（`heroImage` は関連ツアーの写真が自動で入る）。
+- 既存コラム末尾の「from ¥2,500 per person (groups of 4+)」は「¥2,500–8,000 per person, by group size」に統一した（第10回フィードバック③と同じ理由）。
+
 ## ツアー詳細ページの構成（2026-09-25 作り直し）
 「文字しかなくワクワクしない」との指摘を受け、写真で体験を先取りできる構成に変更した。予約ボタンの先（LINKTIVITY）にも詳細が載るため、公式サイトは「ひと目で分かる・ワクワクする」に特化し、細かい情報はFAQに集める（ご本人方針）。
 1. 全画面ヒーロー（実写、ゆっくりズーム）＋大きなキャッチ（`tagline`、5語程度）＋所要時間などのアイコン＋料金と予約ボタン＋写真サムネイル
@@ -95,7 +105,7 @@
 ## 技術構成
 - Astro 5、`trailingSlash: 'never'`、`build.format: 'file'` → 旧サイトと同じ `/tour/slug` 形式のURLを出力する。
 - ツアー：`src/content/tours/*.md`（ファイル名＝URLのslug）。コラム：`src/content/columns/*.md`。
-- `draft: true` のコンテンツは、Netlify の本番（`CONTEXT=production`）では出力されない。プレビューとローカルでは DRAFT 表示付きで出る。
+- `draft: true` のコンテンツは、本番サイト（Netlify の `CONTEXT=production` かつ `URL` が ninjagotours.com）では出力されない。確認用URL・ローカルでは DRAFT 表示付きで出る（`src/lib/tours.ts`、2026-09-25 に確認用URLでも下書きが見えるよう変更）。
 - 計測：`src/data/site.json` の `gtmId`（優先）または `ga4MeasurementId` を設定する。`data-track` 属性のクリックで `click_book`／`click_ota`／`click_tour_card`／`click_map` などのイベントを送る。
 - コマンド：`npm run build`（型チェック込み）、`npm run dev`。
 

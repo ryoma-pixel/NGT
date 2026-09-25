@@ -87,6 +87,6 @@ What did you think? From deep back-alley explorations to the latest entertainmen
 
 Seven alleys is a lot to choose from on your first night. Let a local pick the one that fits your mood — and walk in with you.
 
-Golden Gai: Back Alleys & Nightlife with a Ninja — 60 min · from ¥2,500 per person (groups of 4+)
+Golden Gai: Back Alleys & Nightlife with a Ninja — 60 min · ¥2,500–8,000 per person, by group size
 
 [→ Book now](/tour/goldengai-nightlife)

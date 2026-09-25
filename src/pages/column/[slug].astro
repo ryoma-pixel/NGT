@@ -13,15 +13,53 @@ export async function getStaticPaths() {
 }
 const { column, related } = Astro.props;
 const { Content } = await render(column);
+const d = column.data;
+const url = new URL(`/column/${column.id}`, Astro.site).toString();
+const date = d.publishedAt.toISOString().slice(0, 10);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: d.title,
+    description: d.description,
+    datePublished: date,
+    mainEntityOfPage: url,
+    ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
+    author: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
+    publisher: { '@type': 'Organization', name: 'NINJA GO TOURS', url: Astro.site?.toString() },
+  },
+  ...(d.faq.length
+    ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: d.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }]
+    : []),
+];
+const host = (u: string) => new URL(u).hostname.replace(/^www\./, '');
 ---
-<Base title={column.data.title} description={column.data.description} image={column.data.heroImage}>
+<Base title={d.title} description={d.description} image={d.heroImage} jsonLd={jsonLd}>
   <article class="section">
     <div class="wrap">
       <p class="eyebrow"><a href="/column">Column</a></p>
-      {column.data.draft && <span class="badge badge--draft">DRAFT</span>}
-      <h1>{column.data.title}</h1>
-      {column.data.heroImage && <img class="hero" src={column.data.heroImage} alt="" width="1200" height="675" />}
+      {d.draft && <span class="badge badge--draft">DRAFT{d.generated && ' · auto-written, check the facts'}</span>}
+      <h1>{d.title}</h1>
+      <p class="meta"><time datetime={date}>{d.publishedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tokyo' })}</time>{d.area && <> · {d.area}</>}</p>
+      {d.heroImage && <img class="hero" src={d.heroImage} alt="" width="1200" height="675" />}
       <div class="prose"><Content /></div>
+      {d.faq.length > 0 && (
+        <section class="cfaq" aria-labelledby="cfaq-h">
+          <h2 id="cfaq-h">Quick answers</h2>
+          {d.faq.map((f) => (
+            <details>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </section>
+      )}
+      {d.sources.length > 0 && (
+        <aside class="sources">
+          <h2>Sources</h2>
+          <ul>{d.sources.map((s) => <li><a href={s} rel="noopener" target="_blank">{host(s)}</a></li>)}</ul>
+        </aside>
+      )}
     </div>
   </article>
   {related.length > 0 && (
@@ -36,5 +74,12 @@ const { Content } = await render(column);
 </Base>
 <style>
   .hero { border-radius: var(--radius); margin: 20px 0 28px; }
+  .meta { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); margin: 0.4em 0 0; }
+  .cfaq, .sources { max-width: 760px; margin-top: 48px; }
+  .cfaq details { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  .cfaq summary { font-weight: 700; cursor: pointer; }
+  .cfaq details p { margin: 0.6em 0 0; color: var(--muted); }
+  .sources h2 { font-size: 1rem; }
+  .sources ul { padding-left: 1.2em; font-size: 0.9rem; color: var(--muted); }
   .section--dark :global(.card) { color: var(--ink); }
 </style>

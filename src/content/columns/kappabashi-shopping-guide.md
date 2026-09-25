@@ -49,6 +49,6 @@ Not sure which shop, or which piece?
 
 We'll walk Kappabashi's wholesalers with you, explain what you're looking at, and handle the Japanese.
 
-Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · from ¥2,500 per person (groups of 4+) · kids 12 and under free
+Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · ¥2,500–8,000 per person, by group size · kids 12 and under free
 
 [→ Book now](/tour/asakusa-kappabashi-knife-tour)

@@ -107,7 +107,7 @@ content:
       - { name: draft, label: Draft (hidden on live site), type: boolean, default: true }
       - { name: body, label: Description, type: rich-text }
   - name: columns
-    label: Tokyo Guide (columns)
+    label: Column
     type: collection
     path: src/content/columns
     view:
@@ -119,8 +119,36 @@ content:
       - { name: area, label: Area, type: string }
       - { name: heroImage, label: Main photo, type: image }
       - { name: relatedTours, label: Related tours (file names without .md), type: string, list: true }
+      - name: faq
+        label: FAQ (shown under the article, also sent to Google)
+        type: object
+        list: true
+        fields:
+          - { name: q, label: Question, type: string }
+          - { name: a, label: Answer, type: text }
+      - { name: sources, label: Sources (URLs checked when writing), type: string, list: true }
+      - { name: keyword, label: Search keyword this article answers, type: string }
+      - { name: generated, label: Written by the daily generator (check facts before publishing), type: boolean, default: false }
       - { name: draft, label: Draft (hidden on live site), type: boolean, default: true }
       - { name: body, label: Article, type: rich-text }
+  - name: column-topics
+    label: Column topics (daily generator queue)
+    type: file
+    path: src/data/column-topics.json
+    format: json
+    fields:
+      - name: queue
+        label: Next topics (the first one is written next)
+        type: object
+        list: true
+        fields:
+          - { name: keyword, label: Search keyword, type: string }
+          - { name: angle, label: Angle (what the article should cover), type: text }
+          - name: area
+            label: Area
+            type: select
+            options: { values: [Shinjuku, Ueno, Asakusa] }
+          - { name: relatedTours, label: Related tours (file names without .md), type: string, list: true }
   - name: pricing
     label: Prices
     type: file

@@ -80,6 +80,6 @@ Now, go out and start your ultimate local experience tonight in the deep izakaya
 
 Aiseki and cash-on are a lot easier with someone beside you. We'll scout the under-track alleys together first, so you know exactly where to come back to for dinner.
 
-Ueno Ameyoko! "The First 60 Minutes in Tokyo" — 60 min · from ¥2,500 per person (groups of 4+) · kids 12 and under free
+Ueno Ameyoko! "The First 60 Minutes in Tokyo" — 60 min · ¥2,500–8,000 per person, by group size · kids 12 and under free
 
 [→ Book now](/tour/ueno-ameyoko)

@@ -77,6 +77,6 @@ What do you think? This time, we introduced stores in Shinjuku where you can buy
 
 The most authentic souvenir is the one with your own name on it. Carve a hanko seal, then shop Shinjuku's local streets with someone who knows the good shops.
 
-Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · from ¥2,500 per person (groups of 4+) · kids 12 and under free
+Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by group size · kids 12 and under free
 
 [→ Book now](/tour/shinjuku-hanko)

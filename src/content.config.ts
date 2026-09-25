@@ -77,6 +77,13 @@ const columns = defineCollection({
     area: z.string().optional(),
     heroImage: z.string().optional(),
     relatedTours: z.array(z.string()).default([]),
+    // Shown under the article and output as FAQPage structured data (AI search picks these up well)
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
+    // URLs the facts come from (the daily generator fills these in; listed under the article)
+    sources: z.array(z.string().url()).default([]),
+    keyword: z.string().optional(),
+    // true = written by scripts/generate-column.ts; a person checks the facts before setting draft: false
+    generated: z.boolean().default(false),
     draft: z.boolean().default(true),
   }),
 });

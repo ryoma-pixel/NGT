@@ -33,6 +33,6 @@ Once you’ve found the golden statue, the real scavenger hunt across the entire
 
 Finished the kappa hunt? Keep the day going. A local guide takes the family through Kappabashi's knife and tableware shops — and translates everything as you browse.   
   
-Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · from ¥2,500 per person (groups of 4+) · kids 12 and under free   
+Asakusa & Kappabashi: Japanese Knife & Tableware Tour — 60 min · ¥2,500–8,000 per person, by group size · kids 12 and under free   
   
 [→ Book now](/tour/asakusa-kappabashi-knife-tour)

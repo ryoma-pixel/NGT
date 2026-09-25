@@ -2,8 +2,10 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import pricing from '../data/pricing.json';
 import { usdAmount } from './fx';
 
-// Netlify sets CONTEXT=production only for the live site; previews and local builds show drafts.
-export const showDrafts = process.env.CONTEXT !== 'production';
+// Drafts are hidden only on the live site (Netlify production on ninjagotours.com). The review URL
+// (stellar-bavarois-8bc38e.netlify.app) is also a production deploy, so it is told apart by URL, like noindex in Base.astro.
+const live = process.env.CONTEXT === 'production' && /(^|\/\/)(www\.)?ninjagotours\.com/.test(process.env.URL ?? '');
+export const showDrafts = !live;
 
 export type Tour = CollectionEntry<'tours'>;
 
