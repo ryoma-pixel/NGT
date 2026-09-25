@@ -1,4 +1,5 @@
 ---
+import NextStep from '../../components/NextStep.astro';
 import Tate from '../../components/Tate.astro';
 import Base from '../../layouts/Base.astro';
 import BookingBox from '../../components/BookingBox.astro';
@@ -38,7 +39,8 @@ const timeline = steps.map((s) => {
 const pad = (n: number) => String(n).padStart(2, '0');
 const showRanges = clock > 0 && clock <= d.durationMinutes + 30;
 
-// Questions every guest asks, answered from the tour data, then the tour's own questions
+// Questions about this tour, answered from the tour data, then the tour's own questions.
+// General questions (private tours, kids, language, why book direct) live in the top page FAQ.
 const tiers = priceTiers(tour);
 const priceAnswer = d.fixedPricePerPerson
   ? `${yen(d.fixedPricePerPerson)} per person.`
@@ -47,9 +49,7 @@ const faq = [
   ...(d.meetingPoint ? [{ q: 'Where do we meet?', a: [d.meetingPoint.name, d.meetingPoint.access, d.meetingPoint.lookFor].filter(Boolean).join(' '), map: d.meetingPoint.mapUrl }] : []),
   ...(d.startTimes ? [{ q: 'When does it start?', a: `${d.startTimes}. The tour takes about ${d.durationMinutes} minutes.` }] : []),
   { q: 'How much does it cost?', a: priceAnswer },
-  ...(d.privateTour ? [{ q: 'Will strangers join our group?', a: 'No. The tour is private: your guide is just for your group.' }] : []),
-  { q: 'What language is the tour in?', a: `${d.language}.` },
-  { q: 'How do I book?', a: `Tap “Check availability”, pick a date and time and pay online. You get an instant confirmation email.${d.bookingDeadline ? ` ${d.bookingDeadline}.` : ''}` },
+  { q: 'How do I book?', a: `Tap “Check availability”, then pick a date and time and complete your booking online. A confirmation email follows.${d.bookingDeadline ? ` ${d.bookingDeadline}.` : ''}` },
   ...d.faq,
 ];
 
@@ -121,6 +121,7 @@ const reels = getReels(await getTours(), tour.id);
             </li>
           ))}
         </ul>
+        <NextStep dark lead="Sounds like your kind of night?" label="Check dates" href="#book" where="tour_features" tour={tour.id} />
       </div>
     </section>
   )}
@@ -158,6 +159,7 @@ const reels = getReels(await getTours(), tour.id);
             </article>
           ))}
         </div>
+        <NextStep lead="That’s your hour. Pick the day." label="See available times" href={d.bookingUrl ?? '#book'} where="tour_story" tour={tour.id} external />
       </div>
     </section>
   )}
@@ -192,6 +194,7 @@ const reels = getReels(await getTours(), tour.id);
         <p class="eyebrow">Straight from Instagram</p>
         <h2>See it for real</h2>
         <ReelRail reels={reels} />
+        <NextStep lead="Your turn to film it." label="Check availability" href={d.bookingUrl ?? '#book'} where="tour_reels" tour={tour.id} external />
       </div>
     </section>
   )}
@@ -210,6 +213,7 @@ const reels = getReels(await getTours(), tour.id);
             </figure>
           ))}
         </div>
+        <NextStep lead="Join them." label="Book your date" href={d.bookingUrl ?? '#book'} where="tour_reviews" tour={tour.id} external />
       </div>
     </section>
   )}
@@ -235,6 +239,7 @@ const reels = getReels(await getTours(), tour.id);
             </details>
           ))}
         </div>
+        <p class="faq__more">Private tours, kids, language and more: <a href="/#faq" data-track="click_next_step" data-location="tour_faq_general">general FAQ</a>.</p>
       </div>
       <div class="plan__side">
         <BookingBox tour={tour} />
@@ -415,6 +420,8 @@ const reels = getReels(await getTours(), tour.id);
   .faq summary::after { content: '+'; position: absolute; right: 16px; top: 50%; translate: 0 -50%; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--shu); color: #fff; font-weight: 700; transition: rotate 0.3s; }
   .faq details[open] summary::after { rotate: 45deg; }
   .faq details p { margin: 0; padding: 0 18px 16px; color: var(--ink-2); }
+  .faq__more { margin: 14px 0 0; font-size: 0.92rem; color: var(--muted); }
+  .faq__more a { color: var(--ai); font-weight: 700; }
   .faq__map { display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 16px; font-weight: 700; color: var(--shu-dark); }
 
   /* Sticky booking bar (desktop) */

@@ -1,0 +1,19 @@
+---
+// A quiet "next step" line placed where a guest naturally pauses: a short thought plus one link. Not a banner.
+interface Props { lead: string; label: string; href: string; where: string; tour?: string; dark?: boolean; external?: boolean }
+const { lead, label, href, where, tour, dark = false, external = false } = Astro.props;
+const track = href.includes('triplabo') ? 'click_book' : 'click_next_step';
+---
+<p class:list={['nx', { 'nx--dark': dark }]} data-reveal>
+  <span class="nx__lead">{lead}</span>
+  <a class="nx__a" href={href} data-track={track} data-location={where} data-tour={tour} {...(external ? { rel: 'noopener' } : {})}>{label}<span aria-hidden="true"> →</span></a>
+</p>
+
+<style>
+  .nx { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 28px 0 0; }
+  .nx__lead { color: var(--muted); }
+  .nx--dark .nx__lead { color: rgb(247 240 227 / 0.72); }
+  .nx__a { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ai); text-decoration: none; background: linear-gradient(currentColor, currentColor) left bottom / 100% 2px no-repeat; padding-bottom: 3px; transition: background-size 0.3s; }
+  .nx--dark .nx__a { color: var(--cream); }
+  .nx__a:hover { background-size: 40% 2px; }
+</style>

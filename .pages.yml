@@ -96,7 +96,7 @@ content:
       - { name: privateTour, label: Private tour (one group per guide), type: boolean, default: true }
       - { name: bookingUrl, label: Booking URL (LINKTIVITY), type: string }
       - name: otaLinks
-        label: Review links (OTA)
+        label: OTA links (booking sites such as GetYourGuide)
         type: object
         list: true
         fields:
@@ -191,5 +191,5 @@ content:
         fields:
           - { name: url, label: Instagram URL, type: string }
           - { name: title, label: Title on the card, type: string }
-          - { name: tour, label: Tour (file name, e.g. shinjuku-hanko; empty = top page only), type: string }
+          - { name: tour, label: Tour (file name, e.g. shinjuku-hanko), type: string }
           - { name: cover, label: Cover image (optional; default is the tour photo), type: image }

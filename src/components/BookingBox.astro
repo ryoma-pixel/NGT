@@ -16,15 +16,17 @@ const d = tour.data;
   <ul class="bb__why">
     <li>Best price when you book here</li>
     {d.privateTour && <li>Private: your group only</li>}
-    <li>Instant confirmation by email</li>
+    <li>Confirmation by email</li>
   </ul>
   {d.otaLinks.length > 0 && (
-    <p class="bb__ota">
-      Read reviews on:
-      {d.otaLinks.map((o, i) => (
-        <>{i > 0 && ' · '}<a href={o.url} rel="noopener" target="_blank" data-track="click_ota" data-tour={tour.id} data-ota={o.name}>{o.name}</a></>
-      ))}
-    </p>
+    <div class="bb__ota">
+      <p class="bb__ota-h">Prefer a booking app? Also on</p>
+      <div class="bb__ota-list">
+        {d.otaLinks.map((o) => (
+          <a class="bb__ota-btn" href={o.url} rel="noopener" target="_blank" data-track="click_ota" data-tour={tour.id} data-ota={o.name}>{o.name} <span aria-hidden="true">↗</span></a>
+        ))}
+      </div>
+    </div>
   )}
 </aside>
 
@@ -47,7 +49,6 @@ const d = tour.data;
   .bb__why { list-style: none; padding: 0; margin: 14px 0 0; font-size: 0.9rem; }
   .bb__why li { padding-left: 1.4em; position: relative; margin: 0.3em 0; }
   .bb__why li::before { content: '✓'; position: absolute; left: 0; color: var(--shu); font-weight: 700; }
-  .bb__ota { font-size: 0.85rem; color: var(--muted); margin: 12px 0 0; }
   .bbar { display: none; }
   @media (max-width: 900px) {
     .bb { position: static; }
@@ -61,4 +62,9 @@ const d = tour.data;
     .bbar__t { font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bbar__p strong { font-size: 1.15rem; }
   }
+  .bb__ota { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .bb__ota-h { margin: 0 0 8px; font-size: 0.85rem; color: var(--muted); }
+  .bb__ota-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bb__ota-btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 11px; border: 1.5px solid var(--ai); border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ai); text-decoration: none; }
+  .bb__ota-btn:hover { background: var(--ai); color: var(--cream); }
 </style>
