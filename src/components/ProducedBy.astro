@@ -46,8 +46,10 @@ const plaques: Plaque[] = p.ratings.map((r) => ({ score: r.score, source: r.sour
 <style>
   .nkt { --kaki: #9b5230; --moegi: #3d5a36; --sumi: #141418; position: relative; overflow: hidden; background: var(--night) var(--seigaiha); color: var(--cream); padding: 46px 0 38px; isolation: isolate; }
   /* the striped band of the curtain stays along the top once it is drawn aside */
-  .nkt::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
+  .nkt::before, .nkt::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
     background: repeating-linear-gradient(90deg, var(--sumi) 0 56px, var(--kaki) 56px 112px, var(--moegi) 112px 168px); }
+  /* the same band closes the section at the bottom, so it is clearly apart from the footer */
+  .nkt::after { top: auto; bottom: 0; }
   /* joshiki-maku: covers the stage, then is pulled aside to the left */
   .nkt__maku { position: absolute; inset: 0; z-index: 3; pointer-events: none; transform: translateX(-101%);
     background: repeating-linear-gradient(90deg, var(--sumi) 0 11%, var(--kaki) 11% 22%, var(--moegi) 22% 33.33%); }
