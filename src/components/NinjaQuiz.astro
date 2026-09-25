@@ -431,12 +431,22 @@ const puffs: [number, number, number, number, number][] = [
   .qz__fig-smoke i:nth-child(3) { --tx: -20px; --ty: -80px; animation-delay: 30ms !important; }
   .qz__fig-smoke i:nth-child(4) { --tx: 30px; --ty: 20px; animation-delay: 90ms !important; }
   @keyframes qz-fig-puff { 0% { opacity: 0.95; transform: translate(0, 0) scale(0.3); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.5); } }
-  .qz__say { position: relative; display: block; background: #fff; border: 2px solid var(--ai); border-radius: 14px; padding: 10px 16px 12px; box-shadow: 0 4px 0 var(--ai); }
-  .qz__say::before { content: ''; position: absolute; left: -10px; top: 26px; width: 16px; height: 16px; background: #fff; border-left: 2px solid var(--ai); border-bottom: 2px solid var(--ai); transform: rotate(45deg); }
+  /* Lines are written on the paper like a kabuki script (not boxed, so they never look like the answer cards):
+     a small ink seal with the speaker, the line in 「 」, and a brush stroke under it.
+     The Lord speaks from the left, your Ninja answers from the right, in the same place. */
+  .qz__say { position: relative; display: block; color: var(--ai); }
   .qz__floor { display: none; }
-  .qz__say small b { font-family: var(--mincho); font-weight: 800; font-size: 0.95rem; letter-spacing: 0; margin-right: 6px; color: inherit; }
-  .qz__line { display: block; min-height: 1.05em; }
-  .qz__say small { display: block; font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(31 45 82 / 0.65); margin-bottom: 4px; }
+  .qz__say small { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-family: var(--mono); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(31 45 82 / 0.75); }
+  .qz__say small b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 3px; background: var(--ai); color: var(--cream); font-family: var(--mincho); font-weight: 800; font-size: 0.95rem; letter-spacing: 0; }
+  .qz__line { display: block; min-height: 1.05em; padding-bottom: 12px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 12' preserveAspectRatio='none'%3E%3Cpath d='M2 7 C60 3 140 9 220 5 S360 4 398 6 L396 9 C330 8 250 11 170 9 S50 10 4 10Z' fill='%231f2d52' fill-opacity='.55'/%3E%3C/svg%3E") left bottom / min(100%, 420px) 10px no-repeat; }
+  .qz__line::before, .qz__line::after { font-family: var(--mincho); font-weight: 800; color: #8a4a26; }
+  .qz__line::before { content: '「'; margin-left: -0.35em; }
+  .qz__line::after { content: '」'; }
+  .qz__say--ninja { text-align: right; color: #14151f; }
+  .qz__say--ninja small { justify-content: flex-end; flex-direction: row-reverse; color: rgb(20 21 31 / 0.75); }
+  .qz__say--ninja small b { background: #14151f; }
+  .qz__say--ninja .qz__line { background-position: right bottom; }
 
   /* Questions */
   .qz__box { position: relative; min-width: 0; }
@@ -448,7 +458,7 @@ const puffs: [number, number, number, number, number][] = [
   .qz__step[disabled] { opacity: 0; }
   .qz__back { position: absolute; top: 0; right: 0; z-index: 2; background: none; border: 0; padding: 6px 2px; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
   .qz__back:hover, .qz__back:focus-visible { border-bottom-color: var(--ai); outline: none; }
-  .qz__q { display: block; margin-bottom: 18px; padding: 0 84px 0 0; }
+  .qz__q { display: block; min-height: 118px; margin-bottom: 14px; padding: 0 84px 0 0; }
   .qz__q .qz__say { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.4rem, 2.6vw, 2rem); line-height: 1.05; }
   .qz__opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .qz__opts--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -465,11 +475,11 @@ const puffs: [number, number, number, number, number][] = [
   @keyframes qz-picked { 50% { transform: scale(0.96); } }
 
   /* Your Ninja nods: the badge bows twice, the bubble pops in from the right */
-  .qz__nod { display: flex; justify-content: flex-end; margin: 18px 0 0; }
+  /* your Ninja's answer takes the Lord's place for a moment */
+  .qz__nod { position: absolute; z-index: 4; left: 0; right: 0; top: 4px; margin: 0; }
   .qz__nod[hidden] { display: none; }
-  .qz__say--ninja { background: #14151f; color: var(--cream); border-color: #14151f; box-shadow: 0 4px 0 #000; font-weight: 700; font-size: 1.05rem; }
-  .qz__say--ninja::before { left: auto; right: -10px; background: #14151f; border: 0; }
-  .qz__say--ninja small { color: rgb(247 240 227 / 0.7); }
+  .qz__nod .qz__say--ninja { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.15rem, 1.9vw, 1.45rem); line-height: 1.1; }
+  .qz[data-speaker='ninja'] .qz__q .qz__say, .qz[data-speaker='ninja'] .qz__back { visibility: hidden; }
   .qz__nod.is-on .qz__say--ninja { animation: qz-say 0.35s cubic-bezier(.3,1.5,.5,1) both; }
     @keyframes qz-say { from { opacity: 0; transform: translateX(16px) scale(0.9); } }
 
@@ -572,17 +582,12 @@ const puffs: [number, number, number, number, number][] = [
     /* dialogue window over the edge of the stage */
     .qz__box { margin-top: -14px; }
     .qz__ask { position: relative; }
-    .qz__say { border-radius: 10px; padding: 18px 16px 14px; min-height: 84px; box-shadow: 0 4px 0 var(--ai), 0 10px 22px rgb(60 30 5 / 0.25); }
-    .qz__say::before { display: none; }
-    .qz__say small { position: absolute; top: -13px; left: 12px; margin: 0; padding: 3px 10px; border-radius: 4px; background: var(--ai); color: var(--cream); font-size: 0.64rem; }
-    .qz__say--ninja small { left: auto; right: 12px; background: var(--cream); color: #14151f; box-shadow: 0 0 0 2px #14151f; }
-    .qz__q { width: 100%; box-sizing: border-box; }
+    .qz__q { width: 100%; box-sizing: border-box; min-height: 104px; }
     .qz__q .qz__say { font-size: 1.5rem; }
     .qz__decree .qz__say { font-size: 1.3rem; }
     /* your Ninja's reply takes over the same window */
-    .qz__nod { position: absolute; z-index: 4; left: 0; right: 0; top: 38px; margin: 0; display: block; }
-    .qz__nod .qz__say--ninja { min-height: 84px; font-size: 1.05rem; }
-    .qz[data-speaker='ninja'] .qz__q .qz__say { visibility: hidden; }
+    .qz__nod { top: 38px; }
+    .qz__nod .qz__say--ninja { font-size: 1.2rem; }
     .qz__back { top: 2px; }
         .qz__ask { min-height: 0; }
     .qz__opts { grid-template-columns: 1fr 1fr; }

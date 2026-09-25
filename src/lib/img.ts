@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const PUBLIC = path.resolve('public');
-const WIDTHS = [640, 1024];
+const WIDTHS = [640, 1024, 1600];
 
 /**
  * Build a srcset for an image in /public, using the smaller copies made by

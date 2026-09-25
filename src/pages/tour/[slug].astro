@@ -200,7 +200,7 @@ const reels = getReels(await getTours(), tour.id);
         <div class="lb__track" tabindex="0">
           {photos.map((g) => (
             <figure class="lb__slide">
-              <img src={g.src} srcset={srcset(g.src, 2048)} sizes="100vw" alt={g.alt} width="1100" height="733" loading="lazy" decoding="async" />
+              <img src={g.src} srcset={srcset(g.src, 2048)} sizes="(max-width: 700px) 100vw, min(90vw, 1100px)" alt={g.alt} width="1100" height="733" loading="lazy" decoding="async" style={srcset(g.src) ? `background-image:url(${g.src.replace(/\.webp$/, '-640.webp')})` : undefined} />
               <figcaption>{g.alt}</figcaption>
             </figure>
           ))}
@@ -348,8 +348,12 @@ const reels = getReels(await getTours(), tour.id);
     const total = thumbs.length;
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let idx = 0;
+    // photos in the viewer load only when needed; warm up the current one and its neighbours (saves phone data)
+    const imgs = [...track.querySelectorAll<HTMLImageElement>('img')];
+    const warm = (i: number) => [i - 1, i, i + 1, i + 2].forEach((k) => { const im = imgs[(k + total) % total]; if (im) im.loading = 'eager'; });
     const go = (i: number, smooth = true) => {
       idx = (i + total) % total;
+      warm(idx);
       track.scrollTo({ left: idx * track.clientWidth, behavior: smooth && !reduce ? 'smooth' : 'instant' });
     };
     const mark = () => {
@@ -359,17 +363,23 @@ const reels = getReels(await getTours(), tour.id);
       count.dataset.i = String(i);
       count.textContent = `${i + 1} / ${total}`;
       thumbs.forEach((t, k) => t.classList.toggle('is-on', k === i));
+      warm(i);
       thumbs[i]?.scrollIntoView({ block: 'nearest', inline: 'center' });
     };
     let raf = 0;
     track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(mark); }, { passive: true });
-    document.querySelectorAll<HTMLElement>('[data-open-gallery]').forEach((b) =>
+    document.querySelectorAll<HTMLElement>('[data-open-gallery]').forEach((b) => {
+      // start fetching as soon as a finger or the mouse reaches a photo, before the tap lands
+      const pre = () => warm(Number(b.dataset.openGallery));
+      b.addEventListener('pointerenter', pre, { once: true });
+      b.addEventListener('touchstart', pre, { once: true, passive: true });
+      b.addEventListener('focus', pre, { once: true });
       b.addEventListener('click', () => {
         dlg.showModal();
         go(Number(b.dataset.openGallery), false);
         mark();
-      }),
-    );
+      });
+    });
     thumbs.forEach((t) => t.addEventListener('click', () => go(Number(t.dataset.go))));
     dlg.querySelector('.lb__close')!.addEventListener('click', () => dlg.close());
     dlg.querySelector('.lb__prev')!.addEventListener('click', () => go(idx - 1));
@@ -464,7 +474,7 @@ const reels = getReels(await getTours(), tour.id);
   .lb__track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; min-height: 0; outline: none; }
   .lb__track::-webkit-scrollbar { display: none; }
   .lb__slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; margin: 0; display: grid; place-items: center; align-content: center; gap: 12px; padding: 8px 72px; min-height: 0; }
-  .lb__slide img { max-width: 100%; max-height: calc(100dvh - 210px); width: auto; height: auto; object-fit: contain; border-radius: 12px; background: var(--night-3); }
+  .lb__slide img { max-width: 100%; max-height: calc(100dvh - 210px); width: auto; height: auto; object-fit: contain; border-radius: 12px; background: var(--night-3) center / cover no-repeat; }
   .lb__slide figcaption { color: #ddd; font-size: 0.9rem; text-align: center; max-width: 60ch; }
   .lb__close, .lb__nav { z-index: 2; background: rgb(255 255 255 / 0.14); color: #fff; border: 0; border-radius: 50%; width: 48px; height: 48px; font-size: 1.8rem; line-height: 1; cursor: pointer; transition: background 0.2s; }
   .lb__close:hover, .lb__nav:hover { background: rgb(255 255 255 / 0.28); }

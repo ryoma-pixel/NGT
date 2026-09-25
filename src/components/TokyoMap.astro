@@ -64,10 +64,6 @@ const km5 = map.km * 5;
         ))}
       </ul>
 
-      <dl class="tmap__hops">
-        <div><dt>Shinjuku <span aria-hidden="true">⇄</span> Ueno</dt><dd>about 25 min · JR Yamanote Line</dd></div>
-        <div><dt>Ueno <span aria-hidden="true">⇄</span> Asakusa</dt><dd>about 5 min · Ginza Line</dd></div>
-      </dl>
     </div>
 
     <figure class="tmap__fig" data-tmap>
@@ -130,12 +126,7 @@ const km5 = map.km * 5;
           <text class="tmap__slip-t" x="0" y="0">東京二十三区</text>
         </g>
       </svg>
-      <ul class="tmap__legend" aria-hidden="true">
-        <li><i class="tmap__lg-loop"></i>JR Yamanote Line · one loop ≈ 1 hr</li>
-        <li><i class="tmap__lg-dot"></i>Where the walks start</li>
-        <li><i class="tmap__lg-ward"></i>Tour wards</li>
-      </ul>
-      <figcaption class="tmap__src">Illustrated map. Ward shapes: Global Map Japan (GSI), simplified. Stations and travel times are approximate.</figcaption>
+      <figcaption class="tmap__src">Map data: Global Map Japan (GSI)</figcaption>
     </figure>
   </div>
 </section>
@@ -200,10 +191,6 @@ const km5 = map.km * 5;
   .tmap__tours em { margin-left: auto; font-style: normal; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid currentColor; padding: 1px 6px; border-radius: 999px; }
   .tmap__tours :global(.tmap__kamon) { --kamon-bg: var(--ai); color: var(--cream); background: var(--ai); border-radius: 50%; }
 
-  .tmap__hops { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .tmap__hops div { padding: 10px 12px; border-left: 3px solid #86a83c; background: rgb(255 250 238 / 0.6); }
-  .tmap__hops dt { font-family: var(--display); text-transform: uppercase; font-size: 1.05rem; }
-  .tmap__hops dd { margin: 2px 0 0; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; color: #5a5040; }
 
   /* the map */
   .tmap__fig { margin: 0; }
@@ -240,13 +227,8 @@ const km5 = map.km * 5;
   .tmap__scale text { font-family: var(--mono); font-weight: 700; font-size: 15px; fill: #1f2d52; }
   .tmap__slip rect { fill: #fffaf0; stroke: #1f2d52; stroke-width: 2.5; }
   .tmap__slip-t { font-family: var(--mincho); font-weight: 800; font-size: 32px; fill: #1f2d52; writing-mode: vertical-rl; letter-spacing: 0.08em; }
-  .tmap__legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
-  .tmap__legend li { display: inline-flex; align-items: center; gap: 8px; }
-  .tmap__legend i { display: inline-block; flex: none; }
-  .tmap__lg-loop { width: 26px; height: 6px; border-radius: 3px; background: #86a83c; box-shadow: 0 0 0 2px #fffaf0; }
-  .tmap__lg-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ai); box-shadow: 0 0 0 2px #fffaf0, 0 0 0 3px var(--ai); }
-  .tmap__lg-ward { width: 16px; height: 12px; background: #f0dfae; border: 1px solid rgb(31 45 82 / 0.5); }
-  .tmap__src { margin-top: 8px; font-family: var(--mono); font-size: 0.66rem; color: #6a604e; text-align: right; }
+  /* the data source must be credited; kept as small as it can be */
+  .tmap__src { margin-top: 2px; font-family: var(--mono); font-size: 0.58rem; color: rgb(106 96 78 / 0.7); text-align: right; }
 
   /* entrance: wards settle, the loop is drawn with a brush, stations pop, plates are stamped */
   :global(.js) .tmap__fig:not(.is-in) .tmap__land { opacity: 0; }
@@ -264,8 +246,7 @@ const km5 = map.km * 5;
     .tmap__fig { order: -1; }
     .tmap__text { display: contents; }
     .tmap__text > .eyebrow, .tmap__text > h2 { order: -2; }
-    .tmap__hops { grid-template-columns: 1fr; }
-  }
+    }
   @media (max-width: 760px) {
     .tmap__svg { margin: 0 -8px; width: calc(100% + 16px); }
     .tmap__slip, .tmap__scale { display: none; }
