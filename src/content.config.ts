@@ -40,6 +40,8 @@ const tours = defineCollection({
       image: z.string().optional(),
       imageAlt: z.string().optional(),
       mapUrl: z.string().url().optional(),
+      // Google Maps embed URL (Share > Embed a map > src). Shown as a map under the meeting point photo.
+      mapEmbed: z.string().url().optional(),
     }).optional(),
     // The tour told as chapters, each with a real photo
     story: z.array(z.object({ title: z.string(), text: z.string(), image: z.string().optional(), imageAlt: z.string().optional() })).default([]),

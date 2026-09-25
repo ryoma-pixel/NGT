@@ -38,6 +38,7 @@ content:
           - { name: access, label: How to get there, type: text }
           - { name: lookFor, label: How to find the guide, type: string }
           - { name: mapUrl, label: Google Maps URL, type: string }
+          - { name: mapEmbed, label: Google Maps embed URL (Share > Embed a map > the src inside the code), type: string }
           - { name: image, label: Meeting point photo, type: image }
           - { name: imageAlt, label: Meeting point photo description, type: string }
       - { name: hook, label: Hook (one line under the title on social/SEO), type: string }

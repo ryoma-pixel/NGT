@@ -17,7 +17,8 @@ meetingPoint:
   name: Shinjuku Station – East Exit Police Box (Koban)
   access: Right outside the JR Shinjuku Station East Exit, next to the plaza.
   lookFor: Your guide wearing a Ninja costume.
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.691785,139.701133
+  mapUrl: https://www.google.com/maps?cid=12278454329469033437
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.399534062637!2d139.7011327!3d35.69178459999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd0a97e58d5%3A0xaa65d5289adbdbdd!2z5paw5a6_6K2m5a-f572yIOaWsOWuv-mnheadseWPo-S6pOeVqg!5e0!3m2!1sen!2sus!4v1770788106393!5m2!1sen!2sus
 itinerary:
 - title: Meet up & icebreaker
 - title: Hanazono Shrine (20 min)

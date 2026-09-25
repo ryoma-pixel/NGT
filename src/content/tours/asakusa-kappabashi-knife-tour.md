@@ -20,7 +20,8 @@ meetingPoint:
   access: Right outside Tawaramachi Station Exit 3 on the Tokyo Metro Ginza Line (about 10 minutes’ walk from Asakusa Station).
   image: /images/tours/asakusa-kappabashi-knife-tour/meeting.webp
   imageAlt: The meeting point at Tawaramachi Station Exit 3
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.709903,139.791152
+  mapUrl: https://www.google.com/maps?cid=2512034677748079050
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d202.47895365982575!2d139.7911522!3d35.7099034!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188fdd3b6131c9%3A0x22dc8a3ae6a319ca!2sSanzendo!5e0!3m2!1sen!2sjp!4v1787192705465!5m2!1sen!2sjp
 itinerary:
 - title: Meeting & introduction (5 min)
 - title: Ceramics treasure hunt (10 min)

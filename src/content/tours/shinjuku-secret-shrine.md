@@ -18,7 +18,8 @@ meetingPoint:
   name: Shinjuku Toho Building 1F (next to the entrance of “Maruhan” Pachinko)
   access: 5-minute walk from JR Shinjuku Station East Exit; 3-minute walk from Seibu Shinjuku Station.
   lookFor: Look for the guide wearing a Ninja costume.
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.695163,139.699479
+  mapUrl: https://www.google.com/maps?cid=2311272050053509278
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.262268735693!2d139.69947897604285!3d35.695163129208076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd8225192f9%3A0x201349af12ba709e!2z44Oe44Or44OP44Oz5paw5a6_5p2x5a6d44OT44Or5bqX!5e0!3m2!1sen!2sjp!4v1771226581240!5m2!1sen!2sjp
 itinerary:
 - title: Meeting & introduction (5 min)
 - title: Kabukicho Ichibangai & Sakura-dori (10 min)
@@ -53,10 +54,22 @@ gallery:
   alt: A guest photographing the Ninja guide on a Shinjuku street
 - src: /images/tours/shinjuku-secret-shrine/gallery-3.webp
   alt: Guests walking with the Ninja guide at Hanazono Shrine
-- src: /images/tours/shinjuku-secret-shrine/gallery-4.webp
-  alt: Shinjuku skyline glowing at night
+- src: /images/tours/shinjuku-secret-shrine/gallery-12.webp
+  alt: Walking through a tunnel of red torii gates carpeted with ginkgo leaves
+- src: /images/tours/shinjuku-secret-shrine/gallery-8.webp
+  alt: The Ninja guide holding a paper lantern on a Kabukicho street
+- src: /images/tours/shinjuku-secret-shrine/gallery-9.webp
+  alt: A guest laughing with the guide in front of the Kabukicho gate
+- src: /images/tours/shinjuku-secret-shrine/gallery-7.webp
+  alt: Guests and their Ninja guide under the Kabukicho Ichibangai gate
+- src: /images/tours/shinjuku-secret-shrine/gallery-11.webp
+  alt: Guests with the Ninja guide on the steps of Hanazono Shrine
+- src: /images/tours/shinjuku-secret-shrine/gallery-10.webp
+  alt: The Ninja guide lighting the way through a dark back alley
 - src: /images/tours/shinjuku-secret-shrine/gallery-5.webp
   alt: A quiet back alley behind the neon
+- src: /images/tours/shinjuku-secret-shrine/gallery-4.webp
+  alt: Shinjuku skyline glowing at night
 - src: /images/tours/shinjuku-secret-shrine/gallery-6.webp
   alt: Shinjuku crossing at dusk
 tagline: The neon hides a shrine.

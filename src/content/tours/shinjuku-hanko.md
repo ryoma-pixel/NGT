@@ -21,6 +21,7 @@ meetingPoint:
   image: /images/tours/shinjuku-hanko/meeting.webp
   imageAlt: The Ninja guide pointing to the Busta Shinjuku sign
   mapUrl: https://www.google.com/maps/search/?api=1&query=Busta+Shinjuku
+  mapEmbed: https://www.google.com/maps?q=Busta%20Shinjuku&hl=en&z=17&output=embed
 itinerary:
 - title: Meet up & Kanji workshop (10 min)
 - title: Hanko shop & ordering (20 min)

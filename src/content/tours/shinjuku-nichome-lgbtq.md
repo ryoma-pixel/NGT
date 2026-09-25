@@ -19,7 +19,8 @@ meetingPoint:
   name: In front of Starbucks Coffee (Keio Shinjuku 3-chome Building)
   access: Directly outside Exit C1 of Shinjuku-sanchome Station (subway), or about a 10-minute walk from JR Shinjuku Station.
   lookFor: Your guide wears smart-casual clothing. For this tour, the guide does not wear a Ninja costume.
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.690221,139.7054
+  mapUrl: https://www.google.com/maps?cid=17344434654068008268
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.4630776326862!2d139.7054001!3d35.6902205!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188d0cf8e1ca63%3A0xf0b3cf6c51b2e54c!2z44K544K_44O844OQ44OD44Kv44K5IOOCs-ODvOODkuODvCDkuqznjovmlrDlrr_kuInkuIHnm67jg5Pjg6vlupc!5e0!3m2!1sen!2sus!4v1770791839637!5m2!1sen!2sus
 itinerary:
 - title: Meet & Nichome main street (30 min)
 - title: Golden Gai & creative diversity (15 min)
@@ -55,6 +56,14 @@ gallery:
   alt: Warm lights in a narrow Shinjuku alley
 - src: /images/tours/shinjuku-nichome-lgbtq/gallery-4.webp
   alt: Kabukicho neon at night
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-5.webp
+  alt: The local guide chatting with guests outside an izakaya in Nichome
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-6.webp
+  alt: Guests looking around a Nichome street hung with colorful lanterns
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-7.webp
+  alt: A guest taking in the streets of Shinjuku Nichome
+- src: /images/tours/shinjuku-nichome-lgbtq/gallery-8.webp
+  alt: Bar signs stacked along a Nichome building
 tagline: Tokyo’s rainbow district, decoded.
 pattern: ichimatsu
 kamon: rainbow

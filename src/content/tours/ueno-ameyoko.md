@@ -18,7 +18,8 @@ cardBack: /images/tours/ueno-ameyoko/back-g4.webp
 meetingPoint:
   name: JR Ueno Station, Ueno no Mori Sakura Terrace (1F, in front of Tully’s Coffee)
   access: 'From the JR Ueno Station Shinobazu Exit: turn right, walk under the elevated tracks and cross the pedestrian bridge. From the Keisei Ueno Station Main Exit: turn left and you are there.'
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.711871,139.775128
+  mapUrl: https://www.google.com/maps?cid=2090841618492416242
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1271.493752707308!2d139.77512837530372!3d35.71187098205929!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188e9e76f203e5%3A0x1d04295fcfd7e0f2!2sTully%E2%80%99s%20Coffee%20-%20Ueno-no-Mori%20Sakura%20Terrace!5e0!3m2!1sen!2sjp!4v1786346416494!5m2!1sen!2sjp
 itinerary:
 - title: Meeting & introduction (5 min)
 - title: Ameyoko & red lantern alley scouting (20 min)

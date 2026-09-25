@@ -19,7 +19,8 @@ meetingPoint:
   name: Shinjuku Toho Building 1F (look for the Godzilla Head), next to the Maruhan Pachinko entrance
   access: 3-minute walk from Seibu Shinjuku Station; 9-minute walk from JR Shinjuku Station.
   lookFor: Your Ninja-themed guide with the e-scooters.
-  mapUrl: https://www.google.com/maps/search/?api=1&query=35.694631,139.700337
+  mapUrl: https://www.google.com/maps?cid=7738124920942906102
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.488006606277!2d139.70033677623356!3d35.69463092957204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd99918077b%3A0x6b63579e04664af6!2sShinjuku%20Toho%20Building!5e0!3m2!1sen!2sjp!4v1710000000000!5m2!1sen!2sjp
 itinerary:
 - title: Meet up & safety briefing (25 min before start)
   text: Please arrive exactly at the meeting time (3:05 PM or 6:05 PM) for check-in and safety instructions.
