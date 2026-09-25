@@ -30,6 +30,8 @@ const { scenes, cover, end, kamon } = Astro.props;
         <ol class="emk__paper">
           {scenes.map((s, i) => (
             <li class:list={['emk__scene', { 'emk__scene--low': i % 2 === 1 }]} data-emk-scene>
+              <span class="emk__haze emk__haze--top" aria-hidden="true" style={`--dl:${-i * 2.3}s`}></span>
+              <span class="emk__haze emk__haze--bot" aria-hidden="true" style={`--dl:${-i * 1.7 - 3}s`}></span>
               <div class="emk__kin">
               <figure class="emk__fig">
                 <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 40vw" alt={s.alt} width="1400" height="1050" loading="lazy" data-emk-img />
@@ -50,6 +52,7 @@ const { scenes, cover, end, kamon } = Astro.props;
       </div>
       <div class="emk__shade" aria-hidden="true"></div>
       <Mist class="emk__mist" strength={0.9} />
+      <Mist class="emk__mist emk__mist--top" strength={0.7} />
       <div class="emk__roller" aria-hidden="true"><span data-emk-grain></span></div>
     </div>
   </div>
@@ -126,6 +129,21 @@ const { scenes, cover, end, kamon } = Astro.props;
   .emk__slip { width: 58%; background: var(--cream); color: var(--ai); padding: 22px 14px; text-align: center; box-shadow: 0 6px 18px rgb(0 0 0 / 0.35); border: 1px solid #d9cdb3; }
   .emk__slip :global(.emk__tate) { position: static; display: block; margin: 0 auto 14px; color: var(--ai); font-size: clamp(1.4rem, 2.2vw, 1.9rem); padding-top: 0; background: none; }
   .emk__stage :global(.emk__mist) { z-index: 2; height: 40%; }
+  .emk__stage :global(.emk__mist--top) { top: 0; bottom: auto; height: 30%; transform: scaleY(-1); }
+  /* Misty clouds on the paper (kasumi), drawn soft instead of hard-edged; they ride with the paper and breathe slowly */
+  .emk__haze { position: absolute; z-index: 1; left: -34%; width: 72%; height: 44%; pointer-events: none; animation: haze 11s ease-in-out var(--dl, 0s) infinite alternate;
+    background:
+      radial-gradient(ellipse 34% 30% at 34% 46%, rgb(255 255 252 / 0.97), rgb(255 255 252 / 0) 70%),
+      radial-gradient(ellipse 30% 26% at 60% 40%, rgb(255 254 249 / 0.95), rgb(255 254 249 / 0) 70%),
+      radial-gradient(ellipse 26% 22% at 80% 54%, rgb(252 249 240 / 0.9), rgb(252 249 240 / 0) 70%),
+      radial-gradient(ellipse 22% 20% at 16% 58%, rgb(252 249 240 / 0.85), rgb(252 249 240 / 0) 70%),
+      radial-gradient(ellipse 46% 24% at 50% 66%, rgb(160 142 110 / 0.28), rgb(160 142 110 / 0) 72%); }
+  .emk__haze--top { top: 0; }
+  .emk__haze--bot { bottom: 0; left: auto; right: -34%; transform: scaleX(-1); animation-name: haze-r; }
+  @keyframes haze { from { transform: translate3d(-18px, 0, 0) scale(1); } to { transform: translate3d(22px, -6px, 0) scale(1.06); } }
+  @keyframes haze-r { from { transform: scaleX(-1) translate3d(-18px, 0, 0); } to { transform: scaleX(-1) translate3d(22px, 6px, 0) scale(1.06); } }
+  .emk__kin { position: relative; z-index: 0; }
+  .emk__txt { position: relative; z-index: 2; }
   .emk__cover :global(.emk__kamon) { color: var(--cream); --kamon-bg: var(--ai); }
   .emk__slip-t { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height: 1; margin: 0 0 10px; }
   .emk__slip-s { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
@@ -176,5 +194,5 @@ const { scenes, cover, end, kamon } = Astro.props;
     .emk.is-pinned .emk__roller { right: 0; width: 26px; }
     .emk.is-pinned .emk__stage::after { width: 13px; }
   }
-  @media (prefers-reduced-motion: reduce) { .emk__hint { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze { animation: none; } }
 </style>
