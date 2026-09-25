@@ -16,7 +16,7 @@ meetingPoint:
   access: 0–2 minutes from Asakusa Station (Ginza Line / Asakusa Line), Exit 2 or A4.
   lookFor: Look for the guide dressed in black with a black mask or bandana. This tour’s guides do not wear the full Ninja costume.
   mapUrl: https://maps.app.goo.gl/yQ8SrMyFZX3RGSKS9
-  mapEmbed: https://www.google.com/maps?q=Asakusa%20Culture%20Tourist%20Information%20Center&hl=en&z=17&output=embed
+  mapEmbed: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d810!2d139.7965461!3d35.7107074!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188ec1060d67af%3A0x7740294b7ef17d49!2sAsakusa%20Culture%20Tourist%20Information%20Center!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp
 itinerary:
 - title: Meet up & rooftop view of Senso-ji and Skytree (8 min)
 - title: Kaminarimon & the Nakamise shutter-art hunt (11 min)
