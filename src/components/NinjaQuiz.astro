@@ -5,6 +5,7 @@
 // picture scroll (the Emaki with `mission`), which lands with a DON! right there and unrolls the route. No page jump.
 // Coming-soon tours can be picked too; their scroll asks the guest to get in touch instead of booking.
 import Icon from './Icon.astro';
+import Portrait from './Portrait.astro';
 import type { Tour } from '../lib/tours';
 import type { IconName } from './icons';
 interface Props { tours: Tour[] }
@@ -72,7 +73,7 @@ const puffs: [number, number, number, number, number][] = [
           {questions.map((q, i) => (
             <fieldset class="qz__step" data-qz-q={q.key} disabled={i > 0} aria-hidden={i > 0 ? 'true' : undefined}>
               <legend class="qz__q">
-                <span class="qz__who qz__who--lord" aria-hidden="true">殿</span>
+                <Portrait who="lord" class="qz__who qz__who--lord" />
                 <span class="qz__say"><small>The Lord asks · 0{i + 1}</small>{q.q}</span>
               </legend>
               <div class:list={['qz__opts', { 'qz__opts--two': q.opts.length === 2 }]}>
@@ -87,13 +88,13 @@ const puffs: [number, number, number, number, number][] = [
           ))}
         </div>
         <p class="qz__nod" data-qz-nod hidden>
-          <span class="qz__who qz__who--ninja" aria-hidden="true">忍</span>
+          <Portrait who="ninja" class="qz__who qz__who--ninja" />
           <span class="qz__say qz__say--ninja"><small>Your Ninja</small><span data-qz-nod-t></span></span>
         </p>
       </div>
 
       <div class="qz__result" data-qz-result hidden>
-        <p class="qz__decree"><span class="qz__who qz__who--lord" aria-hidden="true">殿</span><span class="qz__say"><small>The Lord</small>It is decided. Untie the scroll, traveler.</span></p>
+        <p class="qz__decree"><Portrait who="lord" class="qz__who qz__who--lord" /><span class="qz__say"><small>The Lord</small>It is decided. Untie the scroll, traveler.</span></p>
         <p class="visually-hidden" aria-live="polite" data-qz-status></p>
         <span class="qz__poof" aria-hidden="true">
           <b class="qz__flash"></b>
@@ -337,12 +338,11 @@ const puffs: [number, number, number, number, number][] = [
   .qz__trail-i.is-now { border-style: solid; border-color: var(--ai); background: #fff; }
   .qz__trail-i.is-done { border-style: solid; border-color: var(--ai); background: var(--ai); color: var(--cream); }
 
-  /* Who is speaking: the Lord (殿) and your Ninja (忍), as round crests (illustrations can replace them later) */
-  .qz__who { flex: none; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; font-family: var(--mincho); font-weight: 800; font-size: 1.7rem; line-height: 1; }
-  .qz__who--lord { background: var(--ai) var(--seigaiha); color: var(--cream); box-shadow: 0 0 0 3px var(--gold), 0 6px 14px rgb(31 45 82 / 0.3); }
-  .qz__who--ninja { background: #14151f; color: var(--cream); box-shadow: 0 0 0 3px var(--cream), 0 0 0 5px #14151f, 0 6px 14px rgb(0 0 0 / 0.3); }
+  /* Who is speaking: ukiyo-e portraits of the Lord and your Ninja (Portrait.astro). The Lord leans in when he asks. */
+  .qz__step:not([disabled]) :global(.qz__who--lord img), .qz__result.is-poof :global(.qz__who--lord img) { animation: qz-speak 0.9s cubic-bezier(.3,1.4,.5,1) 0.15s both; }
+  @keyframes qz-speak { 0% { transform: translateY(8px) scale(1.08); } 45% { transform: translateY(-2px) scale(1.03) rotate(-1.5deg); } 100% { transform: none; } }
   .qz__say { position: relative; display: block; background: #fff; border: 2px solid var(--ai); border-radius: 14px; padding: 10px 16px 12px; box-shadow: 0 4px 0 var(--ai); }
-  .qz__say::before { content: ''; position: absolute; left: -10px; top: 20px; width: 16px; height: 16px; background: #fff; border-left: 2px solid var(--ai); border-bottom: 2px solid var(--ai); transform: rotate(45deg); }
+  .qz__say::before { content: ''; position: absolute; left: -10px; top: 26px; width: 16px; height: 16px; background: #fff; border-left: 2px solid var(--ai); border-bottom: 2px solid var(--ai); transform: rotate(45deg); }
   .qz__say small { display: block; font-family: var(--mono); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(31 45 82 / 0.65); margin-bottom: 4px; }
 
   /* Questions */
@@ -377,9 +377,10 @@ const puffs: [number, number, number, number, number][] = [
   .qz__say--ninja::before { left: auto; right: -10px; background: #14151f; border: 0; }
   .qz__say--ninja small { color: rgb(247 240 227 / 0.7); }
   .qz__nod.is-on .qz__say--ninja { animation: qz-say 0.35s cubic-bezier(.3,1.5,.5,1) both; }
-  .qz__nod.is-on .qz__who--ninja { animation: qz-nodnod 0.9s ease-in-out 0.1s both; }
+  .qz__nod.is-on :global(.qz__who--ninja img) { animation: qz-nodnod 1s ease-in-out 0.1s both; }
   @keyframes qz-say { from { opacity: 0; transform: translateX(16px) scale(0.9); } }
-  @keyframes qz-nodnod { 0%, 100% { transform: none; } 20% { transform: translateY(5px) rotate(4deg); } 40% { transform: none; } 60% { transform: translateY(5px) rotate(4deg); } 80% { transform: none; } }
+  /* umu, umu: the picture dips twice inside its frame, like a nod */
+  @keyframes qz-nodnod { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(7px) rotate(-3deg) scale(1.04); } 40%, 80% { transform: translateY(-1px); } }
 
   /* ============ Result: the sealed scroll ============ */
   .qz__result[hidden] { display: none; }
@@ -467,7 +468,6 @@ const puffs: [number, number, number, number, number][] = [
     .qz__opts { grid-template-columns: 1fr 1fr; }
     .qz__opt { min-height: 100px; font-size: 1.15rem; padding: 14px; }
     .qz__q { padding-right: 0; padding-top: 30px; gap: 12px; }
-    .qz__who { width: 46px; height: 46px; font-size: 1.35rem; }
     .qz__scroll { height: 390px; }
     .qz__seal-scroll { width: 124px; margin-left: -62px; height: 360px; top: 15px; }
     .qz__slip-jp { font-size: 1.7rem; }
@@ -476,6 +476,6 @@ const puffs: [number, number, number, number, number][] = [
   @media (prefers-reduced-motion: reduce) {
     .qz__steps, .qz__seal-scroll, .qz__ask, .qz__cord-l, .qz__cord-r, .qz__knot, .qz__ground, .qz__scroll { transition: none !important; }
     .qz__result.is-poof .qz__poof i, .qz__result.is-poof .qz__flash, .qz__result.is-poof .qz__seal-scroll, .qz__tap-dot,
-    .qz__opt.is-picked, .qz__nod.is-on .qz__say--ninja, .qz__nod.is-on .qz__who--ninja, .qz__result.is-poof .qz__decree { animation: none !important; }
+    .qz__opt.is-picked, .qz__nod.is-on .qz__say--ninja, .qz__nod.is-on :global(.qz__who--ninja img), .qz__step :global(.qz__who img), .qz__result :global(.qz__who img), .qz__result.is-poof .qz__decree { animation: none !important; }
   }
 </style>
