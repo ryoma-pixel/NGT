@@ -9,8 +9,10 @@ interface Props {
   description?: string;
   image?: string;
   jsonLd?: object;
+  /** Header floats transparently over a full-screen hero until the page scrolls */
+  overlayHeader?: boolean;
 }
-const { title, description = site.description, image, jsonLd } = Astro.props;
+const { title, description = site.description, image, jsonLd, overlayHeader = false } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.tagline}`;
 const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site);
 const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
@@ -32,9 +34,7 @@ const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="/fonts/dela-gothic-one-latin.woff2" as="font" type="font/woff2" crossorigin />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     {site.gtmId ? (
       <script is:inline define:vars={{ id: site.gtmId }}>
@@ -50,17 +50,43 @@ const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
     ) : null}
   </head>
   <body>
-    <Header />
+    <Header overlay={overlayHeader} />
     <main id="main">
       <slot />
     </main>
     <Footer />
     <script>
-      // Reveal elements marked data-reveal as they scroll into view
+      // Scroll motion: reveal / wipe / stamp elements as they enter, count numbers up, and solidify the header.
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const countUp = (el: HTMLElement) => {
+        const end = Number(el.dataset.count);
+        const dec = (el.dataset.count || '').split('.')[1]?.length ?? 0;
+        if (reduce) { el.textContent = end.toFixed(dec); return; }
+        const t0 = performance.now();
+        const tick = (t: number) => {
+          const p = Math.min(1, (t - t0) / 1400);
+          el.textContent = (end * (1 - Math.pow(1 - p, 3))).toFixed(dec);
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      };
       const io = new IntersectionObserver((entries) => {
-        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
-      }, { rootMargin: '0px 0px -10% 0px' });
-      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target as HTMLElement;
+          el.classList.add('is-in');
+          if (el.dataset.count) countUp(el);
+          io.unobserve(el);
+        });
+      }, { rootMargin: '0px 0px -12% 0px' });
+      document.querySelectorAll('[data-reveal],[data-wipe],[data-stamp],[data-count]').forEach((el) => io.observe(el));
+
+      const hdr = document.querySelector('.hdr');
+      if (hdr) {
+        const onScroll = () => hdr.classList.toggle('is-scrolled', scrollY > 40);
+        addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
     </script>
     <script>
       // Analytics: any element with data-track sends an event (GA4 via gtag, or GTM via dataLayer).

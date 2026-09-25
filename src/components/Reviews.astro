@@ -1,10 +1,10 @@
 ---
 import reviews from '../data/reviews.json';
 ---
-<section class="section section--dark rv" id="reviews">
+<section class="section rv" id="reviews">
   <div class="wrap">
     <p class="eyebrow"><span class="jp">お客様の声</span> Guest voices</p>
-    <h2>Smiles from our guests</h2>
+    <h2 class="rv__h">Smiles from our guests</h2>
     <ul class="rv__scores">
       {reviews.ratings.map((r) => (
         <li><a href={r.url} rel="noopener" target="_blank" data-track="click_review_source" data-source={r.source}>
@@ -15,7 +15,7 @@ import reviews from '../data/reviews.json';
     </ul>
     <div class="rv__list">
       {reviews.items.map((r) => (
-        <figure class="rv__item">
+        <figure class="rv__item" data-reveal>
           <span class="rv__stars" aria-label={`${r.stars} out of 5 stars`}>{'★'.repeat(r.stars)}</span>
           <blockquote>“{r.text}”</blockquote>
           <figcaption>{r.author} — {r.source} review{r.tour ? ` (${r.tour})` : ''}</figcaption>
@@ -28,13 +28,16 @@ import reviews from '../data/reviews.json';
 
 <style>
   .rv__scores { list-style: none; padding: 0; margin: 8px 0 28px; display: flex; flex-wrap: wrap; gap: 14px; }
-  .rv__scores a { display: flex; align-items: baseline; gap: 10px; padding: 12px 18px; border-radius: 14px; background: rgb(255 255 255 / 0.06); border: 1px solid rgb(255 255 255 / 0.12); color: var(--cream); text-decoration: none; }
+  .rv__h { font-size: clamp(2rem, 4.8vw, 3.6rem); }
+  .rv__scores a { display: flex; align-items: baseline; gap: 10px; padding: 14px 20px; border-radius: 14px; background: var(--night); color: var(--cream); text-decoration: none; transition: transform 0.2s; }
+  .rv__scores a:hover { transform: translateY(-3px); }
   .rv__scores strong { font-family: var(--display); font-size: 1.6rem; color: var(--lantern); }
   .rv__scores span:last-child { font-size: 0.85rem; opacity: 0.8; }
   .rv__stars { color: var(--lantern); letter-spacing: 2px; }
   .rv__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
-  .rv__item { margin: 0; padding: 22px; border-radius: var(--radius); background: var(--cream); color: var(--ink); display: flex; flex-direction: column; gap: 10px; }
-  .rv__item blockquote { margin: 0; font-size: 1rem; line-height: 1.55; flex: 1; }
+  .rv__item { margin: 0; padding: 26px; border-radius: var(--radius); background: var(--card); color: var(--ink); display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); position: relative; }
+  .rv__item::before { content: '“'; position: absolute; right: 18px; top: -6px; font-family: var(--display); font-size: 5rem; color: rgb(226 70 43 / 0.15); line-height: 1; }
+  .rv__item blockquote { margin: 0; font-size: 1.05rem; line-height: 1.55; flex: 1; }
   .rv__item figcaption { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
-  .rv__note { margin-top: 18px; font-size: 0.8rem; color: rgb(247 240 227 / 0.6); }
+  .rv__note { margin-top: 18px; font-size: 0.8rem; color: var(--muted); }
 </style>

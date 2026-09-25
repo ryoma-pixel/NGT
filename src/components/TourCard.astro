@@ -1,5 +1,6 @@
 ---
 import { fromPrice, yen, type Tour } from '../lib/tours';
+import { srcset } from '../lib/img';
 interface Props { tour: Tour }
 const { tour } = Astro.props;
 const d = tour.data;
@@ -7,7 +8,7 @@ const d = tour.data;
 <article class="tc">
   <a href={`/tour/${tour.id}`} class="tc__link" data-track="click_tour_card" data-tour={tour.id}>
     {d.heroImage
-      ? <img class="tc__img" src={d.heroImage} alt={d.heroAlt ?? ''} loading="lazy" width="700" height="438" />
+      ? <img class="tc__img" src={d.heroImage} srcset={srcset(d.heroImage, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={d.heroAlt ?? ''} loading="lazy" width="700" height="438" />
       : <div class="tc__img tc__ph" aria-hidden="true"></div>}
     <div class="tc__shade" aria-hidden="true"></div>
     <div class="tc__body">

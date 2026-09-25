@@ -1,0 +1,29 @@
+---
+// Headline whose words slide up one by one. Use "|" in the text for a line break.
+interface Props { text: string; as?: 'h1' | 'h2' | 'p'; class?: string; delay?: number }
+const { text, as: Tag = 'h2', class: cls, delay = 150 } = Astro.props;
+// *words between asterisks* are highlighted, even across several words
+let inEm = false;
+const lines = text.split('|').map((l) =>
+  l.trim().split(/\s+/).map((raw) => {
+    const start = raw.startsWith('*');
+    const end = raw.endsWith('*');
+    const word = raw.replace(/^\*|\*$/g, '');
+    if (start) inEm = true;
+    const em = inEm;
+    if (end) inEm = false;
+    return { word, em };
+  }),
+);
+let i = 0;
+---
+<Tag class:list={['split', cls]} aria-label={text.replace(/\|/g, ' ')} style={`--d0:${delay}ms`}>
+  {lines.map((words, li) => (
+    <>
+      {li > 0 && <br />}
+      {words.map(({ word, em }) => (
+        <><span class="w" aria-hidden="true"><span style={`--i:${i++}`}>{em ? <em>{word}</em> : word}</span></span>{' '}</>
+      ))}
+    </>
+  ))}
+</Tag>

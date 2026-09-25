@@ -1,5 +1,6 @@
 ---
 // Full-screen, slowly zooming photo slideshow of real tour moments.
+import { srcset } from '../lib/img';
 interface Slide { src: string; mobile: string; alt: string; caption: string }
 interface Props { slides: Slide[] }
 const { slides } = Astro.props;
@@ -9,8 +10,8 @@ const n = slides.length;
   {slides.map((s, i) => (
     <figure class="hs__slide" style={`--i:${i}`}>
       <picture>
-        <source media="(max-width: 700px)" srcset={s.mobile} />
-        <img src={s.src} alt={s.alt} width="2000" height="1125" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} />
+        <source media="(max-width: 700px)" srcset={srcset(s.mobile, 900) ?? s.mobile} sizes="100vw" />
+        <img src={s.src} srcset={srcset(s.src, 2000)} sizes="100vw" alt={s.alt} width="2000" height="1125" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding={i === 0 ? 'sync' : 'async'} />
       </picture>
       <figcaption>{s.caption}</figcaption>
     </figure>
@@ -26,6 +27,10 @@ const n = slides.length;
   @keyframes hs-fade {
     0% { opacity: 0; } 5% { opacity: 1; }
     33% { opacity: 1; } 40% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @supports (animation-timeline: scroll()) {
+    .hs { animation: hs-drift linear both; animation-timeline: scroll(root); animation-range: 0 100vh; }
+    @keyframes hs-drift { to { transform: translateY(25%); opacity: 0.35; } }
   }
   @keyframes hs-zoom { from { transform: scale(1.02); } to { transform: scale(1.14); } }
   @media (prefers-reduced-motion: reduce) {
