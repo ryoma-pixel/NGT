@@ -63,6 +63,7 @@ gallery:
   alt: The golden gate of Ueno Toshogu
 tagline: Your first 60 minutes in Tokyo.
 pattern: asanoha
+kamon: asanoha
 features:
 - icon: chat
   label: Ask us anything

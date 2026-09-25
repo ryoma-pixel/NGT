@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import BookingBox from '../../components/BookingBox.astro';
 import Split from '../../components/Split.astro';
 import Icon from '../../components/Icon.astro';
-import Crest from '../../components/Crest.astro';
+import Kamon from '../../components/Kamon.astro';
 import PatternBand from '../../components/PatternBand.astro';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
@@ -79,7 +79,7 @@ const jsonLd = [
     <span class="tate tate--area" aria-hidden="true">{AREA_JP[d.area]}</span>
     <div class="wrap th__in">
       {d.draft && <span class="badge badge--draft">DRAFT – not shown on the live site</span>}
-      <div class="th__label"><Crest pattern={d.pattern} size={46} /><h1 class="th__title">{d.title}</h1></div>
+      <div class="th__label"><Kamon name={d.kamon} size={52} /><h1 class="th__title">{d.title}</h1></div>
       <Split as="p" class="th__tag" text={d.tagline ?? d.shortTitle} delay={150} />
       <ul class="th__meta">
         <li><Icon name="clock" size={18} /> {d.durationMinutes} min</li>

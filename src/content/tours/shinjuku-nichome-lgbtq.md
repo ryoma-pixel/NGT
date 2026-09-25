@@ -57,6 +57,7 @@ gallery:
   alt: Kabukicho neon at night
 tagline: Tokyo’s rainbow district, decoded.
 pattern: ichimatsu
+kamon: rainbow
 features:
 - icon: rainbow
   label: LGBTQ+ history

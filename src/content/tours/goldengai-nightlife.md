@@ -64,6 +64,7 @@ gallery:
   alt: Guests and the Ninja guide near the Godzilla Head
 tagline: 280 tiny doors. Pick yours.
 pattern: shippo
+kamon: noren
 features:
 - icon: sake
   label: 280+ tiny bars

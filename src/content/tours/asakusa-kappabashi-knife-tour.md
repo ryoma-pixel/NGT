@@ -67,6 +67,7 @@ gallery:
   alt: The modern Kama-Asa knife store
 tagline: The street where chefs shop.
 pattern: yagasuri
+kamon: knives
 features:
 - icon: knife
   label: Your Japanese knife

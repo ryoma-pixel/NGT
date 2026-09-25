@@ -56,6 +56,7 @@ gallery:
   alt: A group riding e-scooters at night
 tagline: Glide past skyscrapers.
 pattern: tatewaku
+kamon: wheel
 features:
 - icon: scooter
   label: E-scooter ride

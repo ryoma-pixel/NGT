@@ -1,18 +1,22 @@
 ---
-// Picture scroll (emaki): scrolling down unrolls a paper scroll sideways out of the roller on the right.
-// Real tour photos, separated by golden "suyari-gasumi" clouds. Without JS or with reduced motion it is a plain sideways list.
+// Picture scroll (emaki), woodblock-print style: scrolling down slides a long sheet of paper sideways.
+// Each scene: a huge minute number, a vertical Japanese word, a framed photo (ink-black until it reaches the centre,
+// then it turns to colour) and one short line. A 60-minute ruler at the bottom tracks progress.
+// Without JS or with reduced motion it is a plain sideways list.
 import Tate from './Tate.astro';
+import Kamon from './Kamon.astro';
 import { srcset } from '../lib/img';
-interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
-interface Props { scenes: Scene[]; cover: { title: string; sub: string }; end: { title: string; cta: string; href: string } }
-const { scenes, cover, end } = Astro.props;
-
-// A band of cloud "pills" stacked like the mist in old picture scrolls
-const cloud = (seed: number) => {
-  const r = (n: number) => ((Math.sin(seed * 9.7 + n * 3.1) + 1) / 2);
-  const pills = [0, 1, 2].map((k) => ({ x: 10 + r(k) * 90, y: 8 + k * 22, w: 180 + r(k + 5) * 140, h: 26 }));
-  return pills;
-};
+import { patternBg } from '../lib/patterns';
+interface Scene { kicker: string; title: string; text: string; image: string; alt: string; tate?: string }
+interface Props {
+  scenes: Scene[];
+  cover: { title: string; sub: string; tate: string };
+  end: { title: string; cta: string; href: string };
+  kamon?: string;
+  pattern?: string;
+}
+const { scenes, cover, end, kamon, pattern } = Astro.props;
+const bigNum = (k: string) => k.match(/^\d+/)?.[0] ?? '';
 ---
 <section class="emk" data-emaki aria-label="A night with your Ninja, told as a picture scroll">
   <div class="emk__pin">
@@ -21,32 +25,31 @@ const cloud = (seed: number) => {
       <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / {String(scenes.length).padStart(2, '0')}</p>
     </div>
     <div class="emk__stage">
-      <div class="emk__track" data-emk-track>
+      <div class="emk__track" data-emk-track style={`--pat:${patternBg(pattern, '#1f2d52', 0.55)}`}>
         <div class="emk__cover">
-          <div class="emk__slip">
-            <Tate text="新宿の一夜" class="emk__tate" />
-            <h2 class="emk__slip-t">{cover.title}</h2>
-            <p class="emk__slip-s">{cover.sub}</p>
+          <Tate text={cover.tate} class="emk__tate" />
+          <div class="emk__cover-txt">
+            <Kamon name={kamon} size={64} class="emk__kamon" />
+            <h2 class="emk__title">{cover.title}</h2>
+            <p class="emk__sub">{cover.sub}</p>
+            <p class="emk__hint" aria-hidden="true">Scroll →</p>
           </div>
-          <p class="emk__hint" aria-hidden="true">Scroll to unroll →</p>
         </div>
-        <ol class="emk__paper">
+        <ol class="emk__scenes">
           {scenes.map((s, i) => (
-            <li class:list={['emk__scene', { 'emk__scene--low': i % 2 === 1 }]} data-emk-scene>
-              <svg class="emk__cloud emk__cloud--top" viewBox="0 0 440 80" preserveAspectRatio="none" aria-hidden="true">
-                {cloud(i + 1).map((p) => <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="13" />)}
-              </svg>
-              <figure class="emk__fig">
-                <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 40vw" alt={s.alt} width="1400" height="1050" loading="lazy" data-emk-img />
-              </figure>
+            <li class:list={['emk__scene', { 'emk__scene--low': i % 2 === 1 }]} data-emk-scene data-kicker={s.kicker}>
+              <span class="emk__num" aria-hidden="true">{bigNum(s.kicker)}</span>
+              <div class="emk__art">
+                <figure class="emk__fig">
+                  <img src={s.image} srcset={srcset(s.image, 1400)} sizes="(max-width: 700px) 80vw, 36vw" alt={s.alt} width="1400" height="1050" loading="lazy" />
+                </figure>
+                {s.tate && <Tate text={s.tate} class="emk__word" />}
+              </div>
               <div class="emk__txt">
                 <p class="emk__kicker">{s.kicker}</p>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
               </div>
-              <svg class="emk__cloud emk__cloud--bot" viewBox="0 0 440 80" preserveAspectRatio="none" aria-hidden="true">
-                {cloud(i + 7).map((p) => <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="13" />)}
-              </svg>
             </li>
           ))}
           <li class="emk__end">
@@ -55,8 +58,12 @@ const cloud = (seed: number) => {
           </li>
         </ol>
       </div>
-      <div class="emk__shade" aria-hidden="true"></div>
-      <div class="emk__roller" aria-hidden="true"><span data-emk-grain></span></div>
+    </div>
+    <div class="wrap emk__ruler" aria-hidden="true">
+      <span class="emk__rl">00</span>
+      <span class="emk__bar"><span class="emk__fill" data-emk-fill></span></span>
+      <span class="emk__rl">60 min</span>
+      <span class="emk__now" data-emk-now></span>
     </div>
   </div>
 </section>
@@ -67,17 +74,17 @@ const cloud = (seed: number) => {
     if (reduce.matches) return;
     const track = sec.querySelector<HTMLElement>('[data-emk-track]')!;
     const stage = track.parentElement!;
-    const grain = sec.querySelector<HTMLElement>('[data-emk-grain]');
     const count = sec.querySelector('[data-emk-count]');
+    const fill = sec.querySelector<HTMLElement>('[data-emk-fill]');
+    const now = sec.querySelector<HTMLElement>('[data-emk-now]');
     const scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')];
-    const imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]'));
-    let startX = 0, dist = 0, ticking = false;
+    let startX = 0, dist = 0, ticking = false, last = -1;
 
     const measure = () => {
       sec.classList.add('is-pinned');
       const sw = stage.clientWidth;
-      startX = sw * (sw < 700 ? 0.12 : 0.42);
-      dist = Math.max(0, startX + track.scrollWidth - sw * 0.9);
+      startX = sw * (sw < 700 ? 0.04 : 0.06);
+      dist = Math.max(0, startX + track.scrollWidth - sw);
       sec.style.height = `${dist + innerHeight}px`;
       update();
     };
@@ -88,16 +95,19 @@ const cloud = (seed: number) => {
       const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
       const x = startX - p * dist;
       track.style.transform = `translate3d(${x}px,0,0)`;
-      if (grain) grain.style.transform = `translate3d(0,${(p * dist * 0.35) % 60}px,0)`;
-      const mid = stage.clientWidth / 2;
-      let active = 0;
+      if (fill) fill.style.transform = `scaleX(${p})`;
+      const mid = stage.clientWidth * 0.5;
+      let active = -1;
       scenes.forEach((s, i) => {
-        const c = x + s.offsetLeft + track.querySelector<HTMLElement>('.emk__paper')!.offsetLeft + s.offsetWidth / 2;
-        if (c < mid + s.offsetWidth / 2) active = i + 1;
-        const img = imgs[i];
-        if (img) img.style.transform = `translate3d(${(c - mid) * -0.06}px,0,0) scale(1.12)`;
+        const left = x + s.offsetLeft; // offsetLeft is measured from the track
+        if (left < mid) active = i;
       });
-      if (count) count.textContent = String(active).padStart(2, '0');
+      if (active !== last) {
+        last = active;
+        scenes.forEach((s, i) => s.classList.toggle('is-lit', i === active));
+        if (count) count.textContent = String(active + 1).padStart(2, '0');
+        if (now) now.textContent = active >= 0 ? scenes[active].dataset.kicker ?? '' : '';
+      }
     };
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     measure();
@@ -108,78 +118,67 @@ const cloud = (seed: number) => {
 </script>
 
 <style>
-  .emk { position: relative; background: var(--night) var(--seigaiha); color: var(--cream); }
+  .emk { position: relative; background: var(--night); color: var(--cream); }
   .emk__pin { padding: 56px 0 40px; }
-  /* Spotlight: a beam of light falls across the dark room; the paper slides through it */
-  .emk__pin { position: relative; }
-  .emk__pin::before { content: ''; position: absolute; inset: 0; pointer-events: none; background:
-    linear-gradient(112deg, transparent 30%, rgb(247 240 227 / 0.06) 42%, rgb(247 240 227 / 0.11) 50%, rgb(247 240 227 / 0.05) 58%, transparent 68%),
-    radial-gradient(ellipse 40% 12% at 50% 96%, rgb(247 240 227 / 0.16), transparent 70%); }
-  .emk__shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse 55% 75% at 50% 50%, transparent 55%, rgb(8 8 18 / 0.55) 100%); }
-  .emk.is-pinned .emk__pin { position: sticky; top: 0; height: 100svh; padding: 84px 0 28px; display: flex; flex-direction: column; overflow: hidden; }
+  .emk.is-pinned .emk__pin { position: sticky; top: 0; height: 100svh; padding: 84px 0 22px; display: flex; flex-direction: column; overflow: hidden; }
   .emk .eyebrow { color: rgb(247 240 227 / 0.8); }
   .emk__head { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
   .emk__count { margin: 0; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; color: rgb(247 240 227 / 0.6); }
   .emk__count span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--cream); }
-  .emk__stage { position: relative; flex: 1; min-height: 0; overflow-x: auto; scrollbar-width: none; margin-top: 8px; padding: 16px 0; }
+  .emk__stage { position: relative; flex: 1; min-height: 0; overflow-x: auto; scrollbar-width: none; margin-top: 6px; }
   .emk.is-pinned .emk__stage { overflow: hidden; }
-  /* The part of the paper still wound on the roller stays hidden */
-  .emk.is-pinned .emk__stage::after { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: calc(4vw + 17px); background: var(--night); z-index: 2; }
-  .emk__track { display: flex; height: 100%; width: max-content; will-change: transform; }
 
-  /* Cover: navy silk with a title slip, like the outside of a real scroll */
-  .emk__cover { position: relative; flex: none; width: min(34vw, 380px); min-height: 460px; background: var(--ai) var(--seigaiha); border-radius: 10px 0 0 10px; box-shadow: inset -18px 0 24px -12px rgb(0 0 0 / 0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px; }
-  .emk__slip { width: 58%; background: var(--cream); color: var(--ai); padding: 22px 14px; text-align: center; box-shadow: 0 6px 18px rgb(0 0 0 / 0.35); border: 1px solid #d9cdb3; }
-  .emk__slip :global(.emk__tate) { position: static; display: block; margin: 0 auto 14px; color: var(--ai); font-size: clamp(1.4rem, 2.2vw, 1.9rem); padding-top: 0; background: none; }
-  .emk__slip-t { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height: 1; margin: 0 0 10px; }
-  .emk__slip-s { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
-  .emk__hint { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(247 240 227 / 0.75); margin: 0; animation: nudge 1.6s ease-in-out infinite; }
+  /* One long sheet: flat paper, a strip of the tour's pattern along the top like mounting silk, ink rules like a print frame */
+  .emk__track { position: relative; display: flex; height: 100%; width: max-content; will-change: transform; background: #f2eadb; color: var(--ai);
+    border-top: 16px solid var(--ai); box-shadow: inset 0 3px 0 var(--cream), inset 0 6px 0 var(--ai), inset 0 -6px 0 var(--ai), inset 0 -9px 0 var(--cream), inset 0 -11px 0 var(--ai); }
+  .emk__track::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; background: var(--cream) var(--pat); opacity: 0.9; }
+
+  /* Title panel */
+  .emk__cover { flex: none; display: flex; align-items: center; gap: 28px; padding: 0 56px 0 48px; border-right: 2px solid var(--ai); }
+  .emk__cover :global(.emk__tate) { position: static; font-size: clamp(3.2rem, 7vh, 5.4rem); letter-spacing: 0.12em; padding-top: 0; background: none; color: var(--ai); }
+  .emk__cover-txt { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; max-width: 250px; }
+  .emk__cover :global(.emk__kamon) { color: var(--ai); --kamon-bg: #f2eadb; }
+  .emk__title { font-size: clamp(2.2rem, 4.4vw, 3.4rem); line-height: 0.92; margin: 0; color: var(--ai); }
+  .emk__sub { margin: 0; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .emk__hint { margin: 10px 0 0; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; animation: nudge 1.6s ease-in-out infinite; }
   @keyframes nudge { 50% { transform: translateX(8px); } }
 
-  /* Washi paper */
-  .emk__paper { list-style: none; margin: 0; padding: 0 60px 0 30px; display: flex; align-items: stretch; color: var(--ai);
-    background:
-      radial-gradient(circle at 20% 30%, rgb(160 130 80 / 0.07), transparent 40%),
-      radial-gradient(circle at 70% 80%, rgb(160 130 80 / 0.06), transparent 45%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-      #f3ead6;
-    position: relative; box-shadow: 0 30px 70px rgb(0 0 0 / 0.5); }
-  /* Torn washi edges */
-  .emk__paper::before, .emk__paper::after { content: ''; position: absolute; left: 0; right: 0; height: 16px; pointer-events: none; }
-  .emk__paper::before { top: -15px; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%2716%27%3E%3Cpath%20fill%3D%27%23f3ead6%27%20d%3D%27M0%2016%20L0.0%206.9%20L4.1%209.9%20L7.6%208.8%20L13.1%204.5%20L19.7%204.3%20L25.7%204.6%20L29.3%207.8%20L38.1%205.1%20L42.7%209.6%20L52.3%209.2%20L58.1%2012.8%20L61.4%2011.7%20L66.5%205.3%20L70.3%206.8%20L79.0%205.6%20L86.1%209.8%20L91.7%208.9%20L95.1%204.5%20L99.6%2010.1%20L105.5%206.8%20L112.6%208.1%20L117.7%2011.1%20L125.6%206.2%20L132.7%208.7%20L141.8%2010.6%20L146.8%2012.8%20L150.6%207.8%20L158.9%205.4%20L165.4%204.4%20L173.0%2010.9%20L180.0%2011.9%20L185.2%2010.3%20L192.4%209.2%20L198.6%2011.6%20L208.2%208.3%20L215.9%204.5%20L223.8%209.8%20L233.7%2011.4%20L238.7%207.5%20L240.0%206.9%20L240%2016Z%27/%3E%3C/svg%3E") repeat-x; }
-  .emk__paper::after { bottom: -15px; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%2716%27%3E%3Cpath%20fill%3D%27%23f3ead6%27%20d%3D%27M0%200%20L0.0%209.1%20L4.1%206.1%20L7.6%207.2%20L13.1%2011.5%20L19.7%2011.7%20L25.7%2011.4%20L29.3%208.2%20L38.1%2010.9%20L42.7%206.4%20L52.3%206.8%20L58.1%203.2%20L61.4%204.3%20L66.5%2010.7%20L70.3%209.2%20L79.0%2010.4%20L86.1%206.2%20L91.7%207.1%20L95.1%2011.5%20L99.6%205.9%20L105.5%209.2%20L112.6%207.9%20L117.7%204.9%20L125.6%209.8%20L132.7%207.3%20L141.8%205.4%20L146.8%203.2%20L150.6%208.2%20L158.9%2010.6%20L165.4%2011.6%20L173.0%205.1%20L180.0%204.1%20L185.2%205.7%20L192.4%206.8%20L198.6%204.4%20L208.2%207.7%20L215.9%2011.5%20L223.8%206.2%20L233.7%204.6%20L238.7%208.5%20L240.0%209.1%20L240%200Z%27/%3E%3C/svg%3E") repeat-x; }
-  .emk__scene { position: relative; flex: none; width: min(44vw, 560px); padding: 4vh 34px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+  /* Scenes */
+  .emk__scenes { list-style: none; margin: 0; padding: 0; display: flex; }
+  .emk__scene { position: relative; flex: none; width: min(46vw, 600px); padding: 5vh 48px 5vh 40px; display: flex; flex-direction: column; justify-content: center; gap: 20px; border-right: 1px solid rgb(31 45 82 / 0.25); }
   .emk__scene--low { flex-direction: column-reverse; }
-  .emk__fig { position: relative; margin: 0; height: clamp(200px, 40vh, 420px); overflow: hidden; border-radius: 3px; box-shadow: 0 2px 0 #d8c9a6, 0 14px 30px rgb(60 40 10 / 0.25); }
-  .emk__fig img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); will-change: transform; }
-  .emk__txt h3 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); text-transform: uppercase; line-height: 1; margin: 6px 0 8px; color: var(--ai); }
-  .emk__txt p { margin: 0; color: #4a4336; }
-  .emk__txt .emk__kicker { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--ai); border: 1.5px solid var(--ai); padding: 3px 8px; }
-  .emk__cloud { position: absolute; left: -60px; width: calc(100% + 120px); height: 70px; z-index: 2; pointer-events: none; }
-  .emk__cloud rect { fill: #e0cb97; stroke: #c9ad6c; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-  .emk__cloud--top { top: -8px; }
-  .emk__cloud--bot { bottom: -8px; }
-  .emk__scene:nth-child(odd) .emk__cloud--bot, .emk__scene:nth-child(even) .emk__cloud--top { opacity: 0.55; }
-  .emk__end { flex: none; width: min(40vw, 460px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; padding: 0 40px; }
-  .emk__end-t { font-family: var(--display); text-transform: uppercase; font-size: clamp(2.6rem, 5vw, 4.4rem); line-height: 0.95; margin: 0; color: var(--ai); }
+  .emk__num { position: absolute; bottom: 2vh; right: 20px; font-family: var(--display); font-size: clamp(6rem, 17vh, 11rem); line-height: 0.8; color: transparent; -webkit-text-stroke: 1.5px rgb(31 45 82 / 0.28); pointer-events: none; }
+  .emk__scene--low .emk__num { bottom: auto; top: 2vh; }
+  .emk__art { position: relative; display: flex; align-items: flex-start; gap: 16px; }
+  .emk__fig { position: relative; flex: 1; margin: 0; height: clamp(180px, 36vh, 380px); border: 3px solid var(--ai); box-shadow: 10px 10px 0 var(--ai); overflow: hidden; background: var(--ai); }
+  .emk__fig img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); opacity: 0.8; transform: scale(1.06); transition: filter 0.8s ease, opacity 0.8s ease, transform 1.4s ease; }
+  .emk__scene.is-lit .emk__fig img { filter: none; opacity: 1; transform: none; }
+  .emk:not(.is-pinned) .emk__fig img { filter: none; opacity: 1; transform: none; }
+  .emk__art :global(.emk__word) { position: static; font-size: clamp(1.5rem, 3.4vh, 2.2rem); letter-spacing: 0.18em; padding-top: 0; background: none; color: var(--ai); }
+  .emk__txt { position: relative; }
+  .emk__txt h3 { font-size: clamp(1.8rem, 3vw, 2.6rem); text-transform: uppercase; line-height: 1; margin: 8px 0 8px; color: var(--ai); }
+  .emk__txt p { margin: 0; color: #463f33; }
+  .emk__txt .emk__kicker { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; color: var(--cream); background: var(--ai); padding: 3px 8px; }
+  .emk__end { flex: none; width: min(40vw, 460px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; padding: 0 48px; }
+  .emk__end-t { font-family: var(--display); text-transform: uppercase; font-size: clamp(2.8rem, 5.4vw, 4.8rem); line-height: 0.92; margin: 0; color: var(--ai); }
 
-  /* Wooden roller the paper comes out of */
-  .emk__roller { display: none; }
-  .emk.is-pinned .emk__roller { display: block; position: absolute; right: 4vw; top: -14px; bottom: -14px; width: 34px; border-radius: 17px; overflow: hidden; z-index: 3;
-    background: linear-gradient(90deg, #3b2412, #7a4f2a 35%, #a8743f 50%, #6d4424 70%, #2e1b0c); box-shadow: -14px 0 24px rgb(0 0 0 / 0.45); }
-  .emk__roller span { position: absolute; left: 0; right: 0; top: -60px; bottom: -60px; background: repeating-linear-gradient(180deg, rgb(0 0 0 / 0.18) 0 2px, transparent 2px 12px, rgb(255 255 255 / 0.06) 12px 13px, transparent 13px 30px); }
-  .emk.is-pinned .emk__roller::before, .emk.is-pinned .emk__roller::after { content: ''; position: absolute; left: 3px; right: 3px; height: 20px; background: var(--ai); border-radius: 6px; }
-  .emk.is-pinned .emk__roller::before { top: 0; }
-  .emk.is-pinned .emk__roller::after { bottom: 0; }
+  /* 60-minute ruler */
+  .emk__ruler { display: none; }
+  .emk.is-pinned .emk__ruler { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; width: 100%; margin-top: 14px; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(247 240 227 / 0.7); }
+  .emk__bar { position: relative; height: 10px; background: repeating-linear-gradient(90deg, rgb(247 240 227 / 0.35) 0 1px, transparent 1px calc(100% / 12)); border-bottom: 1px solid rgb(247 240 227 / 0.35); }
+  .emk__fill { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--cream); transform-origin: left; transform: scaleX(0); }
+  .emk__now { grid-column: 1 / -1; justify-self: center; color: var(--cream); min-height: 1em; }
 
   @media (max-width: 700px) {
     .emk.is-pinned .emk__pin { padding-top: 76px; }
-    .emk__cover { width: 72vw; min-height: 0; }
-    .emk__scene { width: 80vw; padding: 3vh 18px; }
-    .emk__fig { height: 34svh; }
-    .emk__end { width: 76vw; }
-    .emk.is-pinned .emk__roller { right: 0; width: 26px; }
-    .emk.is-pinned .emk__stage::after { width: 13px; }
+    .emk__cover { padding: 0 28px 0 24px; gap: 16px; }
+    .emk__cover-txt { max-width: 190px; }
+    .emk__scene { width: 84vw; padding: 3vh 22px; }
+    .emk__fig { height: 30svh; box-shadow: 7px 7px 0 var(--ai); }
+    .emk__end { width: 80vw; padding: 0 28px; }
   }
-  @media (prefers-reduced-motion: reduce) { .emk__hint { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .emk__hint { animation: none; }
+    .emk__fig img { filter: none; opacity: 1; transform: none; transition: none; }
+  }
 </style>

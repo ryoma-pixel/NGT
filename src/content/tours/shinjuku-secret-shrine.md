@@ -61,6 +61,7 @@ gallery:
   alt: Shinjuku crossing at dusk
 tagline: The neon hides a shrine.
 pattern: uroko
+kamon: torii
 features:
 - icon: torii
   label: A secret shrine

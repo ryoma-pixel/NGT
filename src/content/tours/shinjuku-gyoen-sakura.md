@@ -65,6 +65,7 @@ gallery:
   alt: Shinjuku skyline over the garden pond
 tagline: Sweets first, then sakura.
 pattern: seigaiha
+kamon: sakura
 features:
 - icon: dango
   label: Japanese sweets

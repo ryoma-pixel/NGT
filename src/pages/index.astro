@@ -30,11 +30,11 @@ const slides = [
 
 // One real hour on the Secret Shrine tour (times follow its itinerary)
 const night = [
-  { kicker: '00–05 min', title: 'Meet under Godzilla', text: 'Say “Konnichiwa!” Your Ninja is waiting.', image: '/images/tours/shinjuku-secret-shrine/story-1.webp', alt: 'The red Kabukicho Ichibangai arch above a busy street' },
-  { kicker: '05–15 min', title: 'Into the neon', text: 'Kabukicho, the town that never sleeps.', image: '/images/tours/shinjuku-secret-shrine/gallery-1.webp', alt: 'A guest walking with the Ninja guide through Kabukicho' },
-  { kicker: '15–30 min', title: 'A shrine nobody sees', text: 'Behind the neon, red gates and silence.', image: '/images/tours/shinjuku-secret-shrine/story-2.webp', alt: 'A Ninja guide with a lantern in a tunnel of red torii gates' },
-  { kicker: '30–55 min', title: '280 tiny bars', text: 'Golden Gai’s alleys, then a wish at Hanazono Shrine.', image: '/images/tours/goldengai-nightlife/story-2.webp', alt: 'Colorful bar signboards crowding a narrow Golden Gai alley' },
-  { kicker: '55–60 min', title: 'Your night starts now', text: 'Photos, plus your Ninja’s dinner picks.', image: '/images/tours/goldengai-nightlife/story-4.webp', alt: 'Guests posing with their Ninja guide under Kabukicho neon' },
+  { kicker: '00–05 min', tate: '集合', title: 'Meet under Godzilla', text: 'Say “Konnichiwa!” Your Ninja is waiting.', image: '/images/tours/shinjuku-secret-shrine/story-1.webp', alt: 'The red Kabukicho Ichibangai arch above a busy street' },
+  { kicker: '05–15 min', tate: '歌舞伎町', title: 'Into the neon', text: 'Kabukicho, the town that never sleeps.', image: '/images/tours/shinjuku-secret-shrine/gallery-1.webp', alt: 'A guest walking with the Ninja guide through Kabukicho' },
+  { kicker: '15–30 min', tate: '秘境', title: 'A shrine nobody sees', text: 'Behind the neon, red gates and silence.', image: '/images/tours/shinjuku-secret-shrine/story-2.webp', alt: 'A Ninja guide with a lantern in a tunnel of red torii gates' },
+  { kicker: '30–55 min', tate: '路地', title: '280 tiny bars', text: 'Golden Gai’s alleys, then a wish at Hanazono Shrine.', image: '/images/tours/goldengai-nightlife/story-2.webp', alt: 'Colorful bar signboards crowding a narrow Golden Gai alley' },
+  { kicker: '55–60 min', tate: '宴', title: 'Your night starts now', text: 'Photos, plus your Ninja’s dinner picks.', image: '/images/tours/goldengai-nightlife/story-4.webp', alt: 'Guests posing with their Ninja guide under Kabukicho neon' },
 ];
 
 const google = reviews.ratings.find((r) => r.source === 'Google');
@@ -108,7 +108,9 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   <div id="night">
     <Emaki
       scenes={night}
-      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min' }}
+      cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
+      kamon="torii"
+      pattern="uroko"
       end={{ title: 'Your turn.', cta: 'Book this night', href: '/tour/shinjuku-secret-shrine#book' }}
     />
   </div>

@@ -2,7 +2,7 @@
 import { fromPrice, yen, type Tour } from '../lib/tours';
 import { srcset } from '../lib/img';
 import Icon from './Icon.astro';
-import Crest from './Crest.astro';
+import Kamon from './Kamon.astro';
 import { patternBg } from '../lib/patterns';
 interface Props { tour: Tour }
 const { tour } = Astro.props;
@@ -17,7 +17,7 @@ const secret = d.gallery[1] ?? d.gallery[0];
       ? <img class="tc__img" src={d.heroImage} srcset={srcset(d.heroImage, 1400)} sizes="(max-width: 700px) 80vw, 380px" alt={d.heroAlt ?? ''} loading="lazy" width="700" height="438" />
       : <div class="tc__img tc__ph" aria-hidden="true"></div>}
     <div class="tc__shade" aria-hidden="true"></div>
-    <Crest pattern={d.pattern} size={42} class="tc__crest" />
+    <Kamon name={d.kamon} size={46} class="tc__crest" />
     <div class="tc__body">
       {d.draft && <span class="badge badge--draft">DRAFT</span>}
       <p class="tc__area">{d.area} · {d.durationMinutes} min{d.privateTour ? ' · Private' : ''}</p>
@@ -70,7 +70,7 @@ const secret = d.gallery[1] ?? d.gallery[0];
   .tc.is-flipped .tc__inner { transform: rotateY(180deg); }
   .tc__face { position: absolute; inset: 0; display: block; border-radius: 6px; overflow: hidden; background: var(--night-2); box-shadow: var(--shadow); color: #fff; text-decoration: none; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .tc__back { transform: rotateY(180deg); }
-  .tc :global(.tc__crest) { position: absolute; top: 14px; left: 14px; z-index: 2; }
+  .tc :global(.tc__crest) { position: absolute; top: 12px; left: 12px; z-index: 2; filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.55)); }
   .tc__band { position: absolute; top: 0; left: 0; right: 0; height: 64px; background-color: var(--ai); border-bottom: 3px solid var(--cream); }
   .tc__shade--back { background: linear-gradient(180deg, rgb(10 8 20 / 0.2), rgb(10 8 20 / 0.92) 75%); }
   .tc__secret { display: inline-block; margin: 0 0 12px; font-family: var(--mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border: 1.5px solid var(--cream); padding: 3px 8px; }

@@ -65,6 +65,7 @@ gallery:
   alt: A narrow shopping lane in Shinjuku 3-chome
 tagline: Your name, carved in kanji.
 pattern: kikko
+kamon: seal
 features:
 - icon: brush
   label: Your own kanji name
