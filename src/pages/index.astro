@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import TourList from '../components/TourList.astro';
 import PriceTable from '../components/PriceTable.astro';
+import Dialogue from '../components/Dialogue.astro';
 import faq from '../data/faq.json';
 import site from '../data/site.json';
 import { getTours } from '../lib/tours';
@@ -11,40 +12,71 @@ const jsonLd = [
   { '@context': 'https://schema.org', '@type': 'TravelAgency', name: site.name, url: Astro.site?.toString(), description: site.description, sameAs: [site.instagram, site.tiktok] },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
 ];
+
+// Each "surprise" is a real stop on one of our tours
+const surprises = [
+  { kanji: '驚', title: 'A shrine hidden in the neon', text: 'Just steps from the lights of Kabukicho, find a quiet shrine most visitors walk right past.', href: '/tour/shinjuku-secret-shrine' },
+  { kanji: '楽', title: '280+ tiny bars in one maze', text: 'Wander the narrow lanes of Golden Gai with a guide who knows its stories.', href: '/tour/goldengai-nightlife' },
+  { kanji: '印', title: 'Your own Japanese name stamp', text: 'Find a personal hanko — the souvenir Japanese people use for life.', href: '/tour/shinjuku-hanko' },
+];
 ---
 <Base jsonLd={jsonLd}>
   <section class="hero">
     <div class="wrap hero__in">
-      <p class="eyebrow">Private walking tours · Tokyo</p>
-      <h1>Tokyo's backstreets,<br />guided by a Ninja.</h1>
-      <p class="hero__lead">Hidden shrines, tiny bars, retro alleys and the best souvenirs — explored in 60 minutes with a friendly local Ninja guide. Just you and your group.</p>
-      <div class="hero__cta">
-        <a class="btn btn--primary" href="#tours" data-track="click_hero_cta">Find your tour</a>
-        <a class="btn btn--ghost" href="#how">How it works</a>
+      <div class="hero__text">
+        <p class="eyebrow"><span class="jp">ようこそ</span> Welcome to Tokyo</p>
+        <h1>Make a Ninja friend.<br /><span class="hero__accent">Discover Tokyo's secrets.</span></h1>
+        <p class="hero__lead">Walk hidden alleys, tiny bars and quiet shrines with a warm local guide who loves to share, laugh and surprise you. 60 minutes, just your group.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#tours" data-track="click_hero_cta">Find your tour</a>
+          <a class="btn btn--ghost" href="#how">How it works</a>
+        </div>
+        <ul class="hero__chips">
+          <li>⏱ 60 min</li>
+          <li>👥 Private group</li>
+          <li>👧 Kids free</li>
+          <li>💴 Best price here</li>
+        </ul>
       </div>
-      <ul class="hero__facts">
-        <li><strong>60 min</strong><span>easy walk</span></li>
-        <li><strong>Private</strong><span>your group only</span></li>
-        <li><strong>Kids free</strong><span>12 & under</span></li>
-        <li><strong>Best price</strong><span>when you book here</span></li>
-      </ul>
+      <Dialogue lines={[
+        { who: 'guest', text: 'Where do locals actually go around here?' },
+        { who: 'ninja', text: 'Follow me! There is a shrine hidden right behind the neon. ⛩️' },
+        { who: 'guest', text: 'No way… we would never have found this!' },
+        { who: 'ninja', text: 'Ninja secret: Golden Gai is next. 280 tiny bars! 🏮' },
+      ]} />
+    </div>
+  </section>
+
+  <section class="section section--pattern">
+    <div class="wrap">
+      <p class="eyebrow"><span class="jp">驚き</span> Little surprises</p>
+      <h2>Moments you won't find in a guidebook</h2>
+      <div class="sur">
+        {surprises.map((s) => (
+          <a class="card sur__item" href={s.href} data-track="click_surprise">
+            <span class="sur__kanji" aria-hidden="true">{s.kanji}</span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 
   <section class="section" id="tours">
     <div class="wrap">
-      <p class="eyebrow">Tours</p>
+      <p class="eyebrow"><span class="jp">ツアー</span> Tours</p>
       <h2>Choose your neighborhood</h2>
       <TourList tours={tours} />
     </div>
   </section>
 
-  <section class="section section--dark">
+  <section class="section section--sakura">
     <div class="wrap split">
       <div>
-        <p class="eyebrow">Group pricing</p>
+        <p class="eyebrow"><span class="jp">料金</span> Group pricing</p>
         <h2>Bring friends, pay less each</h2>
-        <p class="lead">Your guide is yours alone, so the price per person drops as your group grows. Kids 12 and under join free with an adult.</p>
+        <p class="lead">Your guide is yours alone, so the price per person gets lower as your group grows. Kids 12 and under join free with an adult.</p>
       </div>
       <div class="card pbox"><PriceTable /></div>
     </div>
@@ -52,19 +84,19 @@ const jsonLd = [
 
   <section class="section" id="how">
     <div class="wrap">
-      <p class="eyebrow">How it works</p>
-      <h2>Three steps to your Ninja adventure</h2>
+      <p class="eyebrow"><span class="jp">流れ</span> How it works</p>
+      <h2>Three easy steps</h2>
       <ol class="steps">
-        <li><strong>Pick a tour</strong><p>Choose a neighborhood and a theme you love.</p></li>
-        <li><strong>Choose a date & time</strong><p>Book online in a few minutes and get instant confirmation by email.</p></li>
-        <li><strong>Meet your Ninja</strong><p>Find your guide at the meeting point and start exploring.</p></li>
+        <li><span class="steps__n" aria-hidden="true">一</span><strong>Pick a tour</strong><p>Choose a neighborhood and a theme you love.</p></li>
+        <li><span class="steps__n" aria-hidden="true">二</span><strong>Choose a date & time</strong><p>Book online in a few minutes and get instant confirmation by email.</p></li>
+        <li><span class="steps__n" aria-hidden="true">三</span><strong>Meet your Ninja</strong><p>Say "Konnichiwa!" at the meeting point and start exploring together.</p></li>
       </ol>
     </div>
   </section>
 
-  <section class="section faq" id="faq">
+  <section class="section section--pattern faq" id="faq">
     <div class="wrap">
-      <p class="eyebrow">FAQ</p>
+      <p class="eyebrow"><span class="jp">よくある質問</span> FAQ</p>
       <h2>Good to know</h2>
       <div class="faq__list">
         {faq.map((f) => (
@@ -80,27 +112,33 @@ const jsonLd = [
 </Base>
 
 <style>
-  .hero { background: radial-gradient(ellipse at 80% 0%, #3a1f2a 0%, var(--ink) 60%); color: #fff; }
-  .hero__in { padding: 72px 16px 56px; }
-  .hero h1 { font-size: clamp(2.2rem, 7vw, 4rem); }
-  .hero__lead { font-size: 1.15rem; max-width: 36em; color: #ddd7cc; }
-  .hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 36px; }
-  .hero__facts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; max-width: 720px; }
-  .hero__facts li { border-left: 3px solid var(--red); padding-left: 12px; display: flex; flex-direction: column; }
-  .hero__facts strong { font-family: var(--display); font-weight: 400; font-size: 1.1rem; }
-  .hero__facts span { font-size: 0.85rem; color: #bdb7ac; }
+  .hero { background: linear-gradient(180deg, var(--sakura-2) 0%, var(--paper) 100%); overflow: hidden; }
+  .hero__in { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding: 64px 16px 72px; }
+  .hero h1 { font-size: clamp(2.1rem, 5.4vw, 3.6rem); color: var(--ai-dark); }
+  .hero__accent { color: var(--shu); }
+  .hero__lead { font-size: 1.12rem; max-width: 34em; color: var(--ink-2); }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 14px; margin: 26px 0 26px; }
+  .hero__cta .btn--ghost { color: var(--ai); }
+  .hero__chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .hero__chips li { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 0.35em 0.9em; font-size: 0.9rem; font-weight: 600; }
+  .sur { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 8px; }
+  .sur__item { padding: 24px; text-decoration: none; position: relative; transition: transform 0.2s; }
+  .sur__item:hover { transform: translateY(-4px) rotate(-0.5deg); }
+  .sur__kanji { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--shu); color: #fff; font-family: var(--display); font-weight: 700; font-size: 1.6rem; transform: rotate(-6deg); margin-bottom: 14px; box-shadow: 0 3px 0 var(--shu-dark); }
+  .sur__item h3 { color: var(--ai-dark); }
+  .sur__item p { color: var(--muted); margin: 0; }
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-  .pbox { padding: 20px; color: var(--ink); }
-  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: st; }
-  .steps li { counter-increment: st; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
-  .steps li::before { content: counter(st); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .pbox { padding: 22px; }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .steps li { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+  .steps__n { display: block; font-family: var(--display); font-weight: 700; font-size: 2rem; color: var(--shu); line-height: 1; margin-bottom: 10px; }
   .steps p { margin: 0.3em 0 0; color: var(--muted); }
   .faq__list { max-width: 760px; margin-bottom: 24px; }
-  .faq details { border-bottom: 1px solid var(--line); padding: 14px 0; }
-  .faq summary { font-weight: 700; cursor: pointer; }
+  .faq details { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  .faq summary { font-weight: 700; cursor: pointer; color: var(--ai-dark); }
   .faq details p { margin: 0.6em 0 0; color: var(--muted); }
-  @media (max-width: 800px) {
-    .hero__facts { grid-template-columns: repeat(2, 1fr); }
-    .split, .steps { grid-template-columns: 1fr; }
+  @media (max-width: 860px) {
+    .hero__in { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; }
+    .split, .steps, .sur { grid-template-columns: 1fr; }
   }
 </style>

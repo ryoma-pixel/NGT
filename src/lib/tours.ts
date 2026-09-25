@@ -46,3 +46,10 @@ export const THEME_LABELS: Record<string, string> = {
   FourSeasons: 'Seasonal',
   'E-Scooter': 'E-Scooter Rides',
 };
+
+export const AREA_JP: Record<string, string> = {
+  Shinjuku: '新宿',
+  Ueno: '上野',
+  Asakusa: '浅草',
+  Osaka: '大阪',
+};

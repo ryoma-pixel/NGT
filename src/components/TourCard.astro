@@ -1,5 +1,5 @@
 ---
-import { fromPrice, yen, type Tour } from '../lib/tours';
+import { fromPrice, yen, AREA_JP, type Tour } from '../lib/tours';
 interface Props { tour: Tour }
 const { tour } = Astro.props;
 const d = tour.data;
@@ -8,12 +8,12 @@ const d = tour.data;
   <a href={`/tour/${tour.id}`} class="tc__link" data-track="click_tour_card" data-tour={tour.id}>
     <div class="tc__img">
       {d.heroImage
-        ? <img src={d.heroImage} alt={d.heroAlt ?? ''} loading="lazy" width="640" height="400" />
-        : <div class="tc__ph" aria-hidden="true">忍</div>}
-      <span class="tc__area">{d.area}</span>
+        ? <><img src={d.heroImage} alt={d.heroAlt ?? ''} loading="lazy" width="640" height="400" /><span class="tc__stamp" aria-hidden="true">{AREA_JP[d.area]}</span></>
+        : <div class="tc__ph" aria-hidden="true"><span>{AREA_JP[d.area]}</span></div>}
     </div>
     <div class="tc__body">
       {d.draft && <span class="badge badge--draft">DRAFT</span>}
+      <p class="tc__area">{d.area}</p>
       <h3>{d.shortTitle}</h3>
       <p class="tc__sum">{d.summary}</p>
       <div class="tc__meta">
@@ -25,14 +25,18 @@ const d = tour.data;
 </article>
 
 <style>
+  .tc { transition: transform 0.2s, box-shadow 0.2s; }
+  .tc:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgb(60 40 20 / 0.12); }
   .tc__link { display: flex; flex-direction: column; height: 100%; text-decoration: none; }
-  .tc__img { position: relative; aspect-ratio: 16 / 10; background: var(--ink-2); }
+  .tc__img { position: relative; aspect-ratio: 16 / 10; background: var(--sakura-2); }
   .tc__img img { width: 100%; height: 100%; object-fit: cover; }
-  .tc__ph { display: grid; place-items: center; height: 100%; color: #ffffff22; font-size: 5rem; font-family: var(--display); }
-  .tc__area { position: absolute; left: 12px; top: 12px; background: var(--ink); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25em 0.7em; border-radius: 999px; }
-  .tc__body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
-  .tc__body h3 { margin: 0.3em 0; }
+  .tc__ph { display: grid; place-items: center; height: 100%; background: var(--sakura-2) var(--seigaiha); }
+  .tc__ph span { font-family: var(--display); font-weight: 700; font-size: 3.2rem; color: #e9bfc3; letter-spacing: 0.1em; }
+  .tc__stamp { position: absolute; right: 14px; bottom: 14px; width: 52px; height: 52px; border-radius: 50%; background: var(--shu); color: #fff; display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 0.85rem; writing-mode: vertical-rl; letter-spacing: 0.05em; border: 3px solid #fff; transform: rotate(-8deg); }
+  .tc__body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 1; }
+  .tc__area { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ai); }
+  .tc__body h3 { margin: 0.2em 0 0.4em; color: var(--ink); }
   .tc__sum { color: var(--muted); font-size: 0.95rem; flex: 1; }
-  .tc__meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
-  .tc__price strong { color: var(--ink); font-size: 1.1rem; }
+  .tc__meta { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; font-size: 0.85rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; }
+  .tc__price strong { color: var(--shu-dark); font-size: 1.1rem; }
 </style>

@@ -1,18 +1,25 @@
 :root {
-  --ink: #16161f;
-  --ink-2: #2a2a38;
-  --paper: #faf7f2;
+  --paper: #fbf7f0;
+  --paper-2: #f4ecdf;
   --card: #ffffff;
-  --line: #e7e1d6;
-  --muted: #5d5d6c;
-  --red: #c8321f;
-  --red-dark: #a3261a;
-  --gold: #b98d2c;
-  --radius: 14px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px rgb(0 0 0 / 0.06);
-  --display: 'Dela Gothic One', 'Hiragino Kaku Gothic ProN', system-ui, sans-serif;
+  --ink: #2b2622;
+  --ink-2: #4a423b;
+  --muted: #6e655c;
+  --line: #eadfce;
+  --shu: #d9573c;
+  --shu-dark: #b8442b;
+  --ai: #2f4b7c;
+  --ai-dark: #22375c;
+  --sakura: #f7d9dc;
+  --sakura-2: #fcefef;
+  --matcha: #6f8f52;
+  --radius: 20px;
+  --shadow: 0 2px 6px rgb(60 40 20 / 0.05), 0 12px 32px rgb(60 40 20 / 0.07);
+  --display: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
   --body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --max: 1120px;
+  /* Seigaiha (wave) pattern used as a quiet Japanese texture */
+  --seigaiha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23e6d8c3' stroke-width='1.2'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0M8 24a16 16 0 0 1 32 0M16 24a8 8 0 0 1 16 0M-24 12a24 24 0 0 1 48 0M24 12a24 24 0 0 1 48 0'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -25,7 +32,7 @@ body {
 }
 img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; }
-h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.2; letter-spacing: 0.01em; margin: 0 0 0.5em; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; margin: 0 0 0.5em; }
 h1 { font-size: clamp(2rem, 5vw, 3.25rem); }
 h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); }
 h3 { font-size: 1.2rem; }
@@ -33,9 +40,12 @@ p { margin: 0 0 1em; }
 
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
 .section { padding: 56px 0; }
-.section--dark { background: var(--ink); color: #f3efe7; }
-.eyebrow { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 0.5em; }
-.section--dark .eyebrow { color: #f0a08f; }
+.section--dark { background: var(--ai-dark); color: #f3efe7; }
+.section--sakura { background: var(--sakura-2); }
+.section--pattern { background: var(--paper-2) var(--seigaiha); }
+.eyebrow { display: inline-flex; align-items: baseline; gap: 0.6em; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--shu); margin-bottom: 0.6em; }
+.eyebrow .jp { font-family: var(--display); letter-spacing: 0.2em; color: var(--ai); font-size: 0.95rem; }
+.section--dark .eyebrow, .section--dark .eyebrow .jp { color: #f6c1b3; }
 .lead { font-size: 1.1rem; color: var(--muted); max-width: 46em; }
 .section--dark .lead { color: #c9c4ba; }
 
@@ -46,15 +56,15 @@ p { margin: 0 0 1em; }
   transition: background 0.15s, transform 0.15s;
 }
 .btn:active { transform: translateY(1px); }
-.btn--primary { background: var(--red); color: #fff; }
-.btn--primary:hover { background: var(--red-dark); }
+.btn--primary { background: var(--shu); color: #fff; box-shadow: 0 4px 0 var(--shu-dark); }
+.btn--primary:hover { background: var(--shu-dark); }
 .btn--ghost { border-color: currentColor; color: inherit; background: transparent; }
 .btn--block { width: 100%; }
 
 .grid { display: grid; gap: 20px; }
 .grid--3 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 
-.badge { display: inline-block; padding: 0.2em 0.7em; border-radius: 999px; background: #f1ebe0; font-size: 0.8rem; font-weight: 600; color: var(--ink-2); }
+.badge { display: inline-block; padding: 0.2em 0.7em; border-radius: 999px; background: var(--paper-2); font-size: 0.8rem; font-weight: 600; color: var(--ink-2); }
 .badge--draft { background: #ffe58a; }
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
