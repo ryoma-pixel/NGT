@@ -32,6 +32,7 @@ const ogImage = image ? new URL(image, Astro.site).toString() : undefined;
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
+    {process.env.CONTEXT !== 'production' && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />

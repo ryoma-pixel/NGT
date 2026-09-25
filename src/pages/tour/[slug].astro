@@ -6,6 +6,8 @@ import Split from '../../components/Split.astro';
 import Icon from '../../components/Icon.astro';
 import Kamon from '../../components/Kamon.astro';
 import Mist from '../../components/Mist.astro';
+import ReelRail from '../../components/ReelRail.astro';
+import { getReels } from '../../lib/reels';
 import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { getTours, fromPrice, priceTiers, yen, AREA_JP } from '../../lib/tours';
@@ -71,6 +73,7 @@ const jsonLd = [
   },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
 ];
+const reels = getReels(await getTours(), tour.id);
 ---
 <Base title={d.title} description={d.summary} image={d.heroImage} jsonLd={jsonLd} overlayHeader>
   <!-- 1. Hero: one big promise -->
@@ -180,6 +183,16 @@ const jsonLd = [
         <button type="button" class="lb__nav lb__next" aria-label="Next photo">›</button>
       </dialog>
       <script type="application/json" id="gallery-data" set:html={JSON.stringify(d.gallery)} />
+    </section>
+  )}
+
+  {reels.length > 0 && (
+    <section class="section reels">
+      <div class="wrap">
+        <p class="eyebrow">Straight from Instagram</p>
+        <h2>See it for real</h2>
+        <ReelRail reels={reels} />
+      </div>
     </section>
   )}
 

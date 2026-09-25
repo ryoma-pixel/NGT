@@ -5,6 +5,8 @@ import Split from '../components/Split.astro';
 import MissionRail from '../components/MissionRail.astro';
 import Emaki from '../components/Emaki.astro';
 import Mist from '../components/Mist.astro';
+import ReelRail from '../components/ReelRail.astro';
+import { getReels } from '../lib/reels';
 import NinjaQuiz from '../components/NinjaQuiz.astro';
 import Reviews from '../components/Reviews.astro';
 import Icon from '../components/Icon.astro';
@@ -14,6 +16,7 @@ import pricing from '../data/pricing.json';
 import reviews from '../data/reviews.json';
 import { getTours, yen } from '../lib/tours';
 const tours = await getTours();
+const reels = getReels(tours);
 
 const jsonLd = [
   { '@context': 'https://schema.org', '@type': 'TravelAgency', name: site.name, url: Astro.site?.toString(), description: site.description, sameAs: [site.instagram, site.tiktok] },
@@ -112,6 +115,16 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       end={{ title: 'Your turn.', cta: 'Book this night', href: '/tour/shinjuku-secret-shrine#book' }}
     />
   </div>
+
+  {reels.length > 0 && (
+    <section class="section reels" id="reels">
+      <div class="wrap">
+        <p class="eyebrow">Straight from Instagram</p>
+        <Split text="See it | for real." />
+        <ReelRail reels={reels} />
+      </div>
+    </section>
+  )}
 
   <Reviews />
 
@@ -233,7 +246,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
   /* Missions */
   .missions { overflow: hidden; }
   .missions__head { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px 48px; align-items: end; margin-bottom: 24px; }
-  .missions__head :global(h2), .price :global(h2), .how :global(h2) { font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1; }
+  .missions__head :global(h2), .reels :global(h2), .price :global(h2), .how :global(h2) { font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1; }
 
   .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
   .facts li { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1.5px solid var(--ai); border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; }
