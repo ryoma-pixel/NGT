@@ -34,7 +34,7 @@ export function fromPrice(tour: Tour) {
 
 /**
  * Price as guests should read it. Showing only "¥2,500 (4+ guests)" made people think
- * the tour needs 4 people, so tiered tours show the full range: "¥2,500–8,000", "per person, by group size".
+ * the tour needs 4 people, so tiered tours show the full range: "¥2,500–8,000", "per person, by party size".
  */
 export function priceLabel(tour: Tour): { amount: string; note: string; jpy: [number, number] } {
   if (tour.data.fixedPricePerPerson) {
@@ -43,7 +43,7 @@ export function priceLabel(tour: Tour): { amount: string; note: string; jpy: [nu
   }
   const prices = priceTiers(tour).map((t) => t.pricePerPerson);
   const lo = Math.min(...prices), hi = Math.max(...prices);
-  return { amount: `${yen(lo)}–${hi.toLocaleString('en-US')}`, note: 'per person, by group size', jpy: [lo, hi] };
+  return { amount: `${yen(lo)}–${hi.toLocaleString('en-US')}`, note: 'per person, by party size', jpy: [lo, hi] };
 }
 
 export function yen(n: number) {

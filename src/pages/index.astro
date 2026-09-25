@@ -64,7 +64,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     <div class="hero__shade" aria-hidden="true"></div>
     <Mist />
     <div class="wrap hero__in">
-      <p class="hero__kicker">Private walking tours · Tokyo</p>
+      <p class="hero__kicker">Walking tours · Tokyo</p>
       <Split as="h1" class="hero__title" text="Follow | the *Ninja.*" delay={900} />
       <p class="hero__lead">Secret shrines. Tiny bars. Neon alleys. <b>60 minutes.</b></p>
       <div class="hero__cta">
@@ -89,7 +89,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       </div>
       <ul class="facts">
         <li><Icon name="clock" /> 60 min</li>
-        <li><Icon name="group" /> Just your group</li>
+        <li><Icon name="yen" /> Book direct, best price</li>
         <li><Icon name="chat" /> English guide</li>
         <li><Icon name="kid" /> Kids welcome</li>
       </ul>
@@ -126,7 +126,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
     <div class="wrap">
       <p class="eyebrow">Group pricing</p>
       <Split text="Bring friends. | Pay less each." />
-      <p class="lead">One private guide. More friends, lower price.</p>
+      <p class="lead">Priced by your booking: more friends, lower price each.</p>
       <ul class="stamps">
         {pricing.tiers.map((t, i) => (
           <li class="stamp" data-stamp style={`--d:${i * 140}ms; --r:${[-8, 5, -4, 7][i]}deg`}>

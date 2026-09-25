@@ -93,7 +93,7 @@ content:
           - { name: a, label: Answer, type: text }
       - { name: materialCostPerPerson, label: Materials fee per person (JPY), type: number, default: 0 }
       - { name: fixedPricePerPerson, label: Flat price per person (JPY, only for tours outside the group tiers), type: number }
-      - { name: privateTour, label: Private tour (one group per guide), type: boolean, default: true }
+      - { name: privateTour, label: Private tour (no other guests join; normally off), type: boolean, default: false }
       - { name: bookingUrl, label: Booking URL (LINKTIVITY), type: string }
       - name: otaLinks
         label: OTA links (booking sites such as GetYourGuide)

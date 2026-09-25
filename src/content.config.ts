@@ -52,8 +52,8 @@ const tours = defineCollection({
     materialCostPerPerson: z.number().default(0),
     // Tours outside the group-size tiers (e.g. E-Scooter) use one flat price per person
     fixedPricePerPerson: z.number().optional(),
-    // Group-tier tours are private (one group per guide); set false for shared-departure tours
-    privateTour: z.boolean().default(true),
+    // Tours are shared: other bookings can join the same departure. Set true only for a tour sold as private.
+    privateTour: z.boolean().default(false),
     // LINKTIVITY direct booking page for this tour
     bookingUrl: z.string().url().optional(),
     otaLinks: z.array(z.object({ name: z.string(), url: z.string().url() })).default([]),

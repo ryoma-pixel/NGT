@@ -45,7 +45,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const showRanges = clock > 0 && clock <= d.durationMinutes + 30;
 
 // Questions about this tour, answered from the tour data, then the tour's own questions.
-// General questions (private tours, kids, language, why book direct) live in the top page FAQ.
+// General questions (other guests, kids, language, why book direct) live in the top page FAQ.
 const tiers = priceTiers(tour);
 const priceAnswer = d.fixedPricePerPerson
   ? `${yen(d.fixedPricePerPerson)} per person.`
@@ -239,7 +239,7 @@ const reels = getReels(await getTours(), tour.id);
             </details>
           ))}
         </div>
-        <p class="faq__more">Private tours, kids, language and more: <a href="/#faq" data-track="click_next_step" data-location="tour_faq_general">general FAQ</a>.</p>
+        <p class="faq__more">Other guests, kids, language and more: <a href="/#faq" data-track="click_next_step" data-location="tour_faq_general">general FAQ</a>.</p>
       </div>
       <div class="plan__side">
         <BookingBox tour={tour} />

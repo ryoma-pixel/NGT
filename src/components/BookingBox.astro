@@ -11,14 +11,14 @@ const soon = d.comingSoon || !d.bookingUrl;
 <aside class="bb card" id="book">
   {d.fixedPricePerPerson
     ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> <Usd jpy={d.fixedPricePerPerson} /> per person</p>
-    : <p class="bb__from"><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> per adult. The bigger your group, the less each person pays.</p>}
+    : <p class="bb__from"><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> per adult. The more adults in your booking, the less each pays.</p>}
   <PriceTable tour={tour} />
   {soon
     ? <><p class="bb__soon">Launching soon. Tell us your dates and we’ll let you know first.</p><a class="btn btn--primary btn--block" href={`/contact?tour=${tour.id}`} data-track="click_coming_soon" data-tour={tour.id}>Ask about dates</a></>
     : <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>}
   <ul class="bb__why">
     <li>Best price when you book here</li>
-    {d.privateTour && <li>Private: your group only</li>}
+    {d.privateTour && <li>Private: no other guests join</li>}
     <li>Confirmation by email</li>
     <li>Charged in Japanese yen. US$ amounts are approximate, at today’s rate.</li>
   </ul>

@@ -27,6 +27,9 @@ itinerary:
 - title: Customized souvenir stroll (30 min)
 - title: Wrap-up
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-LS1ZU
+otaLinks:
+- name: Klook
+  url: https://www.klook.com/en-US/activity/227324-ninja-go-tours-tokyo-create-your-own-hanko-a-60-minute-experience/
 order: 3
 draft: false
 story:

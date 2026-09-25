@@ -84,6 +84,6 @@ While taking photos of the alley's exterior is fine, pointing your camera around
 
 Kabukicho's alleys make a lot more sense with a local beside you. We'll walk the shortcuts, point out which places welcome visitors, and which ones to skip.
 
-Golden Gai: Back Alleys & Nightlife with a Ninja — 60 min · ¥2,500–8,000 per person, by group size
+Golden Gai: Back Alleys & Nightlife with a Ninja — 60 min · ¥2,500–8,000 per person, by party size
 
 [→ Book now](/tour/goldengai-nightlife)

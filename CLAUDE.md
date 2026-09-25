@@ -23,7 +23,8 @@
 1. **価格（確定）**：大人1名あたり、1名¥8,000／2名¥4,000／3名¥2,800／4名以上¥2,500。`src/data/pricing.json`。
    - 試算：`docs/pricing/NGT_価格モデル.xlsx`。Reelu 特別単価（最初の6ヶ月）では全人数で黒字、通常単価に戻ると1〜3名が赤字 → 特別単価の終了前に単価交渉か価格改定が必要。
    - OTA価格は公式価格 ÷（1 − OTA手数料率）で上乗せする。公式が最安になるようにする。
-   - 子ども：現行は「12歳以下無料」。サイトの文言は「大人1名につき子ども1名まで無料」（提案段階・**ご本人の最終確認待ち**）。
+   - 子ども（2026-09-25 ご本人確認・確定）：**12歳以下は何人でも無料**（大人の同伴が必要）。「大人1名につき子ども1名まで」は誤り。
+   - **ツアーは貸切ではない**（2026-09-25 ご本人指摘）：同じ日時に他の予約のお客様が一緒になることがある。サイトから「Private／Just your group／no strangers」の表現をすべて外し、FAQは「Will other guests join my tour? → They may」。料金は「予約した大人の人数で決まる」と説明する（`by party size`）。`privateTour` は既定 false（貸切で売るツアーができたときだけ true）。
 2. **サイト基盤（確定）**：STUDIO をやめ、このリポジトリ（Astro 5 の静的サイト）を Netlify 無料枠で公開する。更新は Pages CMS（`.pages.yml`）の入力フォームで行う。
 3. **公開方針**：9/30 に v1 を公開し、10月に改善（v2）。
 
@@ -59,7 +60,7 @@
 - 確認用URL（2026-09-25 ご本人が作成）：https://stellar-bavarois-8bc38e.netlify.app （Netlify上は Private＝Netlifyのチームメンバーだけ閲覧可。作業ブランチに push すると自動で更新）。作業環境からはこのURLに接続できない。
 - FAQの分担（2026-09-25 ご本人指示）：トップ＝全体の質問（`src/data/faq.json`：貸切・料金の仕組み・子ども・言語・予約方法・集合場所・直販の理由）。ツアー詳細＝そのツアーの質問（集合場所・開始時刻・そのツアーの料金・予約方法と締切＋各ツアーの `faq`）で、最後に全体FAQへのリンク。
 - CTAは「広告っぽくなく自然に、多めに」（ご本人方針）：`NextStep.astro`（ひとこと＋タイプライター風の下線リンク1つ）を、迷いやすい所の直後に置く。トップ：ツアー一覧の後（→診断）、料金の後、流れの後、口コミの後、FAQの後（→問い合わせ）。ツアー詳細：体験の後、行程の後、リールの後、口コミの後、FAQの後（→全体FAQ）。予約エンジンへのリンクは `click_book`、それ以外は `click_next_step` で計測。
-- OTAボタン：ツアー詳細の予約ボックスに「Prefer a booking app? Also on」として枠線ボタンで表示（`otaLinks`）。**載せるOTAは Klook と Viator の2社だけ**（ご本人指示）。2026-09-25 時点で見つかったのは Klook（196854「Tokyo Shinjuku Ninja Walking Tour: Kabukicho & Golden Gai (60min)」）のみで、同名のGetYourGuide商品の行程（花園神社→ゴールデン街→ゴジラ）からゴールデン街ツアーに仮登録。Viator の掲載は見つからず。ほかのツアーのKlook・ViatorのURLは LINKTIVITY に確認する。
+- OTAボタン：ツアー詳細の予約ボックスに「Prefer a booking app? Also on」として枠線ボタンで表示（`otaLinks`）。**載せるOTAは Klook と Viator の2社だけ**（ご本人指示）。2026-09-25 ご本人からKlookのURL 2件を受領：196854（ゴールデン街）、227324（ハンコ）→ 両ツアーに設定済み。2026-09-25 時点で見つかったのは Klook（196854「Tokyo Shinjuku Ninja Walking Tour: Kabukicho & Golden Gai (60min)」）のみで、同名のGetYourGuide商品の行程（花園神社→ゴールデン街→ゴジラ）からゴールデン街ツアーに仮登録。Viator の掲載は見つからず。ほかのツアーのKlook・ViatorのURLは LINKTIVITY に確認する。
 - 予約の説明文から確認できていない表現（instant confirmation、pay online）を外した。
 - 2026-09-25 第10回フィードバック（確認用URLを見たご本人の指摘）：
   - ヘッダー：Tokyo Guide を外し、フッターに「Column」として置く（コラム一覧の名前もColumn）。ヘッダーのボタンは「Find your tour」。
@@ -81,6 +82,7 @@
 - 口コミ：Drive の「NGT_英語口コミ一覧_20260908」に実際のレビューがある。掲載できる範囲を確認してから使う（捏造しない）。
 
 ## コラムの自動生成（2026-09-25 ご本人依頼「SEO・AIO対策で1日1本」）
+- **2026-09-25 ご本人指示で保留（コラムは最後に進める）**。仕組みは入っているが、`ANTHROPIC_API_KEY` 未設定のため動いていない。
 - 仕組み：GitHub Actions（`.github/workflows/daily-column.yml`、毎日 05:53 JST）が `scripts/generate-column.ts` を実行 → 下書き（`draft: true`・`generated: true`）を `src/content/columns/` にコミット → 人が Pages CMS で事実確認して `draft: false` にすると公開。**自動では公開しない**。
 - 手順：①ネタ帳 `src/data/column-topics.json` の先頭を使う（Pages CMS の「Column topics」で編集可。空になったら Claude が既存記事と重ならない題を選ぶ）②Claude（`claude-opus-5`）がウェブ検索で調べて出典つきメモを作る ③メモだけを根拠に、構造化出力（JSON）で本文・FAQ・関連ツアー・出典を書く ④ビルドが通ったらコミット。
 - AIO向けの形：冒頭2〜3文で検索の問いに直接答える／質問形の見出し／FAQ（`faq` → FAQPage構造化データ）／Article構造化データ／出典の一覧（`sources`）／関連ツアーへの内部リンク1〜2本。料金・割引は本文に書かせない（ツアーページが正）。価格らしき記述があればActionsのSummaryに「Check」と出る。
@@ -144,7 +146,8 @@
 - [ ] ウォークツアーのキャンセル規定をご本人に確認し、FAQ（全体・各ツアー）に入れる。現行の規約はNINJA GO RIDE用のため、未記載のままにしている。
 - [ ] GTM か GA4 のIDを `site.json` に設定する。予約エンジン（`ars-ninjagoride.triplabo.com`）とのクロスドメイン計測を GA4 側で設定し、キーイベントを「予約完了」に定義し直す。
 - [ ] 価格の同時切替：LINKTIVITY で公式の段階制料金とOTAの上乗せ価格を**サイト公開と同じ日に**反映する。人数別の料金をOTAで設定できない場合は、人数別プランに分ける。
-- [ ] 子ども料金の文言（「大人1名につき子ども1名まで無料」）をご本人に最終確認する。ツアー本文は「Children 12 and under join free with a paying adult」で統一済み。
+- [x] 子ども料金：12歳以下は何人でも無料で確定（2026-09-25）。
+- [ ] 相乗りと人数別料金の整合：1名で¥8,000払った人と4名で¥2,500ずつ払った人が同じ回になり得る。表現で済ませるか、料金設計を変えるか（ご本人判断待ち）。
 - [ ] ロゴを取り込む（現在は「忍」の仮ロゴ）。
 - [ ] Netlify Forms の通知先メールを設定する（Netlify 管理画面）。
 - [ ] `.pages.yml` の設定を、Pages CMS に初回ログインした時点で動作確認する。

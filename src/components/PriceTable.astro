@@ -12,8 +12,8 @@ const fixed = !!tour?.data.fixedPricePerPerson;
     <p class="pt__fixed"><strong>{yen(tiers[0].pricePerPerson)}</strong> per person <Usd jpy={tiers[0].pricePerPerson} class="pt__usd" /></p>
   ) : (
   <table class="price">
-    <caption class="visually-hidden">Price per adult by group size</caption>
-    <thead><tr><th scope="col">Your group</th><th scope="col">Per adult</th><th scope="col">Group total</th></tr></thead>
+    <caption class="visually-hidden">Price per adult by number of adults in your booking</caption>
+    <thead><tr><th scope="col">Adults in your booking</th><th scope="col">Per adult</th><th scope="col">Booking total</th></tr></thead>
     <tbody>
       {tiers.map((t) => (
         <tr>

@@ -153,7 +153,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       const usd = (a: number, b: number) => (a === b ? `≈US$${Math.round(a * rate)}` : `≈US$${Math.round(a * rate)}–${Math.round(b * rate)}`);
       root.querySelector('[data-qz-price]')!.textContent = lo === hi
         ? `${yen(lo)} (${usd(lo, lo)}) per person`
-        : `${yen(lo)}–${hi.toLocaleString('en-US')} (${usd(lo, hi)}) per person, by group size`;
+        : `${yen(lo)}–${hi.toLocaleString('en-US')} (${usd(lo, hi)}) per person, by party size`;
       const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
       const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
       book.href = t.booking || `/tour/${t.id}#book`; book.dataset.tour = t.id;

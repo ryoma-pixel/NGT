@@ -7,6 +7,6 @@
     { "label": "3 guests", "minGuests": 3, "maxGuests": 3, "pricePerPerson": 2800 },
     { "label": "4+ guests", "minGuests": 4, "maxGuests": 99, "pricePerPerson": 2500 }
   ],
-  "childPolicy": "Kids 12 and under join free (one child per paying adult). Additional children pay the adult rate.",
-  "note": "Price per adult (13+). Your group only — no strangers join your tour."
+  "childPolicy": "Kids 12 and under join free, as many as you bring.",
+  "note": "Price per adult (13+), based on how many adults are in your booking. Other guests may join the same tour."
 }

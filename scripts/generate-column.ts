@@ -162,7 +162,7 @@ Write your result as plain research notes: short bullet points, each ending with
   return { notes, sources: [...sources] };
 }
 
-const HOUSE_RULES = `You write the "Column" section of NINJA GO TOURS (ninjagotours.com), a Tokyo company that runs small, private, 60-minute walking tours with a local guide (a "Ninja") in Shinjuku, Ueno and Asakusa.
+const HOUSE_RULES = `You write the "Column" section of NINJA GO TOURS (ninjagotours.com), a Tokyo company that runs 60-minute walking tours with a local guide (a "Ninja") in Shinjuku, Ueno and Asakusa.
 
 Readers: international travellers (mostly English speakers) planning a Tokyo trip, often reading on a phone or getting this article summarised by an AI search engine.
 
