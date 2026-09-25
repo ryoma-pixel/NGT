@@ -17,7 +17,7 @@ heroImage: /images/tours/shinjuku-secret-shrine.webp
 heroAlt: A Ninja guide standing in a tunnel of red torii gates at a hidden Shinjuku shrine
 meetingPoint:
   name: Shinjuku Toho Building 1F (next to the entrance of “Maruhan” Pachinko)
-  access: 5-minute walk from JR Shinjuku Station East Exit; 3-minute walk from Seibu Shinjuku Station.
+  access: 3-minute walk from Seibu Shinjuku Station; 9-minute walk from JR Shinjuku Station.
   lookFor: Look for the guide wearing a Ninja costume.
   mapUrl: https://www.google.com/maps?q=35.695611,139.701750
   mapEmbed: https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d810.0609458758662!2d139.70111592852027!3d35.69561808742833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzXCsDQxJzQ0LjIiTiAxMznCsDQyJzA2LjMiRQ!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp

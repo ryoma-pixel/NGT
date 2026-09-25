@@ -3,14 +3,14 @@ title: E-Scooter & Walking Tour with a Ninja Guide
 shortTitle: E-Scooter & Walking Tour
 seoTitle: "Shinjuku E-Scooter & Walking Tour"
 hook: Glide between Shinjuku’s skyscrapers with a Ninja leading the way.
-summary: Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then explore Kabukicho on foot with photos and videos included.
+summary: Ride an e-scooter from Kabukicho to the Tokyo Metropolitan Government Building, then walk Kabukicho, Golden Gai and Hanazono Shrine, with photos and videos included.
 area: Shinjuku
 themes:
 - E-Scooter
 - Entertainment
-durationMinutes: 120
-startTimes: 'Day course: meet 3:05 PM (3:30–5:30 PM) / Night course: meet 6:05 PM (6:30–8:30 PM)'
-bookingDeadline: Free cancellation up to 24 hours before
+durationMinutes: 145
+startTimes: 'Day course: 3:05–5:30 PM / Night course: 6:05–8:30 PM'
+bookingDeadline: Reserve by 3:05 PM (day course) or 6:05 PM (night course) the day before
 ageNote: Ages 16 and up
 fixedPricePerPerson: 5000
 privateTour: false
@@ -23,20 +23,22 @@ meetingPoint:
   mapUrl: https://www.google.com/maps?q=35.695611,139.701750
   mapEmbed: https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d810.0609458758662!2d139.70111592852027!3d35.69561808742833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzXCsDQxJzQ0LjIiTiAxMznCsDQyJzA2LjMiRQ!5e0!3m2!1sen!2sjp!4v1790342227618!5m2!1sen!2sjp
 itinerary:
-- title: Meet up & safety briefing (check-in 25 min before start)
-  text: Please arrive exactly at the meeting time (3:05 PM or 6:05 PM) for check-in and safety instructions.
-- title: E-scooter ride (about 40 min)
-  text: Ride from Kabukicho to the Tokyo Metropolitan Government Building along wide streets lined with skyscrapers.
-- title: Flexible walking tour (about 60 min)
-  text: A semi-flexible walk in Kabukicho, adjusted to your interests.
-- title: Goal & wrap-up (about 20 min)
-  text: Return to Kabukicho. Your photos and videos are shared afterwards via a download link.
+- title: Meet up & safety briefing (10 min)
+  text: Meet at 3:05 PM (day) or 6:05 PM (night). Your guide shows you how to ride and the road rules.
+- title: Ride to the Tokyo Metropolitan Government Building (15 min)
+  text: Ride through West Shinjuku’s skyscraper district.
+- title: Observatory by day, projection mapping by night (about 40 min)
+  text: 'Day: go up to the free observatory for views across Tokyo. Night: watch “TOKYO Night & Light”, the Guinness World Records–certified projection mapping.'
+- title: Ride back to Kabukicho (15 min)
+  text: Head back east toward Kabukicho.
+- title: Walking tour (about 65 min)
+  text: Leave the e-scooters and explore Kabukicho Ichibangai, Golden Gai and Hanazono Shrine on foot. The tour ends there; photos and videos follow via a download link.
 bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-7QR5Z
 order: 8
 draft: false
 story:
 - title: Ride into the light show
-  text: 'Night: ride to the world’s largest projection mapping at the Tokyo Government Building.'
+  text: 'Night: ride to “TOKYO Night & Light”, the Guinness World Records–certified projection mapping on the Tokyo Metropolitan Government Building.'
   image: /images/tours/shinjuku-escooter-ride/story-1.webp
   imageAlt: E-scooter riders on a Shinjuku street at night
 - title: Skyscrapers by day
@@ -65,20 +67,20 @@ features:
 - icon: scooter
   label: E-scooter ride
 - icon: city
-  label: Tokyo Gov. building
+  label: Tokyo Metropolitan Gov. Building
 - icon: camera
   label: Photos & video included
 - icon: mask
   label: Ninja walking tour
 faq:
 - q: What’s included in the price?
-  a: Your guide, e-scooter rental, photos and insurance are included.
+  a: Your guide, e-scooter and helmet rental, photos and videos, and insurance. The day course also visits the Tokyo Metropolitan Government Building observatory (free entry).
 - q: Who can join?
   a: Must be 16 or older and not under the influence of alcohol or drugs. Not suitable during pregnancy or for people with chronic illnesses such as heart disease.
 - q: What shoes do I need?
   a: Shoes that securely support the heel (such as sneakers) are mandatory.
 - q: What if it rains?
-  a: For weather cancellations, check our official X account for updates. Full refund if we cancel due to weather.
+  a: The tour may be cancelled or rescheduled in rain or severe weather. We let you know the day before or on the day, and you get a full refund if we cancel.
 quizFor: [ride]
 quizAlso: [photos]
 ---
