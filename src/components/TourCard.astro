@@ -12,10 +12,10 @@ const d = tour.data;
     <div class="tc__shade" aria-hidden="true"></div>
     <div class="tc__body">
       {d.draft && <span class="badge badge--draft">DRAFT</span>}
-      <p class="tc__area">{d.area} · {d.durationMinutes} min · Private</p>
+      <p class="tc__area">{d.area} · {d.durationMinutes} min{d.privateTour ? ' · Private' : ''}</p>
       <h3>{d.shortTitle}</h3>
       <p class="tc__sum">{d.summary}</p>
-      <p class="tc__price"><strong>{yen(fromPrice(tour))}</strong> /person <small>(4+ guests)</small><span class="tc__go" aria-hidden="true">→</span></p>
+      <p class="tc__price"><strong>{yen(fromPrice(tour))}</strong> /person {!d.fixedPricePerPerson && <small>(4+ guests)</small>}<span class="tc__go" aria-hidden="true">→</span></p>
     </div>
   </a>
 </article>

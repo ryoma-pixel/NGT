@@ -1,0 +1,13 @@
+---
+// Layout for simple text pages written in Markdown (terms, privacy, legal notice)
+import Base from './Base.astro';
+const { frontmatter } = Astro.props;
+---
+<Base title={frontmatter.title} description={frontmatter.description}>
+  <section class="section">
+    <div class="wrap prose">
+      <h1>{frontmatter.title}</h1>
+      <slot />
+    </div>
+  </section>
+</Base>

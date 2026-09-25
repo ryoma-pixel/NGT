@@ -17,8 +17,11 @@ export async function getColumns() {
 }
 
 export function priceTiers(tour: Tour) {
-  const extra = tour.data.materialCostPerPerson;
-  return pricing.tiers.map((t) => ({ ...t, pricePerPerson: t.pricePerPerson + extra }));
+  const { fixedPricePerPerson, materialCostPerPerson } = tour.data;
+  if (fixedPricePerPerson) {
+    return [{ label: 'Per person', minGuests: 1, maxGuests: 99, pricePerPerson: fixedPricePerPerson }];
+  }
+  return pricing.tiers.map((t) => ({ ...t, pricePerPerson: t.pricePerPerson + materialCostPerPerson }));
 }
 
 // Lowest per-person price, shown as "from" on cards
@@ -34,8 +37,9 @@ export function usd(n: number) {
   return `US$${Math.round(n / pricing.usdRate)}`;
 }
 
-export const AREAS = ['Shinjuku', 'Ueno', 'Asakusa', 'Osaka'] as const;
-export const THEMES = ['Entertainment', 'Culture', 'Food', 'Shopping', 'Nightlife', 'FourSeasons', 'E-Scooter'] as const;
+// Areas with their own listing page (Osaka is reserved in the schema but redirects to /tours for now)
+export const AREAS = ['Shinjuku', 'Ueno', 'Asakusa'] as const;
+export const THEMES = ['Entertainment', 'Culture', 'Food', 'Shopping', 'Nightlife', 'FourSeasons', 'E-Scooter', 'History', 'JapaneseCustoms', 'Walk'] as const;
 
 export const THEME_LABELS: Record<string, string> = {
   Entertainment: 'Entertainment',
@@ -45,6 +49,9 @@ export const THEME_LABELS: Record<string, string> = {
   Nightlife: 'Nightlife',
   FourSeasons: 'Seasonal',
   'E-Scooter': 'E-Scooter Rides',
+  History: 'History & Culture',
+  JapaneseCustoms: 'Japanese Customs',
+  Walk: 'Walking Tours',
 };
 
 export const AREA_JP: Record<string, string> = {

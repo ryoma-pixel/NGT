@@ -19,7 +19,6 @@ const jsonLd = {
   '@type': 'TouristTrip',
   name: d.title,
   description: d.summary,
-  touristType: 'Private group',
   ...(d.heroImage ? { image: new URL(d.heroImage, Astro.site).toString() } : {}),
   offers: {
     '@type': 'Offer',
@@ -41,9 +40,9 @@ const jsonLd = {
       <p class="th__sum">{d.summary}</p>
       <ul class="th__facts">
         <li>⏱ {d.durationMinutes} minutes</li>
-        <li>👥 Private – your group only</li>
-        <li>🗣 English-speaking Ninja guide</li>
-        {d.startTimes.length > 0 && <li>🕒 Starts {d.startTimes.join(' / ')}</li>}
+        {d.privateTour && <li>👥 Private – your group only</li>}
+        <li>🗣 {d.language}</li>
+        {d.ageNote && <li>🎟 {d.ageNote}</li>}
         {d.seasonal && <li>🌸 {d.seasonal}</li>}
       </ul>
     </div>
@@ -54,7 +53,14 @@ const jsonLd = {
       {d.highlights.length > 0 && (
         <section>
           <h2>Highlights</h2>
-          <ul class="hl">{d.highlights.map((h) => <li>{h}</li>)}</ul>
+          <ul class="hl">
+            {d.highlights.map((h) => (
+              <li>
+                {h.icon && <span class="hl__icon" aria-hidden="true">{h.icon}</span>}
+                <div><strong>{h.title}</strong><p>{h.text}</p></div>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
@@ -62,25 +68,40 @@ const jsonLd = {
 
       {d.itinerary.length > 0 && (
         <section>
-          <h2>Route</h2>
+          <h2>Itinerary</h2>
           <ol class="it">
-            {d.itinerary.map((s) => <li><h3>{s.title}</h3><p>{s.text}</p></li>)}
+            {d.itinerary.map((s) => <li><h3>{s.title}</h3>{s.text && <p>{s.text}</p>}</li>)}
           </ol>
+          {d.itineraryNote && <p class="it__note">{d.itineraryNote}</p>}
         </section>
       )}
 
-      {(d.included.length > 0 || d.notIncluded.length > 0) && (
-        <section class="inc">
-          <div><h2>Included</h2><ul>{d.included.map((i) => <li>{i}</li>)}</ul></div>
-          <div><h2>Not included</h2><ul>{d.notIncluded.map((i) => <li>{i}</li>)}</ul></div>
-        </section>
-      )}
+      <section class="facts card">
+        <h2>Good to know before you book</h2>
+        <dl>
+          {d.startTimes && <><dt>Start times</dt><dd>{d.startTimes}</dd></>}
+          {d.bookingDeadline && <><dt>Booking</dt><dd>{d.bookingDeadline}</dd></>}
+          <dt>Duration</dt><dd>{d.durationMinutes} minutes</dd>
+          <dt>Language</dt><dd>{d.language}</dd>
+        </dl>
+      </section>
 
       {d.meetingPoint && (
         <section>
           <h2>Meeting point</h2>
-          <p><strong>{d.meetingPoint.name}</strong>{d.meetingPoint.address && <><br />{d.meetingPoint.address}</>}</p>
+          <p class="mp__name">📍 <strong>{d.meetingPoint.name}</strong></p>
+          {d.meetingPoint.access && <p>{d.meetingPoint.access}</p>}
+          {d.meetingPoint.lookFor && <p class="mp__look">👀 {d.meetingPoint.lookFor}</p>}
           {d.meetingPoint.mapUrl && <a class="btn btn--ghost" href={d.meetingPoint.mapUrl} rel="noopener" target="_blank" data-track="click_map" data-tour={tour.id}>Open in Google Maps</a>}
+        </section>
+      )}
+
+      {d.notes.length > 0 && (
+        <section>
+          <h2>Important notes</h2>
+          <dl class="notes">
+            {d.notes.map((n) => <><dt>{n.title}</dt><dd>{n.text}</dd></>)}
+          </dl>
         </section>
       )}
 
@@ -119,7 +140,18 @@ const jsonLd = {
   .tl { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; padding-top: 40px; padding-bottom: 40px; }
   .tl__main > section { margin-bottom: 36px; }
   .hl { list-style: none; padding: 0; display: grid; gap: 10px; }
-  .hl li { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--shu); border-radius: 12px; padding: 10px 14px; }
+  .hl li { display: flex; gap: 14px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .hl__icon { font-size: 1.6rem; line-height: 1; flex: none; }
+  .hl li p { margin: 0.2em 0 0; color: var(--muted); font-size: 0.95rem; }
+  .it__note { color: var(--muted); font-style: italic; }
+  .facts { padding: 20px 22px; }
+  .facts h2 { font-size: 1.2rem; }
+  .facts dl, .notes { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; }
+  .facts dt, .notes dt { font-weight: 700; }
+  .facts dd, .notes dd { margin: 0; color: var(--ink-2); }
+  .mp__name { font-size: 1.05rem; }
+  .mp__look { color: var(--muted); }
+  @media (max-width: 600px) { .facts dl, .notes { grid-template-columns: 1fr; gap: 2px; } .facts dd, .notes dd { margin-bottom: 10px; } }
   .it { list-style: none; padding: 0; counter-reset: s; }
   .it li { position: relative; padding: 0 0 18px 44px; counter-increment: s; border-left: 2px dashed var(--line); margin-left: 15px; }
   .it li::before { content: counter(s); position: absolute; left: -16px; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--shu); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }

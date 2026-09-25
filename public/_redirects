@@ -1,0 +1,5 @@
+# Old STUDIO URLs that no longer have their own page (301 keeps search rankings and old links working)
+/ninjagoride      /tour/shinjuku-escooter-ride   301
+/comic-lp         /                              301
+/area/Osaka       /tours                         301
+/search           /tours                         301

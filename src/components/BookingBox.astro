@@ -6,14 +6,16 @@ const { tour } = Astro.props;
 const d = tour.data;
 ---
 <aside class="bb card" id="book">
-  <p class="bb__from">from <strong>{yen(fromPrice(tour))}</strong> per adult in groups of 4+</p>
+  {d.fixedPricePerPerson
+    ? <p class="bb__from"><strong>{yen(d.fixedPricePerPerson)}</strong> per person</p>
+    : <p class="bb__from">from <strong>{yen(fromPrice(tour))}</strong> per adult in groups of 4+</p>}
   <PriceTable tour={tour} />
   {d.bookingUrl
     ? <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>
     : <p class="bb__missing">Booking link not set yet (bookingUrl).</p>}
   <ul class="bb__why">
     <li>Best price when you book here</li>
-    <li>Private: your group only</li>
+    {d.privateTour && <li>Private: your group only</li>}
     <li>Instant confirmation by email</li>
   </ul>
   {d.otaLinks.length > 0 && (

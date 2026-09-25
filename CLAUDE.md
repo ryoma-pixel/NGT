@@ -39,23 +39,40 @@
 - コマンド：`npm run build`（型チェック込み）、`npm run dev`。
 
 ## 旧サイトのURL（すべて維持すること）
-サーチコンソールで確認済みのURL：
+サーチコンソールで確認済みのURL（全46URLの一覧は旧サイトの sitemap.xml）：
 - `/`、`/tours`、`/column`、`/term`、`/comic-lp`（GBPのリンク先）、`/ninjagoride`
 - `/tour/shinjuku-secret-shrine`、`/tour/goldengai-nightlife`、`/tour/shinjuku-hanko`、`/tour/shinjuku-nichome-lgbtq`、`/tour/shinjuku-gyoen-sakura`、`/tour/shinjuku-escooter-ride`
 - `/area/Shinjuku`、`/area/Asakusa`、`/area/Osaka`、`/theme/Entertainment`、`/theme/E-Scooter`、`/theme/FourSeasons`
 - `/column/` 配下：`ueno-izakaya-guide`、`shinjuku-center-gai-guide`、`ninja-shinjuku-family`、`shinjuku-kawaii-vintage-shops`、`shinjuku-retro-unique-souvenirs`、`kappabashi-family-guide`、`kappabashi-shopping-guide`、`shinjuku-showa-retro-cafes`、`best-japanese-goods-shinjuku`、`shinjuku-golden-gai-guide`
 
+## 移行の状況（2026-09-25）
+- 旧サイトの全46URL（サイトマップ＋SC）を確認済み。すべて新サイトにページがあるか、`public/_redirects` で301転送される（`/ninjagoride`→E-Scooterツアー、`/comic-lp`→トップ、`/area/Osaka`・`/search`→ツアー一覧）。
+- ツアー8本（旧サイト掲載分）は英文・集合場所・開始時刻・予約URL（`ars-ninjagoride.triplabo.com`）を移行し公開済み。浅草ナイトツアーは旧サイトに未掲載の新ツアーのため `draft: true`。
+- コラム20本を本文・画像ごと移行済み（`src/content/columns/`、画像は `public/images/columns/`）。本文末の料金表記は「from ¥2,500 per person (groups of 4+)」に修正。
+- `/term`・`/privacy`・`/about`（特商法表記）は旧サイトの文面をそのまま移行。お問い合わせは Netlify Forms（`/contact`）。
+- 口コミは Drive の一覧（2026-09-08 取得）から、短い抜粋＋イニシャル＋媒体名で5件掲載（`src/data/reviews.json`）。関係者の可能性がある投稿（Raheem Knott）は除外。
+
+## 旧サイトから見つかった問題（要対応）
+- **利用規約・プライバシーポリシーが NINJA GO RIDE（Eスクーター）専用の文面**。ウォークツアー（子ども・キャンセル規定など）を対象にした規約がない。改訂は法務確認のうえ行う（文面は勝手に書き換えない）。
+- 特商法表記のサービスURL・メールアドレスが旧ドメイン（ninja-kabukitokyo.com / info_ninja-go-ride@…）のまま。
+- `/comic-lp` は旧サイトでも404だったが、GBPのウェブサイトリンクがここを指している。GBP側のリンクを `https://ninjagotours.com/` に修正する。
+- ハンコツアーの旧ページは「体験内容3」がゴールデン街の文章のコピペで、地図の埋め込みも別の集合場所（新宿東宝ビル）を指していた。新サイトでは修正済み（集合場所はバスタ新宿）。
+- 二丁目ツアーの開始時刻が旧ページ内で「5:00 PM – 9:00 PM」と「15:00 PM – 9:00 PM」で食い違い。新サイトは 5:00 PM – 9:00 PM で掲載。LINKTIVITY の設定と要照合。
+- 旧サイトの評価表示（Google 4.9・17件／Tripadvisor 5.0・18件）は古い。9/8時点は Google 5.0・23件／Tripadvisor 5.0・19件。Tripadvisor は NINJA GO RIDE の掲載のみで、ウォークツアーの掲載がない。
+
+## 画像の使い分けルール（2026-09-25 ご本人合意）
+- AI生成画像は使ってよい場面を限定する：①実写がまだない新ツアーの告知（「Image for illustration」と明記し、初回催行後に実写へ差し替え）②地図・イラスト・漫画風の説明図（ひと目でイラストとわかるもの）③人物が主役でない雰囲気カット（実在の場所を実際と違う姿で見せない）。
+- 使わない：「参加者の笑顔」「ガイドとの交流」など体験の証拠に見える写真、口コミの横。
+
 ## 残作業（v1 公開の前に必須）
-`ninjagotours.com` にこの環境からアクセスできる必要がある（環境のネットワーク設定で許可ドメインに追加）。
-- [ ] 旧サイトの全ページをクロールし、URL一覧を上の表と突き合わせる（漏れたURLは `public/_redirects` で301転送する）。
-- [ ] ツアー8本の英文、写真、開始時刻、集合場所、`bookingUrl`（LINKTIVITY直販ページ）、OTAのレビューリンクを移行し、`draft: false` にする。上野・浅草の3本はslugが推測のため、旧URLに合わせてファイル名を変える。
-- [ ] コラム10本を移行する（本文・画像）。移行しないと検索流入を失う。
-- [ ] `/term`（利用規約・キャンセルポリシー）、`/comic-lp`、`/ninjagoride` を移行する。`/tour/shinjuku-escooter-ride` の扱い（残す／転送）をご本人に確認する。
-- [ ] ロゴとブランドカラーを旧サイトから取り込む（現在は仮デザイン）。
-- [ ] GTM か GA4 のIDを `site.json` に設定する。予約エンジン（別ドメイン）とのクロスドメイン計測を GA4 側で設定し、キーイベントを「予約完了」に定義し直す。
-- [ ] 価格の同時切替：LINKTIVITY で公式の段階制料金とOTAの上乗せ価格を**サイト公開と同じ日に**反映する（OTAが旧価格のままだと「公式が最安」の表記が事実と合わなくなる）。人数別の料金をOTAで設定できない場合は、人数別プランに分ける。
-- [ ] 子ども料金の文言をご本人に最終確認する。
-- [ ] `.pages.yml` の設定を、Pages CMS に初回ログインした時点で動作確認する（FAQのリスト形式など）。
+- [ ] GTM か GA4 のIDを `site.json` に設定する。予約エンジン（`ars-ninjagoride.triplabo.com`）とのクロスドメイン計測を GA4 側で設定し、キーイベントを「予約完了」に定義し直す。
+- [ ] 価格の同時切替：LINKTIVITY で公式の段階制料金とOTAの上乗せ価格を**サイト公開と同じ日に**反映する。人数別の料金をOTAで設定できない場合は、人数別プランに分ける。
+- [ ] 子ども料金の文言（「大人1名につき子ども1名まで無料」）をご本人に最終確認する。ツアー本文は「Children 12 and under join free with a paying adult」で統一済み。
+- [ ] ロゴを取り込む（現在は「忍」の仮ロゴ）。
+- [ ] Netlify Forms の通知先メールを設定する（Netlify 管理画面）。
+- [ ] `.pages.yml` の設定を、Pages CMS に初回ログインした時点で動作確認する。
+- [ ] 浅草ナイトツアーの本文・集合場所・予約URLを用意して公開する。
+- [ ] 合羽橋の実写（Drive「素材_浅草 合羽橋ツアー / 元素材」98枚）から追加で選ぶ。Drive コネクタが不安定で1枚のみ取得済み（ツアーカードに使用）。
 
 ## 公開手順（ご本人の作業・手順書を別途用意）
 1. Netlify のアカウントを作成し、このGitHubリポジトリを接続する（ビルド設定は `netlify.toml` 済み）。

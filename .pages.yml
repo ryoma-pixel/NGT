@@ -22,9 +22,12 @@ content:
         label: Themes
         type: select
         list: true
-        options: { values: [Entertainment, Culture, Food, Shopping, Nightlife, FourSeasons, E-Scooter] }
+        options: { values: [Entertainment, Culture, Food, Shopping, Nightlife, FourSeasons, E-Scooter, History, JapaneseCustoms, Walk] }
       - { name: durationMinutes, label: Duration (minutes), type: number, default: 60 }
-      - { name: startTimes, label: Start times (e.g. 18:00), type: string, list: true }
+      - { name: language, label: Language, type: string, default: English }
+      - { name: startTimes, label: Start times (free text), type: string }
+      - { name: bookingDeadline, label: Booking deadline, type: string }
+      - { name: ageNote, label: Age note, type: string }
       - { name: heroImage, label: Main photo, type: image }
       - { name: heroAlt, label: Main photo description, type: string }
       - name: meetingPoint
@@ -32,19 +35,35 @@ content:
         type: object
         fields:
           - { name: name, label: Name, type: string }
-          - { name: address, label: Address, type: string }
+          - { name: access, label: How to get there, type: text }
+          - { name: lookFor, label: How to find the guide, type: string }
           - { name: mapUrl, label: Google Maps URL, type: string }
-      - { name: highlights, label: Highlights, type: string, list: true }
-      - name: itinerary
-        label: Route
+      - name: highlights
+        label: Highlights
         type: object
         list: true
         fields:
-          - { name: title, label: Stop, type: string }
-          - { name: text, label: Description, type: text }
-      - { name: included, label: Included, type: string, list: true }
-      - { name: notIncluded, label: Not included, type: string, list: true }
+          - { name: icon, label: Emoji, type: string }
+          - { name: title, label: Title, type: string }
+          - { name: text, label: Text, type: text }
+      - name: itinerary
+        label: Itinerary
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Step (with minutes), type: string }
+          - { name: text, label: Description (optional), type: text }
+      - { name: itineraryNote, label: Note under itinerary, type: text }
+      - name: notes
+        label: Important notes
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Title, type: string }
+          - { name: text, label: Text, type: text }
       - { name: materialCostPerPerson, label: Materials fee per person (JPY), type: number, default: 0 }
+      - { name: fixedPricePerPerson, label: Flat price per person (JPY, only for tours outside the group tiers), type: number }
+      - { name: privateTour, label: Private tour (one group per guide), type: boolean, default: true }
       - { name: bookingUrl, label: Booking URL (LINKTIVITY), type: string }
       - name: otaLinks
         label: Review links (OTA)
@@ -91,6 +110,34 @@ content:
           - { name: pricePerPerson, label: Price per adult (JPY), type: number }
       - { name: childPolicy, label: Child policy, type: text }
       - { name: note, label: Note under price table, type: text }
+  - name: reviews
+    label: Guest reviews
+    type: file
+    path: src/data/reviews.json
+    format: json
+    fields:
+      - { name: asOf, label: Checked on (YYYY-MM-DD), type: string }
+      - { name: note, label: Selection note shown under reviews, type: text }
+      - name: ratings
+        label: Rating badges
+        type: object
+        list: true
+        fields:
+          - { name: source, label: Site, type: string }
+          - { name: score, label: Score, type: number }
+          - { name: count, label: Number of reviews, type: number }
+          - { name: label, label: Listing name (optional), type: string }
+          - { name: url, label: URL, type: string }
+      - name: items
+        label: Review excerpts (quote exactly, do not edit wording)
+        type: object
+        list: true
+        fields:
+          - { name: text, label: Excerpt, type: text }
+          - { name: author, label: Initials, type: string }
+          - { name: source, label: Site, type: string }
+          - { name: stars, label: Stars, type: number }
+          - { name: tour, label: Tour (optional), type: string }
   - name: faq
     label: FAQ
     type: file
