@@ -67,7 +67,13 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       </div>
 
       <div class="qz__result" data-qz-result hidden>
+        <span class="qz__poof" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i style={`--a:${i * 40}deg; --d:${(i % 3) * 40}ms`}></i>)}</span>
         <div class="qz__scroll">
+          <button type="button" class="qz__wrap" data-qz-open aria-label="Open your mission scroll">
+            <span class="qz__wrap-slip"><small>Your</small>Mission</span>
+            <span class="qz__wrap-cord" aria-hidden="true"></span>
+            <span class="qz__wrap-tap"><span class="qz__wrap-dot" aria-hidden="true"></span>Tap to open</span>
+          </button>
           <span class="qz__rod qz__rod--l" aria-hidden="true"></span>
           <div class="qz__paper" aria-live="polite">
             <img class="qz__img" data-qz-img alt="" width="640" height="400" />
@@ -158,15 +164,25 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
       book.href = t.booking || `/tour/${t.id}#book`; book.dataset.tour = t.id;
       more.dataset.tour = t.id;
-      // the picture scroll below the quiz switches to this tour (rolled up, ready to open)
-      document.dispatchEvent(new CustomEvent('ngt:mission', { detail: t.id }));
+      picked = t.id;
       steps.parentElement!.classList.add('is-done');
       result.hidden = false;
+      result.classList.remove('is-open');
       const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
       root.style.setProperty('--half', `${scroll.offsetWidth / 2 - 22}px`);
-      requestAnimationFrame(() => requestAnimationFrame(() => result.classList.add('is-open')));
+      // Poof! A puff of ninja smoke, and a sealed scroll appears. The answer stays hidden until it is opened.
+      result.classList.remove('is-poof'); void result.offsetWidth; result.classList.add('is-poof');
+      setTimeout(() => root.querySelector<HTMLButtonElement>('[data-qz-open]')?.focus({ preventScroll: true }), 700);
       track('quiz_complete', { tour: t.id, area: answers.area, time: answers.time, into: answers.into });
     };
+    let picked = '';
+    root.querySelector('[data-qz-open]')!.addEventListener('click', () => {
+      result.classList.add('is-open');
+      // the big picture scroll further down switches to this tour too (rolled up, ready to open)
+      document.dispatchEvent(new CustomEvent('ngt:mission', { detail: picked }));
+      track('quiz_open', { tour: picked });
+      setTimeout(() => root.querySelector<HTMLAnchorElement>('[data-qz-book]')?.focus({ preventScroll: true }), 900);
+    });
 
     // "See its route": glide down to the picture scroll (now showing this tour) and put focus on its open button
     root.querySelector<HTMLAnchorElement>('[data-qz-more]')?.addEventListener('click', (e) => {
@@ -187,7 +203,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
     }));
 
     root.querySelector('[data-qz-again]')!.addEventListener('click', () => {
-      result.classList.remove('is-open');
+      result.classList.remove('is-open', 'is-poof');
       result.hidden = true;
       steps.parentElement!.classList.remove('is-done');
       qs.forEach((q) => q.querySelectorAll('.qz__opt').forEach((o) => o.classList.remove('is-picked')));
@@ -200,15 +216,16 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   /* Needs JS to work, so it only appears when scripts run */
   .qz { display: none; }
   :global(.js) .qz { display: block; }
-  .qz { background: var(--ai) var(--seigaiha); color: var(--cream); padding: 72px 0; overflow: hidden; }
-  .qz .eyebrow { color: rgb(247 240 227 / 0.8); }
+  .qz { background: #efe4cc var(--washi); color: var(--ai); padding: 72px 0; overflow: clip; border-top: 1px solid rgb(31 45 82 / 0.12); }
+  .qz .eyebrow { color: var(--ai); }
   .qz__in { display: grid; grid-template-columns: 1fr 1.6fr; gap: 32px 56px; align-items: center; }
   .qz__head h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 0.95; margin: 0 0 16px; }
-  .qz__o { color: transparent; -webkit-text-stroke: 2px var(--cream); }
-  .qz__progress { font-family: var(--mono); font-weight: 700; letter-spacing: 0.1em; margin: 0; color: rgb(247 240 227 / 0.7); }
-  .qz__progress span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--cream); }
+  .qz__o { color: transparent; -webkit-text-stroke: 2px var(--ai); }
+  .qz__progress { font-family: var(--mono); font-weight: 700; letter-spacing: 0.1em; margin: 0; color: rgb(31 45 82 / 0.6); }
+  .qz__progress span { font-family: var(--display); font-weight: 400; font-size: 2rem; color: var(--ai); }
 
-  .qz__box { position: relative; overflow: hidden; min-height: 330px; }
+  /* clip (not hidden) so focusing an answer can never scroll the slider sideways */
+  .qz__box { position: relative; overflow: clip; padding: 4px 0 12px; min-height: 330px; min-width: 0; }
   .qz__steps { display: flex; transition: transform 0.55s cubic-bezier(.7,0,.2,1), opacity 0.3s; }
   .qz__box.is-done { min-height: 0; }
   .qz__box.is-done .qz__steps { display: none; }
@@ -216,20 +233,26 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   .qz__q { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1; margin-bottom: 18px; padding: 0; display: flex; gap: 14px; align-items: baseline; }
   .qz__n { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; border: 1.5px solid currentColor; padding: 2px 6px; }
   .qz__opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-  .qz__opt { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; min-height: 118px; background: rgb(247 240 227 / 0.06); color: var(--cream); border: 1.5px solid rgb(247 240 227 / 0.35); border-radius: 4px; cursor: pointer; font-family: var(--display); font-size: 1.35rem; text-transform: uppercase; text-align: left; line-height: 1; transition: background 0.2s, color 0.2s, transform 0.2s; }
-  .qz__opt:hover, .qz__opt:focus-visible { background: rgb(247 240 227 / 0.14); transform: translateY(-3px); }
-  .qz__opt.is-picked { background: var(--cream); color: var(--ai); }
+  /* Answer cards: white on washi, navy frame and a filled icon disc, so they read as buttons */
+  .qz__opt { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; min-height: 124px; background: #fff; color: var(--ai); border: 2px solid var(--ai); border-radius: 10px; box-shadow: 0 5px 0 var(--ai); cursor: pointer; font-family: var(--display); font-size: 1.35rem; text-transform: uppercase; text-align: left; line-height: 1; transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.15s; }
+  .qz__opt :global(svg) { width: 44px; height: 44px; padding: 8px; border-radius: 50%; background: var(--ai); color: var(--cream); flex: none; transition: background 0.2s, color 0.2s; }
+  .qz__opt:hover, .qz__opt:focus-visible { background: var(--ai); color: var(--cream); transform: translateY(-2px); box-shadow: 0 7px 0 #0f1730; outline: none; }
+  .qz__opt:hover :global(svg), .qz__opt:focus-visible :global(svg) { background: var(--cream); color: var(--ai); }
+  .qz__opt:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ai); }
+  .qz__opt.is-picked { background: var(--ai); color: var(--cream); }
+  .qz__opt.is-picked::after { content: '✓'; position: absolute; top: 12px; right: 14px; font-family: var(--mono); font-size: 1rem; }
 
   /* Result: the scroll opens from the middle */
   .qz__result[hidden] { display: none; }
   .qz__result { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
   .qz__scroll { position: relative; width: 100%; display: flex; align-items: stretch; }
-  .qz__rod { position: relative; z-index: 2; flex: none; width: 22px; margin: -10px 0; border-radius: 11px; background: linear-gradient(90deg, #3b2412, #a8743f 50%, #2e1b0c); box-shadow: 0 8px 18px rgb(0 0 0 / 0.4); transition: transform 0.9s cubic-bezier(.7,0,.2,1); }
+  .qz__rod { position: relative; z-index: 3; flex: none; width: 22px; margin: -10px 0; border-radius: 11px; background: linear-gradient(90deg, #3b2412, #a8743f 50%, #2e1b0c); box-shadow: 0 8px 18px rgb(0 0 0 / 0.4); }
   .qz__rod--l { transform: translateX(calc(var(--half, 300px))); }
   .qz__rod--r { transform: translateX(calc(var(--half, 300px) * -1)); }
-  .qz__paper { flex: 1; min-width: 0; display: grid; grid-template-columns: 0.9fr 1fr; background: #f3ead6; color: var(--ai); clip-path: inset(0 50% 0 50%); transition: clip-path 0.9s cubic-bezier(.7,0,.2,1); }
-  .qz__result.is-open .qz__rod { transform: none; }
-  .qz__result.is-open .qz__paper { clip-path: inset(0 0 0 0); }
+  .qz__paper { flex: 1; min-width: 0; display: grid; grid-template-columns: 0.9fr 1fr; background: #fbf6ea; color: var(--ai); border: 10px solid var(--ai); box-shadow: 0 18px 40px rgb(31 45 82 / 0.28); clip-path: inset(0 50% 0 50%); }
+  /* animate only while opening, so the closed scroll never slides into place from the wrong width */
+  .qz__result.is-open .qz__rod { transform: none; transition: transform 0.9s cubic-bezier(.7,0,.2,1); }
+  .qz__result.is-open .qz__paper { clip-path: inset(0 0 0 0); transition: clip-path 0.9s cubic-bezier(.7,0,.2,1); }
   .qz__img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; }
   .qz__body { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
   .qz__seal { align-self: flex-start; font-family: var(--mono); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1.5px solid var(--ai); padding: 3px 8px; margin: 0 0 4px; transform: rotate(-3deg); }
@@ -242,7 +265,31 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   .qz__more span { display: inline-block; animation: qz-down 1.4s ease-in-out infinite; }
   @keyframes qz-down { 50% { transform: translateY(4px); } }
   @media (prefers-reduced-motion: reduce) { .qz__more span { animation: none; } }
-  .qz__again { background: none; border: 0; color: var(--cream); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
+  .qz__again { background: none; border: 0; color: var(--ai); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
+
+  /* Sealed scroll: navy silk wrapped around the rods, tied with a gold cord; the whole thing is the button */
+  .qz__wrap { position: absolute; z-index: 4; left: 50%; top: -14px; bottom: -14px; width: 150px; margin-left: -75px; border: 0; padding: 0; cursor: pointer; border-radius: 12px; color: var(--ai);
+    background: var(--ai) var(--seigaiha); box-shadow: inset 10px 0 18px -8px rgb(0 0 0 / 0.5), inset -10px 0 18px -8px rgb(0 0 0 / 0.5), 0 18px 34px rgb(31 45 82 / 0.35);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: transform 0.45s cubic-bezier(.7,0,.2,1), opacity 0.35s; }
+  .qz__wrap-slip { background: var(--cream); padding: 16px 12px; width: 62%; font-family: var(--display); font-size: 1.6rem; line-height: 1; text-transform: uppercase; box-shadow: 0 4px 10px rgb(0 0 0 / 0.3); }
+  .qz__wrap-slip small { display: block; font-family: var(--mono); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px; }
+  .qz__wrap-cord { position: absolute; left: -6px; right: -6px; top: 58%; height: 6px; background: linear-gradient(90deg, #8a6a24, #e9c96a 50%, #8a6a24); border-radius: 3px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.35); }
+  .qz__wrap-tap { position: absolute; bottom: 18px; display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); }
+  .qz__wrap-dot { width: 9px; height: 9px; border-radius: 50%; background: #f3d27a; animation: qz-ping 1.5s ease-out infinite; }
+  @keyframes qz-ping { 0% { box-shadow: 0 0 0 0 rgb(243 210 122 / 0.7); } 100% { box-shadow: 0 0 0 12px rgb(243 210 122 / 0); } }
+  .qz__wrap:hover, .qz__wrap:focus-visible { transform: scale(1.04) rotate(-1deg); outline: 3px solid #f3d27a; outline-offset: 4px; }
+  .qz__result.is-poof:not(.is-open) .qz__wrap { animation: qz-pop 0.6s cubic-bezier(.3,1.5,.5,1) 0.15s both, qz-wiggle 2.4s ease-in-out 1.2s infinite; }
+  @keyframes qz-pop { from { opacity: 0; transform: scale(0.3) rotate(-12deg); } }
+  @keyframes qz-wiggle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
+  .qz__result.is-open .qz__wrap { opacity: 0; transform: scaleX(0.1); pointer-events: none; }
+  /* before opening, the answer and its buttons stay hidden */
+  .qz__result:not(.is-open) .qz__paper { visibility: hidden; }
+  .qz__result:not(.is-open) .qz__again { visibility: hidden; }
+  /* Poof: puffs of smoke burst out from the middle and fade (transform + opacity only) */
+  .qz__poof { position: absolute; z-index: 5; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+  .qz__poof i { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgb(255 255 255 / 0.95), rgb(230 224 212 / 0.7) 45%, rgb(230 224 212 / 0) 70%); opacity: 0; }
+  .qz__result.is-poof .qz__poof i { animation: qz-puff 0.9s ease-out var(--d) both; }
+  @keyframes qz-puff { 0% { opacity: 0.95; transform: rotate(var(--a)) translateX(0) scale(0.3); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(150px) scale(2.2); } }
 
   @media (max-width: 900px) {
     .qz__in { grid-template-columns: 1fr; }
@@ -253,6 +300,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
     .qz__opt { min-height: 96px; font-size: 1.15rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .qz__steps, .qz__rod, .qz__paper { transition: none; }
+    .qz__steps, .qz__rod, .qz__paper, .qz__wrap { transition: none; }
+    .qz__result.is-poof .qz__poof i, .qz__result.is-poof:not(.is-open) .qz__wrap, .qz__wrap-dot { animation: none; }
   }
 </style>
