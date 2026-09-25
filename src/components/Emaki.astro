@@ -6,26 +6,29 @@ import Kamon from './Kamon.astro';
 import Mist from './Mist.astro';
 import { srcset } from '../lib/img';
 interface Scene { kicker: string; title: string; text: string; image: string; alt: string }
-interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string }
-const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour } = Astro.props;
+// closed: the scroll starts rolled up and opens on a tap. switchable: the home page swaps in another tour's scroll
+// when the quiz picks one (listens for the "ngt:mission" event; tour data comes from <script data-emk-tours>).
+interface Props { scenes: Scene[]; cover: { title: string; sub: string; tate: string }; end: { title: string; cta: string; href: string; external?: boolean }; kamon?: string; eyebrow?: string; id?: string; tour?: string; closed?: boolean; switchable?: boolean }
+const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour, closed = false, switchable = false } = Astro.props;
 
 ---
-<section class="emk" id={id} data-emaki aria-label={`${eyebrow}, told as a picture scroll`}>
+<section class="emk" id={id} data-tour={tour} data-emaki data-emk-closed={closed ? '' : undefined} data-emk-switch={switchable ? '' : undefined} aria-label={`${eyebrow}, told as a picture scroll`}>
   <div class="emk__pin">
     <div class="wrap emk__head">
-      <p class="eyebrow">{eyebrow}</p>
-      <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / {String(scenes.length).padStart(2, '0')}</p>
+      <p class="eyebrow" data-emk-eyebrow>{eyebrow}</p>
+      <p class="emk__count" aria-hidden="true"><span data-emk-count>00</span> / <span data-emk-total>{String(scenes.length).padStart(2, '0')}</span></p>
     </div>
     <div class="emk__stage">
       <div class="emk__track" data-emk-track>
         <div class="emk__cover">
           <div class="emk__slip">
-            <Tate text={cover.tate} class="emk__tate" />
-            <h2 class="emk__slip-t">{cover.title}</h2>
-            <p class="emk__slip-s">{cover.sub}</p>
+            <span data-emk-tate><Tate text={cover.tate} class="emk__tate" /></span>
+            <h2 class="emk__slip-t" data-emk-title>{cover.title}</h2>
+            <p class="emk__slip-s" data-emk-sub>{cover.sub}</p>
           </div>
-          <Kamon name={kamon} size={54} class="emk__kamon" />
+          <span data-emk-kamon><Kamon name={kamon} size={54} class="emk__kamon" /></span>
           <p class="emk__hint" aria-hidden="true">Scroll to unroll →</p>
+          {closed && <button type="button" class="emk__open" data-emk-open><span class="emk__open-dot" aria-hidden="true"></span>Tap to unroll</button>}
         </div>
         <ol class="emk__paper">
           {scenes.map((s, i) => (
@@ -38,15 +41,15 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
               </figure>
               </div>
               <div class="emk__txt">
-                <p class="emk__kicker">{s.kicker}</p>
-                <h3>{s.title}</h3>
-                <p>{s.text}</p>
+                <p class="emk__kicker" data-emk-kicker>{s.kicker}</p>
+                <h3 data-emk-h>{s.title}</h3>
+                <p data-emk-p>{s.text}</p>
               </div>
             </li>
           ))}
           <li class="emk__end">
             <p class="emk__end-t">{end.title}</p>
-            <a class="btn btn--primary" href={end.href} data-track="click_emaki_book" data-tour={tour} {...(end.external ? { rel: 'noopener' } : {})}>{end.cta}</a>
+            <a class="btn btn--primary" href={end.href} data-track="click_emaki_book" data-tour={tour} data-emk-end {...(end.external ? { rel: 'noopener' } : {})}>{end.cta}</a>
           </li>
         </ol>
       </div>
@@ -59,19 +62,32 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
 </section>
 
 <script>
+  type Tour = { id: string; eyebrow: string; title: string; sub: string; tate: string; cta: string; href: string; scenes: { kicker: string; title: string; text: string; image: string; srcset?: string; alt: string }[] };
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   document.querySelectorAll<HTMLElement>('[data-emaki]').forEach((sec) => {
-    if (reduce.matches) return;
     const track = sec.querySelector<HTMLElement>('[data-emk-track]')!;
     const stage = track.parentElement!;
+    const paper = track.querySelector<HTMLElement>('.emk__paper')!;
+    const cover = track.querySelector<HTMLElement>('.emk__cover')!;
     const grain = sec.querySelector<HTMLElement>('[data-emk-grain]');
     const count = sec.querySelector('[data-emk-count]');
-    const scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')];
-    const imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]'));
+    const openBtn = sec.querySelector<HTMLButtonElement>('[data-emk-open]');
+    const closedMode = sec.hasAttribute('data-emk-closed') && !reduce.matches;
+    let scenes: HTMLElement[] = [], imgs: (HTMLElement | null)[] = [];
+    const collect = () => { scenes = [...sec.querySelectorAll<HTMLElement>('[data-emk-scene]')]; imgs = scenes.map((s) => s.querySelector<HTMLElement>('[data-emk-img]')); };
+    collect();
     let startX = 0, dist = 0, ticking = false, lastLit = -2;
-    const paperLeft = () => track.querySelector<HTMLElement>('.emk__paper')!.offsetLeft;
 
+    // Rolled up: only the silk cover and the roller, centred, until someone taps "Tap to unroll"
+    const placeClosed = () => {
+      const sw = stage.clientWidth;
+      const x = Math.max(8, (sw - cover.offsetWidth) / 2 - 20);
+      track.style.transform = `translate3d(${x}px,0,0)`;
+      sec.style.setProperty('--roll-x', `${x + cover.offsetWidth}px`);
+    };
     const measure = () => {
+      if (reduce.matches) return;
+      if (sec.classList.contains('is-closed')) { placeClosed(); return; }
       sec.classList.add('is-pinned');
       const sw = stage.clientWidth;
       startX = sw * (sw < 700 ? 0.12 : 0.42);
@@ -81,6 +97,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
     };
     const update = () => {
       ticking = false;
+      if (!sec.classList.contains('is-pinned')) return;
       const r = sec.getBoundingClientRect();
       const total = sec.offsetHeight - innerHeight;
       const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
@@ -88,7 +105,7 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       track.style.transform = `translate3d(${x}px,0,0)`;
       if (grain) grain.style.transform = `translate3d(0,${(p * dist * 0.35) % 60}px,0)`;
       const mid = stage.clientWidth / 2;
-      const pl = paperLeft();
+      const pl = paper.offsetLeft;
       let active = 0, lit = -1, best = Infinity;
       scenes.forEach((s, i) => {
         const c = x + s.offsetLeft + pl + s.offsetWidth / 2;
@@ -103,7 +120,66 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
       if (lit !== lastLit) { lastLit = lit; scenes.forEach((s, i) => s.classList.toggle('is-lit', i === lit)); }
     };
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-    measure();
+
+    const close = () => {
+      sec.classList.remove('is-pinned', 'is-opening');
+      sec.classList.add('is-closed');
+      sec.style.height = '';
+      lastLit = -2;
+      placeClosed();
+    };
+    const open = () => {
+      sec.classList.remove('is-closed');
+      sec.classList.add('is-opening');
+      measure();
+      setTimeout(() => sec.classList.remove('is-opening'), 1500);
+      // glide a little way in, so the paper visibly starts to unroll
+      const top = sec.getBoundingClientRect().top + scrollY;
+      setTimeout(() => scrollTo({ top: top + Math.min(dist * 0.14, innerHeight * 0.7), behavior: 'smooth' }), 650);
+      const w = window as unknown as { dataLayer?: unknown[] };
+      (w.dataLayer = w.dataLayer || []).push({ event: 'emaki_open', tour: sec.dataset.tour });
+    };
+
+    // Home page: show the tour the quiz picked
+    if (sec.hasAttribute('data-emk-switch')) {
+      const data: Record<string, Tour> = JSON.parse(document.querySelector('[data-emk-tours]')?.textContent || '{}');
+      const tpl = scenes[0]?.cloneNode(true) as HTMLElement | undefined;
+      document.addEventListener('ngt:mission', (e) => {
+        const t = data[(e as CustomEvent<string>).detail];
+        if (!t || !tpl || sec.dataset.tour === t.id) return;
+        sec.dataset.tour = t.id;
+        const set = (sel: string, v: string) => { const el = sec.querySelector(sel); if (el) el.textContent = v; };
+        set('[data-emk-eyebrow]', t.eyebrow);
+        set('[data-emk-title]', t.title);
+        set('[data-emk-sub]', t.sub);
+        set('[data-emk-tate] .tate', t.tate);
+        set('[data-emk-total]', String(t.scenes.length).padStart(2, '0'));
+        const k = document.querySelector(`template[data-emk-kamon-tpl="${t.id}"]`) as HTMLTemplateElement | null;
+        const kWrap = sec.querySelector('[data-emk-kamon]');
+        if (k && kWrap) kWrap.replaceChildren(k.content.cloneNode(true));
+        const end = sec.querySelector<HTMLAnchorElement>('[data-emk-end]');
+        if (end) { end.href = t.href; end.textContent = t.cta; end.dataset.tour = t.id; }
+        scenes.forEach((s) => s.remove());
+        const endLi = paper.querySelector('.emk__end');
+        t.scenes.forEach((c, i) => {
+          const li = tpl.cloneNode(true) as HTMLElement;
+          li.classList.toggle('emk__scene--low', i % 2 === 1);
+          li.classList.remove('is-lit');
+          const img = li.querySelector<HTMLImageElement>('[data-emk-img]')!;
+          img.src = c.image; img.alt = c.alt; if (c.srcset) img.srcset = c.srcset; else img.removeAttribute('srcset');
+          li.querySelector('[data-emk-kicker]')!.textContent = c.kicker;
+          li.querySelector('[data-emk-h]')!.textContent = c.title;
+          li.querySelector('[data-emk-p]')!.textContent = c.text;
+          paper.insertBefore(li, endLi);
+        });
+        collect();
+        if (closedMode) close(); else measure();
+      });
+    }
+
+    if (reduce.matches) return;
+    if (closedMode) { sec.classList.add('is-closed'); placeClosed(); openBtn?.addEventListener('click', open); }
+    else measure();
     addEventListener('scroll', onScroll, { passive: true });
     addEventListener('resize', measure);
     addEventListener('load', measure);
@@ -192,6 +268,26 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
   .emk.is-pinned .emk__roller::before { top: 0; }
   .emk.is-pinned .emk__roller::after { bottom: 0; }
 
+  /* Rolled up (closed): cover + roller only, a pulsing "Tap to unroll" button */
+  .emk.is-closed .emk__stage { height: min(620px, 80svh); min-height: 460px; overflow: hidden; }
+  .emk.is-closed .emk__track { height: 100%; }
+  .emk.is-closed .emk__paper { visibility: hidden; }
+  .emk.is-closed .emk__hint { display: none; }
+  .emk.is-closed .emk__count { visibility: hidden; }
+  .emk.is-closed .emk__cover { gap: 20px; min-height: 0; }
+  .emk.is-closed .emk__roller { display: block; position: absolute; left: var(--roll-x, 60%); top: 4px; bottom: 4px; width: 34px; border-radius: 17px; overflow: hidden; z-index: 3;
+    background: linear-gradient(90deg, #3b2412, #7a4f2a 35%, #a8743f 50%, #6d4424 70%, #2e1b0c); box-shadow: 10px 0 24px rgb(0 0 0 / 0.45); }
+  .emk__open { display: none; }
+  .emk.is-closed .emk__open { display: inline-flex; align-items: center; gap: 10px; border: 2px solid var(--cream); background: rgb(247 240 227 / 0.08); color: var(--cream); font-family: var(--mono); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 12px 20px; border-radius: 999px; cursor: pointer; animation: tap-pulse 2.2s ease-in-out infinite; }
+  .emk.is-closed .emk__open:hover { background: var(--cream); color: var(--ai); }
+  .emk__open-dot { width: 10px; height: 10px; border-radius: 50%; background: #f3d27a; box-shadow: 0 0 0 0 rgb(243 210 122 / 0.7); animation: dot-ping 1.6s ease-out infinite; }
+  @keyframes tap-pulse { 50% { transform: scale(1.05); } }
+  @keyframes dot-ping { to { box-shadow: 0 0 0 12px rgb(243 210 122 / 0); } }
+  /* Opening: the cover glides to its place and the paper unfurls out of it */
+  .emk.is-opening .emk__track { transition: transform 1s cubic-bezier(.3,.7,.2,1); }
+  .emk.is-opening .emk__paper { animation: unfurl 1.3s cubic-bezier(.3,.7,.2,1) 0.2s both; }
+  @keyframes unfurl { from { clip-path: inset(-20px 100% -20px 0); } to { clip-path: inset(-20px 0 -20px 0); } }
+
   @media (max-width: 700px) {
     .emk.is-pinned .emk__pin { padding-top: 76px; }
     .emk__cover { width: 72vw; min-height: 0; }
@@ -202,5 +298,5 @@ const { scenes, cover, end, kamon, eyebrow = 'A night with your Ninja', id, tour
     .emk.is-pinned .emk__roller { right: 0; width: 26px; }
     .emk.is-pinned .emk__stage::after { width: 13px; }
   }
-  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze { animation: none; } .emk__fig img { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .emk__hint, .emk__haze, .emk__open, .emk__open-dot { animation: none; } .emk__fig img { transition: none; } }
 </style>

@@ -78,7 +78,7 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
               <p class="qz__price" data-qz-price></p>
               <div class="qz__cta">
                 <a class="btn btn--primary" data-qz-book data-track="click_quiz_book">Book this mission</a>
-                <a class="qz__more" data-qz-more data-track="click_quiz_scroll">Unroll its scroll →</a>
+                <a class="qz__more" href="#night" data-qz-more data-track="click_quiz_scroll">See its route on the scroll <span aria-hidden="true">↓</span></a>
               </div>
             </div>
           </div>
@@ -157,7 +157,9 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       const book = root.querySelector<HTMLAnchorElement>('[data-qz-book]')!;
       const more = root.querySelector<HTMLAnchorElement>('[data-qz-more]')!;
       book.href = t.booking || `/tour/${t.id}#book`; book.dataset.tour = t.id;
-      more.href = `/tour/${t.id}#scroll`; more.dataset.tour = t.id;
+      more.dataset.tour = t.id;
+      // the picture scroll below the quiz switches to this tour (rolled up, ready to open)
+      document.dispatchEvent(new CustomEvent('ngt:mission', { detail: t.id }));
       steps.parentElement!.classList.add('is-done');
       result.hidden = false;
       const scroll = result.querySelector<HTMLElement>('.qz__scroll')!;
@@ -165,6 +167,15 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
       requestAnimationFrame(() => requestAnimationFrame(() => result.classList.add('is-open')));
       track('quiz_complete', { tour: t.id, area: answers.area, time: answers.time, into: answers.into });
     };
+
+    // "See its route": glide down to the picture scroll (now showing this tour) and put focus on its open button
+    root.querySelector<HTMLAnchorElement>('[data-qz-more]')?.addEventListener('click', (e) => {
+      const target = document.getElementById('night');
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      setTimeout(() => target.querySelector<HTMLButtonElement>('[data-emk-open]')?.focus({ preventScroll: true }), 900);
+    });
 
     qs.forEach((q, i) => q.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.qz__opt');
@@ -226,7 +237,11 @@ const questions: { key: string; q: string; opts: Opt[] }[] = [
   .qz__tag { margin: 0; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; }
   .qz__price { margin: 6px 0 8px; font-family: var(--display); font-size: 1.5rem; }
   .qz__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: auto; }
-  .qz__more { font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+  .qz__more { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ai); border: 2px solid var(--ai); border-radius: 999px; padding: 10px 16px; text-decoration: none; transition: background 0.25s, color 0.25s; }
+  .qz__more:hover { background: var(--ai); color: var(--cream); }
+  .qz__more span { display: inline-block; animation: qz-down 1.4s ease-in-out infinite; }
+  @keyframes qz-down { 50% { transform: translateY(4px); } }
+  @media (prefers-reduced-motion: reduce) { .qz__more span { animation: none; } }
   .qz__again { background: none; border: 0; color: var(--cream); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 8px; }
 
   @media (max-width: 900px) {

@@ -15,7 +15,7 @@ const soon = d.comingSoon || !d.bookingUrl;
   <PriceTable tour={tour} />
   {soon
     ? <><p class="bb__soon">Launching soon. Tell us your dates and we’ll let you know first.</p><a class="btn btn--primary btn--block" href={`/contact?tour=${tour.id}`} data-track="click_coming_soon" data-tour={tour.id}>Ask about dates</a></>
-    : <a class="btn btn--primary btn--block" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>}
+    : <a class="btn btn--primary btn--block btn--call" href={d.bookingUrl} data-track="click_book" data-tour={tour.id} data-location="booking_box">Check availability</a>}
   <ul class="bb__why">
     <li>Best price when you book here</li>
     {d.privateTour && <li>Private: no other guests join</li>}
@@ -39,7 +39,7 @@ const soon = d.comingSoon || !d.bookingUrl;
     <span class="bbar__t">{d.shortTitle}</span>
     <span class="bbar__p">{soon ? 'Coming soon' : <><strong>{pl.amount}</strong> /person</>}</span>
   </div>
-  <a class="btn btn--primary" href={soon ? `/contact?tour=${tour.id}` : d.bookingUrl} data-track={soon ? 'click_coming_soon' : 'click_book'} data-tour={tour.id} data-location="mobile_bar">{soon ? 'Ask us' : 'Book now'}</a>
+  <a class="btn btn--primary btn--call" href={soon ? `/contact?tour=${tour.id}` : d.bookingUrl} data-track={soon ? 'click_coming_soon' : 'click_book'} data-tour={tour.id} data-location="mobile_bar">{soon ? 'Ask us' : 'Book now'}</a>
 </div>
 
 <style>

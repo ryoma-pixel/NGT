@@ -108,7 +108,7 @@ const reels = getReels(await getTours(), tour.id);
         {d.ageNote && <li><Icon name="kid" size={18} /> {d.ageNote}</li>}
       </ul>
       <div class="th__cta">
-        <a class="btn btn--primary btn--lg" href={ctaHref} data-track="click_hero_book" data-tour={tour.id}>{ctaLabel}</a>
+        <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track="click_hero_book" data-tour={tour.id}>{ctaLabel}</a>
         <p class="th__price">{soon ? <strong>Coming soon</strong> : <><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /><span class="th__pnote">{pl.note}</span></>}</p>
       </div>
       {heroThumbs.length > 0 && (
@@ -288,7 +288,7 @@ const reels = getReels(await getTours(), tour.id);
     <div class="wrap sbar__in">
       <p class="sbar__t">{d.shortTitle}</p>
       <p class="sbar__p">{soon ? <strong>Coming soon</strong> : <><strong>{pl.amount}</strong> <Usd jpy={pl.jpy} /> {pl.note}</>}</p>
-      <a class="btn btn--primary" href={ctaHref} tabindex="-1" data-track="click_sticky_book" data-tour={tour.id}>{ctaLabel}</a>
+      <a class="btn btn--primary btn--call" href={ctaHref} tabindex="-1" data-track="click_sticky_book" data-tour={tour.id}>{ctaLabel}</a>
     </div>
   </div>
 
@@ -300,7 +300,7 @@ const reels = getReels(await getTours(), tour.id);
       <Tate text="いざ出陣" class="tate--inline" />
       <img class="fin__seal" data-stamp style="--r:-10deg" src="/images/brand/logo-light-160.webp" alt="" width="110" height="110" loading="lazy" />
       <Split text="Your Ninja is ready." />
-      <a class="btn btn--primary btn--lg" href={ctaHref} data-track="click_final_book" data-tour={tour.id}>{ctaLabel}</a>
+      <a class="btn btn--primary btn--lg btn--call" href={ctaHref} data-track="click_final_book" data-tour={tour.id}>{ctaLabel}</a>
     </div>
   </section>
 

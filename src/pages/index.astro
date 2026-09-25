@@ -10,11 +10,13 @@ import Mist from '../components/Mist.astro';
 import NinjaQuiz from '../components/NinjaQuiz.astro';
 import Reviews from '../components/Reviews.astro';
 import Icon from '../components/Icon.astro';
+import Kamon from '../components/Kamon.astro';
+import { srcset } from '../lib/img';
 import faq from '../data/faq.json';
 import site from '../data/site.json';
 import pricing from '../data/pricing.json';
 import reviews from '../data/reviews.json';
-import { getTours, yen } from '../lib/tours';
+import { getTours, yen, AREA_JP } from '../lib/tours';
 const tours = await getTours();
 // The home picture scroll tells the Secret Shrine tour, so its button books that tour directly
 const shrineBooking = tours.find((t) => t.id === 'shinjuku-secret-shrine')?.data.bookingUrl ?? '/tour/shinjuku-secret-shrine#book';
@@ -41,6 +43,26 @@ const night = [
 ];
 
 const google = reviews.ratings.find((r) => r.source === 'Google');
+
+// Picture-scroll data for every bookable tour, so the scroll below the quiz can show the tour it picked
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const scrollTours = Object.fromEntries(
+  tours
+    .filter((t) => !t.data.comingSoon && t.data.story.some((c) => c.image))
+    .map((t) => {
+      const d = t.data;
+      return [t.id, {
+        id: t.id,
+        eyebrow: `Your mission: ${d.shortTitle}`,
+        title: d.tagline ?? d.shortTitle,
+        sub: `${d.shortTitle} · ${d.durationMinutes} min`,
+        tate: `${AREA_JP[d.area]}の${d.themes.includes('Nightlife') ? '一夜' : '一刻'}`,
+        cta: 'Book this mission',
+        href: d.bookingUrl ?? `/tour/${t.id}#book`,
+        scenes: d.story.filter((c) => c.image).map((c, n) => ({ kicker: `Scene ${pad2(n + 1)}`, title: c.title, text: c.text, image: c.image!, srcset: srcset(c.image!, 1400), alt: c.imageAlt ?? '' })),
+      }];
+    }),
+);
 ---
 <Base jsonLd={jsonLd} image="/images/og.jpg" overlayHeader>
   <!-- First visit only: sliding doors open onto Tokyo -->
@@ -107,8 +129,13 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       scenes={night}
       cover={{ title: 'One night in Shinjuku', sub: 'Secret Shrine tour · 60 min', tate: '新宿の一夜' }}
       kamon="torii"
+      tour="shinjuku-secret-shrine"
+      closed
+      switchable
       end={{ title: 'Your turn.', cta: 'Book this night', href: shrineBooking, external: true }}
     />
+    <script type="application/json" data-emk-tours set:html={JSON.stringify(scrollTours)} />
+    {tours.map((t) => <template data-emk-kamon-tpl={t.id}><Kamon name={t.data.kamon} size={54} class="emk__kamon" /></template>)}
   </div>
 
   <section class="stats" aria-label="NINJA GO TOURS in numbers">
@@ -116,7 +143,7 @@ const google = reviews.ratings.find((r) => r.source === 'Google');
       <div data-reveal><strong><span data-count="280">0</span>+</strong><span>tiny bars, one Ninja</span></div>
       <div data-reveal style="--d:100ms"><strong><span data-count="60">0</span></strong><span>minutes of Tokyo magic</span></div>
       {google && <div data-reveal style="--d:200ms"><strong><span data-count={google.score.toFixed(1)}>0</span>★</strong><span>on Google ({google.count} reviews)</span></div>}
-      <div data-reveal style="--d:300ms"><strong><span data-count="1">0</span></strong><span>guide, just for you</span></div>
+      <div data-reveal style="--d:300ms"><strong><span data-count="1">0</span></strong><span>local guide leads the way</span></div>
     </div>
   </section>
 

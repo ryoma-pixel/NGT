@@ -139,3 +139,11 @@ table.price td:last-child, table.price th:last-child { text-align: right; }
   .marquee__track { animation: none; }
   .js [data-stamp] { opacity: 1; transform: rotate(var(--r, -6deg)); transition: none; }
 }
+
+/* Booking buttons that ask for attention (tour pages): a slow breath and a sheen that sweeps across every few seconds */
+.btn--call { position: relative; overflow: hidden; isolation: isolate; animation: call-breathe 3.6s ease-in-out infinite; }
+.btn--call::after { content: ''; position: absolute; inset: -2px; z-index: -1; pointer-events: none; background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.5) 50%, transparent 70%); transform: translateX(-130%); animation: call-sheen 3.6s ease-in-out infinite; }
+.btn--call:hover, .btn--call:focus-visible { animation-play-state: paused; }
+@keyframes call-breathe { 0%, 60%, 100% { transform: none; } 75% { transform: scale(1.045); } 88% { transform: scale(0.99); } }
+@keyframes call-sheen { 0%, 55% { transform: translateX(-130%); } 90%, 100% { transform: translateX(130%); } }
+@media (prefers-reduced-motion: reduce) { .btn--call, .btn--call::after { animation: none; } }
