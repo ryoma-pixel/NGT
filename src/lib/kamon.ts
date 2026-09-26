@@ -42,6 +42,22 @@ export const KAMON: Record<string, { label: string; svg: string }> = {
     <rect x="38" y="20" width="24" height="7" rx="1.5"/><rect x="38" y="73" width="24" height="7" rx="1.5"/>
     <path d="M36 28 H 64 C 76 36, 76 64, 64 72 H 36 C 24 64, 24 36, 36 28 Z"/></g>
     <g fill="none" stroke="var(--kamon-bg, #1f2d52)" stroke-width="3"><path d="M29 40 H 71 M 27 50 H 73 M 29 60 H 71"/></g>` },
+  // Dango on a skewer: Asakusa street snacks
+  dango: { label: 'Dango skewer', svg: `${ring}<g fill="currentColor" transform="rotate(-35 50 50)">
+    <rect x="48" y="14" width="4" height="74" rx="2"/>
+    <circle cx="50" cy="28" r="11"/><circle cx="50" cy="50" r="11"/><circle cx="50" cy="72" r="11"/></g>` },
+  // Beckoning cat's face: Imado Shrine, home of the maneki-neko
+  cat: { label: 'Lucky cat', svg: `${ring}<g fill="currentColor">
+    <path d="M27 50 L31 22 L46 36 Z"/><path d="M73 50 L69 22 L54 36 Z"/>
+    <ellipse cx="50" cy="55" rx="25" ry="22"/></g>
+    <g fill="none" stroke="var(--kamon-bg, #1f2d52)" stroke-width="3.2" stroke-linecap="round">
+    <path d="M38 52 Q 42 48 46 52"/><path d="M54 52 Q 58 48 62 52"/><path d="M46 62 Q 50 66 54 62"/>
+    <path d="M24 60 H 36 M 64 60 H 76"/></g>` },
+  // Taiko drum with its sticks: Edo crafts and drums
+  drum: { label: 'Taiko drum', svg: `${ring}<g fill="currentColor">
+    <path d="M30 38 C 24 48, 24 62, 30 72 H 70 C 76 62, 76 48, 70 38 Z"/><ellipse cx="50" cy="38" rx="20" ry="6"/>
+    <rect x="24" y="20" width="5" height="26" rx="2.5" transform="rotate(-38 26 33)"/><rect x="71" y="20" width="5" height="26" rx="2.5" transform="rotate(38 74 33)"/></g>
+    <g fill="var(--kamon-bg, #1f2d52)"><circle cx="32" cy="47" r="1.8"/><circle cx="32" cy="66" r="1.8"/><circle cx="39" cy="47" r="1.8"/><circle cx="39" cy="66" r="1.8"/><circle cx="46" cy="47" r="1.8"/><circle cx="46" cy="66" r="1.8"/><circle cx="54" cy="47" r="1.8"/><circle cx="54" cy="66" r="1.8"/><circle cx="61" cy="47" r="1.8"/><circle cx="61" cy="66" r="1.8"/><circle cx="68" cy="47" r="1.8"/><circle cx="68" cy="66" r="1.8"/></g>` },
 };
 
 export const KAMON_NAMES = Object.keys(KAMON) as [string, ...string[]];
