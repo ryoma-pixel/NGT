@@ -1,9 +1,9 @@
 ---
-title: "Hanazono Shrine Shinjuku: History, Festivals and Visiting at Night"
+title: "[Hanazono Shrine] Shinjuku's Guardian Shrine, Next Door to Golden Gai"
 description: "Hanazono Shrine is Shinjuku's guardian shrine, next to Golden Gai. Its grounds are open around the clock. Here is its history, festivals and how to visit."
 publishedAt: "2026-09-27"
 area: "Shinjuku"
-heroImage: "/images/tours/shinjuku-secret-shrine.webp"
+heroImage: "/images/tours/goldengai-nightlife/story-3.webp"
 relatedTours: ["shinjuku-secret-shrine", "goldengai-nightlife"]
 faq:
   - q: "Is Hanazono Shrine open at night?"
@@ -32,76 +32,68 @@ draft: true
 ---
 Hanazono Shrine is the guardian shrine of Shinjuku, a bright vermilion Shinto shrine that sits right between the department stores of Shinjuku-sanchome and the tiny bars of Golden Gai. Its grounds are generally open around the clock and free to enter, which makes it one of the few places in central Shinjuku where you can step out of the neon and into a quiet, working shrine at almost any hour.
 
-## What is Hanazono Shrine?
+Its front opens onto a busy shopping street. Its back edge touches Golden Gai, and Kabukicho is a few minutes' walk away. The official GO TOKYO map of Shinjuku describes it as a place locals use to escape the bustle, and after one evening visit you will see why.
 
-Hanazono Shrine (Hanazono Jinja) is dedicated mainly to Inari, the kami associated with rice, harvests and prosperity. For centuries it has served as the local guardian shrine of Shinjuku, and today it is still where neighbourhood businesses come to pray for a good year.
+## ① A shrine named after a flower garden
 
-What surprises most visitors is the location. Its front opens onto a busy shopping district, while its back edge touches Golden Gai, the maze of small post-war bars. Kabukicho, Tokyo's biggest entertainment district, is a few minutes' walk away. The official GO TOKYO map of Shinjuku describes it as a place locals use to escape the bustle, and that is a fair description.
+**【Who is enshrined here?】** Hanazono Shrine (Hanazono Jinja) is dedicated mainly to Inari, the kami associated with rice, harvests and prosperity. For centuries it has been Shinjuku's local guardian shrine, and neighbourhood businesses still come here to pray for a good year.
 
-## A short history: from Edo post town to modern Shinjuku
+**【Where the name comes from】** The exact founding date is not known, but sources agree the shrine already existed before the Edo period began in the early 1600s, when this area was growing into Naito Shinjuku, a post town on the Koshu Kaido highway.
 
-The exact founding date is not known. Sources agree that the shrine already existed before the Edo period began in the early 1600s, when this area was growing into Naito Shinjuku, a post town on the Koshu Kaido highway where travellers stopped on their way in and out of Edo.
+It first stood a short distance away, on land now occupied by the Isetan department store. In the Kan'ei era (1624-1644) that land was given to a shogunate retainer, and the shrine moved to its present grounds, part of an Owari Tokugawa estate known as a flower garden. "Hanazono" means exactly that: "flower garden".
 
-The shrine originally stood a short distance from its current site, on land now occupied by the Isetan department store. In the Kan'ei era (1624-1644), that land was given to a shogunate retainer for a residence, and the shrine was moved to its present grounds. The new site had been part of an estate of the Owari Tokugawa family and was known as a flower garden. That garden gave the shrine its name: "hanazono" means "flower garden".
+**【Rebuilt, but still classic】** The shrine suffered fires in the Edo period and was destroyed in the Second World War. The current main hall, finished in 1965, is concrete but follows traditional shrine architecture, so from the street it still reads as a classic vermilion shrine.
 
-Like much of Tokyo, the shrine has been rebuilt more than once. It suffered fires in the Edo period and was destroyed in the Second World War. The current main hall, finished in 1965, is made of concrete but follows traditional shrine architecture, so it still reads as a classic vermilion shrine from the street.
+## ② What to see in 15 to 20 minutes
 
-## What to see on the grounds
+The grounds are compact and easy to explore.
 
-The grounds are compact and easy to explore in 15 to 20 minutes.
+- **The main hall.** The vermilion hall at the top of the steps is where most people pray. At night it is lit, and the red glows against the office buildings behind it.
+- **Geino Asama Shrine.** A smaller shrine for the performing arts. Actors, singers and dancers pray here before big performances, and its charm for performers, with space to write your real or stage name, is one of the best known.
+- **Itoku Inari Shrine.** A small sub-shrine reached through a short row of red torii gates, and a popular photo spot.
+- **Charms and goshuin.** The shrine office offers omamori (charms) and goshuin, the handwritten shrine stamps that collectors gather in a special book.
 
-- **The main hall (honden and haiden).** The vermilion hall at the top of the steps is where most people make their prayer. At night it is lit, and the red stands out against the office buildings behind it.
-- **Geino Asama Shrine.** A smaller shrine on the grounds dedicated to the performing arts. Actors, singers and dancers visit to pray before important performances, and the shrine's charm for performers, which has space to write your real or stage name, is one of its best known.
-- **Itoku Inari Shrine.** A small sub-shrine reached through a short row of red torii gates. It is a popular photo spot and a good example of the Inari style of shrine found all over Japan.
-- **Charms and goshuin.** The shrine office offers omamori (charms) and goshuin, the handwritten shrine stamps that collectors gather in a special book. Seasonal designs appear from time to time.
+**【A red tent in theatre history】** In 1967 the playwright Juro Kara and his Situation Theatre company first pitched their famous red tent on these grounds and staged performances there. The "red tent" became a symbol of Tokyo's underground theatre of the late 1960s, a fitting story for a shrine that performers have visited since the Edo period.
 
-### A link to Tokyo's underground theatre
+## ③ Festivals worth planning around
 
-Hanazono Shrine also has an unusual place in Japanese theatre history. In 1967 the playwright Juro Kara and his Situation Theatre company first pitched their famous red tent on the shrine grounds and staged performances there. The "red tent" became a symbol of Tokyo's underground theatre movement of the late 1960s. It fits the shrine's long connection with performers, which goes back to the Edo period.
+**【Tori no Ichi (November)】** A market festival held on the days of the rooster in the old calendar, which fall two or three times each November. Hanazono's is counted among the three best-known Tori no Ichi of old Edo, with those in Asakusa and Fuchu. Stalls sell kumade, decorated bamboo rakes said to "rake in" good fortune, and when a sale is made, sellers and buyer often clap in rhythm together. It is liveliest after dark, and a festival eve is held the night before each day. Dates change every year, so check the shrine's official announcement, and expect big evening crowds.
 
-## Festivals and markets worth planning around
+**【Reitaisai, the grand festival (late May)】** The main annual festival runs over several days around the last weekend of May. Mikoshi (portable shrines) are carried through Shinjuku's streets and the grounds fill with food stalls. Which mikoshi take part varies by year.
 
-### Tori no Ichi (November)
+**【The Sunday antique market】** On most Sundays, dealers set up on the grounds with prints, scrolls, furniture and old kimono, usually from early morning until mid-afternoon. It may be cancelled in bad weather or during shrine events, so treat it as a bonus and check before you go.
 
-Tori no Ichi is a market festival held on the days of the rooster in the old calendar, which fall two or three times each November. Hanazono's is counted among the three best-known Tori no Ichi of old Edo, together with those in Asakusa and Fuchu. Stalls sell kumade, decorated bamboo rakes that are said to "rake in" good fortune for business, and when a sale is made, the sellers and buyer often clap in rhythm together. The grounds are packed with food stalls and lit with lanterns, and the atmosphere is at its liveliest after dark. A festival eve is also held the night before each Tori no Ichi day.
+## ④ Visiting at night: the best time, with three manners
 
-The dates change every year, so check the shrine's official announcement. Expect heavy crowds, especially in the evening.
+The grounds are generally open around the clock and the shrine is lit in the evening. This is when many visitors like it best: the office workers have gone home, the steps and lanterns are calm, and the glow of Golden Gai is only a few steps away.
 
-### Reitaisai, the grand festival (late May)
+- **The office closes.** Charms, goshuin and formal prayers are handled during office hours only, from morning into the early evening, and hours can change. Go in the daytime or early evening if you want a stamp or a charm.
+- **Keep your voice down.** This is an active place of worship, used by people who live and work nearby. It is not a spot to drink, even with bars next door.
+- **Watch your footing.** The stone steps can be slippery in the rain.
 
-The shrine's main annual festival is held over several days around the last weekend of May. Mikoshi (portable shrines) are carried through the streets of Shinjuku, and the grounds fill with stalls selling festival food. Which mikoshi take part varies by year, so check the schedule if you want to see a particular procession.
+## ⑤ How to pray, in four steps
 
-### The Sunday antique market
+![Guests praying at Hanazono Shrine](/images/tours/goldengai-nightlife/gallery-3.webp)
 
-On most Sundays, antique dealers set up on the grounds with items such as prints, scrolls, furniture and old kimono. It usually runs from early morning until mid-afternoon, and it may be cancelled in bad weather or when the shrine is holding an event. Treat it as a bonus rather than the reason for a trip, and check before you go.
+You do not need to be Shinto or speak Japanese to pray.
 
-## Can you visit Hanazono Shrine at night?
-
-Yes. The grounds are generally open around the clock, and the shrine is lit in the evening. This is when many visitors like it best: after the office workers have gone home, the steps and lanterns are calm, while the glow of Golden Gai and Kabukicho is only a few steps away.
-
-A few things to keep in mind at night:
-
-- **The office closes.** Charms, goshuin and formal prayers are handled during office hours only, which run from morning into the early evening and can change. If you want a stamp or a charm, go in the daytime or early evening.
-- **Keep your voice down.** The shrine is an active place of worship, and people who live and work nearby use it too. It is not a spot to drink or party, even though bars are next door.
-- **Watch your footing.** The stone steps up to the hall can be slippery in the rain.
-
-## How to pray at Hanazono Shrine
-
-You do not need to be Shinto or speak Japanese to pray. The common etiquette is:
-
-1. **Bow lightly** at the torii gate before you enter, and walk slightly to the side rather than straight down the centre of the path.
-2. **Purify your hands and mouth** at the water basin (temizuya): rinse your left hand, then your right, then pour a little water into your cupped left hand to rinse your mouth, and never drink directly from the ladle.
+1. **Bow lightly** at the torii gate, and walk slightly to the side rather than down the centre of the path.
+2. **Purify your hands and mouth** at the water basin (temizuya): rinse your left hand, then your right, then pour a little water into your cupped left hand to rinse your mouth. Never drink directly from the ladle.
 3. **At the hall,** drop a coin into the offering box. Any amount is fine.
 4. **Bow twice, clap twice, make your wish, then bow once more.**
 
-Photos of the grounds are generally fine, but avoid photographing people while they pray, and follow any signs that ask you not to take pictures of the halls or ceremonies.
+Photos of the grounds are generally fine, but avoid photographing people while they pray, and follow any signs asking you not to photograph the halls or ceremonies.
 
-## How to get there and how long to stay
+## ⑥ Getting there, and what to pair it with
 
-The shrine sits next to Shinjuku-sanchome Station, served by the Tokyo Metro Marunouchi and Fukutoshin lines and the Toei Shinjuku Line. Exit E2 is the usual one to use. From the east side of JR Shinjuku Station it is an easy walk along Yasukuni-dori, and it is only a few minutes on foot from Kabukicho.
+![The neon Golden Gai sign at night](/images/tours/shinjuku-secret-shrine/story-3.webp)
 
-Plan on 15 to 30 minutes for the shrine itself. A natural route is to combine it with Golden Gai directly behind it and the neon streets of Kabukicho, which together make a good first evening in Shinjuku.
+The shrine is next to Shinjuku-sanchome Station (Tokyo Metro Marunouchi and Fukutoshin lines, Toei Shinjuku Line); exit E2 is the usual one. From the east side of JR Shinjuku Station it is an easy walk along Yasukuni-dori, and only a few minutes on foot from Kabukicho.
+
+Allow 15 to 30 minutes for the shrine itself. Pair it with Golden Gai directly behind and the neon of Kabukicho, and you have a good first evening in Shinjuku.
 
 ## Explore it with a local
 
-A guide can show you small details, such as which charms suit performers, that are easy to miss on your own. On the [Golden Gai back alleys and nightlife tour](/tour/goldengai-nightlife), a NINJA GO TOURS guide in a Ninja costume walks you through the prayer ritual at Hanazono Shrine before heading into Golden Gai. The [secret shrine and neon backstreets walk](/tour/shinjuku-secret-shrine) also ends at Hanazono after a stop at a smaller hidden shrine in Kabukicho.
+![Guests with the Ninja guide on the steps of Hanazono Shrine](/images/tours/shinjuku-secret-shrine/gallery-11.webp)
+
+A guide can point out small details, like which charms suit performers, that are easy to miss on your own. On the [Golden Gai back alleys and nightlife tour](/tour/goldengai-nightlife), a NINJA GO TOURS guide in a Ninja costume walks you through the prayer ritual at Hanazono Shrine before heading into Golden Gai. The [secret shrine and neon backstreets walk](/tour/shinjuku-secret-shrine) also ends at Hanazono, after a stop at a smaller hidden shrine in Kabukicho.

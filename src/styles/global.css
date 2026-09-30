@@ -99,6 +99,14 @@ p { margin: 0 0 1em; }
 .prose h2 { margin-top: 1.6em; font-size: 1.5rem; }
 .prose h3 { margin-top: 1.4em; }
 .prose ul, .prose ol { padding-left: 1.3em; }
+/* Column photos: rounded, and two images in one paragraph sit side by side */
+.prose img { border-radius: var(--radius); }
+.prose p:has(> img) { margin: 1.2em 0; }
+.prose p:has(> img + img) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.prose p:has(> img + img) img { width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.prose table { width: 100%; border-collapse: collapse; margin: 1.2em 0; font-size: 0.95rem; }
+.prose th, .prose td { padding: 0.55em 0.5em; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.prose th { font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; }
 
 table.price { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 table.price th, table.price td { padding: 0.65em 0.5em; border-bottom: 1px solid var(--line); text-align: left; }

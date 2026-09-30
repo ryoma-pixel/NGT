@@ -3,7 +3,7 @@
 A scheduled Claude Code session (a Routine, Mon/Wed/Fri 05:53 JST) follows this file to write **one** column draft for ninjagotours.com.
 It runs on the owner's Claude plan, so it needs no API key. Edit this file to change how columns are written; the next run uses it.
 
-The rules below are the same as in `scripts/generate-column.ts` (the API version, kept as a paid alternative).
+The rules below started from `scripts/generate-column.ts` (the API version, kept as a paid alternative). Since 2026-09-30 this file uses the column style with photos; the API version still writes the older photo-free guide style and must be updated before it is switched on.
 
 ## 0. Settings
 
@@ -48,12 +48,20 @@ Our tours: read `src/content/tours/*.md` (skip `draft: true`). Respect what each
 - `seasonal` → mention the season.
 - Never mention tour prices, discounts or availability (the tour pages are the source of truth).
 
-Structure (for search and AI answers):
-- Start with a 2-3 sentence paragraph that directly answers the search query. No heading above it.
-- Then 4-7 sections with `##` headings phrased the way people search (questions or clear topics). `###` is allowed inside sections. Bullet lists or one small table where they help.
-- 1,100-1,600 words in the body. No `#` (H1), no images, no HTML.
+Structure: column style (owner decision 2026-09-30 — match the older columns such as `shinjuku-golden-gai-guide.md` and `shinjuku-yokocho-guide.md`, while keeping what helps search and AI answers):
+- Start with a 2-3 sentence paragraph that directly answers the search query. No heading above it. Then 1-2 short paragraphs that set the scene from a local's point of view (what you see and feel there), using only facts from your notes.
+- Then 5-7 sections with numbered `##` headings: `## ① ...`, `## ② ...` and so on. Make each heading a short, catchy line that still says what the section answers (for example `## ② So is it dangerous? Safe for your body, risky for your wallet`).
+- Inside sections, use bold bracket labels to break up the text, such as `**【What kind of place is it?】**`, `**【How to say no】**`, plus bullet or numbered lists. One small table is allowed where it helps. `###` is allowed.
+- 900-1,200 words in the body. No `#` (H1), no HTML, no emoji.
+- Photos: put 3-6 photos from our own tour folders (`public/images/tours/<tour-id>/`) in the body, right under a `##` heading or next to the paragraph they illustrate. Pick them by the `alt`/`imageAlt` text in `src/content/tours/*.md` `gallery` and `story`, and copy that text as the image's alt: `![alt text](/images/tours/<tour-id>/gallery-3.webp)`. Two images in one paragraph (`![a](x)![b](y)`, no space) are shown side by side.
+  - Use only photos that match the section (place and time of day). Do not reuse the hero image in the body.
+  - Photos with guests or the guide go only in positive parts (the scene, how to pray, `Explore it with a local`), never next to warnings about scams, crime, touts or danger. Warnings get street or scenery photos without identifiable people.
+  - Never use photos from tours with `noCostume: true` for a Ninja-costume context, and never use images outside `public/images/tours/` or `public/images/columns/`.
+  - The person checking the draft may swap photos; list the ones you used in the report.
+- Title: start with the place or theme in square brackets, then the question or promise, e.g. `[Kabukicho at Night] Is It Safe? An Honest Guide for First-Timers`. Contains the keyword (or its words). No hype words.
+- `heroImage`: a strong landscape photo of the place from the related tour folders (not one with guests in a warning-heavy article).
 - Mention NINJA GO TOURS at most twice, only where it genuinely helps. Link 1-2 related tours as `[text](/tour/<id>)`.
-- End with a short `## Explore it with a local` section (2-3 sentences) that links one related tour.
+- End with a short `## Explore it with a local` section (2-3 sentences, may start with one photo with guests) that links one related tour.
 - 3-5 FAQ items: real traveller questions, each answer 1-3 self-contained sentences.
 
 ## 5. Save the draft
@@ -62,11 +70,11 @@ Create `src/content/columns/<slug>.md` (slug: lowercase words joined by hyphens,
 
 ```
 ---
-title: "45-70 characters, contains the keyword, no clickbait"
+title: "45-75 characters, [Place] prefix, contains the keyword, no clickbait"
 description: "Meta description, 120-155 characters, answers the query"
 publishedAt: "YYYY-MM-DD (today, Tokyo time)"
 area: "Shinjuku | Ueno | Asakusa"
-heroImage: "the heroImage of the first related tour"
+heroImage: "/images/tours/<tour-id>/<photo>.webp (a landscape photo of the place)"
 relatedTours: ["tour-id", "tour-id"]
 faq:
   - q: "Question"
@@ -93,5 +101,6 @@ Then, in `src/data/column-topics.json`, remove the topic from `queue` and add it
 
 End with a short report for the owner:
 - タイトルと、確認用URLでのパス（`/column/<slug>`）
+- 使った写真（ファイル名と置いた見出し）。合わなければ確認時に差し替える
 - 公開前に確認すべき点：数字（営業時間・料金・日付）とその出典、「check before publishing」にした箇所、料金らしき記述の有無
 - 確認と公開の方法：Pages CMS の Column でその記事を開き、事実を確かめて draft を外す（外すまで本番サイトには出ない）
