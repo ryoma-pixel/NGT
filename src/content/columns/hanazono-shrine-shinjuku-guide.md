@@ -28,7 +28,7 @@ sources:
   - "https://en.wikipedia.org/wiki/J%C5%ABr%C5%8D_Kara"
 keyword: "Hanazono Shrine Shinjuku"
 generated: true
-draft: true
+draft: false
 ---
 Hanazono Shrine is the guardian shrine of Shinjuku, a bright vermilion Shinto shrine that sits right between the department stores of Shinjuku-sanchome and the tiny bars of Golden Gai. Its grounds are generally open around the clock and free to enter, which makes it one of the few places in central Shinjuku where you can step out of the neon and into a quiet, working shrine at almost any hour.
 
