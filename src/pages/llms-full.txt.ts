@@ -33,6 +33,8 @@ export const GET: APIRoute = async ({ site: base }) => {
     const d = t.data;
     const pl = priceLabel(t);
     out.push(`## ${d.title}`, '', `URL: ${url(`/tour/${t.id}`)}`, '', d.summary, '');
+    if (d.activity) out.push(`- In short: ${d.activity}`);
+    if (d.idealFor.length) out.push(`- Perfect for: ${d.idealFor.join('; ')}`);
     out.push(`- Area: ${d.area}, Tokyo`);
     out.push(`- Duration: about ${d.durationMinutes} minutes`);
     if (d.startTimes) out.push(`- Start times (last start included): ${d.startTimes}`);

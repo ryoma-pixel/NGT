@@ -72,6 +72,11 @@ gallery:
 - src: /images/tours/shinjuku-nichome-lgbtq/story-3.webp
   alt: The Golden Gai sign lit up at night
 tagline: Tokyo’s rainbow district, decoded.
+activity: "LGBTQ+ night walk"
+idealFor:
+  - "LGBTQ+ travelers and allies"
+  - "Anyone who wants local context before a night out in Nichome"
+  - "Travelers curious about Tokyo today, not just the sights"
 pattern: ichimatsu
 kamon: rainbow
 features:

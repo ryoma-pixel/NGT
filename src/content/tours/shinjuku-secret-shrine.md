@@ -76,6 +76,11 @@ gallery:
 - src: /images/tours/shinjuku-secret-shrine/story-1.webp
   alt: The red Kabukicho Ichibangai arch above a busy street
 tagline: The neon hides a shrine.
+activity: "Secret shrine hunt"
+idealFor:
+  - "First-timers who want an easy start in Kabukicho"
+  - "Travelers who prefer hidden spots to famous sights"
+  - "Anyone who wants photos with a real Ninja"
 pattern: uroko
 kamon: torii
 features:

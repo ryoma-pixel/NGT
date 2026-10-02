@@ -61,6 +61,11 @@ gallery:
 - src: /images/tours/shinjuku-escooter-ride/story-2.webp
   alt: Guests with e-scooters in front of the Tokyo Metropolitan Government Building
 tagline: Glide past skyscrapers.
+activity: "E-scooter ride"
+idealFor:
+  - "Travelers who want to see more of Shinjuku in one go"
+  - "Riders aged 16 and over"
+  - "Anyone who wants photos and video of the ride"
 pattern: tatewaku
 kamon: wheel
 features:

@@ -27,6 +27,11 @@ itinerary:
 - title: Farewell & tips for the rest of your night (5 min)
 itineraryNote: The tour ends on Denboin-dori. Your guide can point you to Hoppy Street for drinks or back to the station.
 tagline: "Asakusa after dark."
+activity: "Night photo walk"
+idealFor:
+  - "Anyone who loves taking photos at night"
+  - "Travelers who want Asakusa without the daytime crowds"
+  - "The curious: how does a temple differ from a shrine?"
 pattern: seigaiha
 kamon: lantern
 comingSoon: true

@@ -66,6 +66,11 @@ gallery:
 - src: /images/tours/ueno-ameyoko/gallery-8.webp
   alt: The golden gate of Ueno Toshogu
 tagline: Join the snack auction!
+activity: "Snack auction"
+idealFor:
+  - "New arrivals who want to learn the local rules fast"
+  - "Fans of street food and market energy"
+  - "Anyone who wants a relaxed start in Ueno Park"
 pattern: asanoha
 kamon: asanoha
 features:

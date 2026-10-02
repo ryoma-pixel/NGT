@@ -28,6 +28,10 @@ const tours = defineCollection({
     hook: z.string().optional(),
     // Short catch (max ~6 words) shown on cards and as the big hero line
     tagline: z.string().optional(),
+    // What you do, in 1-3 words (e.g. "Hanko making"), shown as a chip on the home page cards
+    activity: z.string().optional(),
+    // Who the tour suits, about 3 short lines, shown on the tour page only
+    idealFor: z.array(z.string()).default([]),
     // Traditional pattern the tour wears like a crest (src/lib/patterns.ts)
     pattern: z.enum(PATTERNS).optional(),
     // Family crest shown on cards and the tour page (src/lib/kamon.ts)

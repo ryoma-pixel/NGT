@@ -151,11 +151,19 @@ const jsonLd = [
   </section>
 
 
-  <!-- 2. What you will do, at a glance -->
-  {d.features.length > 0 && (
+  <!-- 2. Who it suits, and what you will do, at a glance -->
+  {(d.features.length > 0 || d.idealFor.length > 0) && (
     <section class="feat">
       <div class="wrap">
-        <p class="eyebrow">What you’ll do</p>
+        {d.idealFor.length > 0 && (
+          <div class="fit">
+            <p class="eyebrow">Perfect for</p>
+            <ul class="fit__list">
+              {d.idealFor.map((t, i) => <li data-reveal style={`--d:${i * 90}ms`}><span class="fit__tick" aria-hidden="true">✓</span>{t}</li>)}
+            </ul>
+          </div>
+        )}
+        {d.features.length > 0 && <p class="eyebrow">What you’ll do</p>}
         <ul class="feat__list">
           {d.features.map((f, i) => (
             <li data-reveal style={`--d:${i * 90}ms`}>
@@ -462,6 +470,10 @@ const jsonLd = [
   .tate--area { position: absolute; z-index: 1; right: 4vw; top: 16vh; left: auto; font-size: clamp(2.4rem, 5vw, 4.4rem); color: var(--cream); text-shadow: 0 4px 30px rgb(0 0 0 / 0.5); animation: rise 1.4s cubic-bezier(.2,.8,.2,1) 0.3s both; }
   .fin :global(.tate--inline) { position: static; display: inline-block; color: var(--cream); margin: 0 auto 18px; font-size: 1.5rem; }
   @media (max-width: 700px) { .tate--area { font-size: 2.2rem; top: 84px; right: 14px; } }
+  .fit { margin: 0 0 40px; }
+  .fit__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 44em; }
+  .fit__list li { display: flex; align-items: flex-start; gap: 12px; font-size: 1.12rem; line-height: 1.45; }
+  .fit__tick { flex: none; display: grid; place-items: center; width: 26px; height: 26px; margin-top: 1px; border-radius: 50%; background: var(--cream); color: var(--night); font-weight: 700; font-size: 0.9rem; }
   .feat__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .feat__list li { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 22px; border-radius: var(--radius); background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.1); transition: transform 0.3s, background 0.3s; }
   .feat__list li:hover { transform: translateY(-4px); background: rgb(255 255 255 / 0.09); }

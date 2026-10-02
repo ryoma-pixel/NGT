@@ -29,6 +29,11 @@ itinerary:
   text: Tips for lunch, rubbish and places to sit in Asakusa.
 itineraryNote: Snacks are paid at each shop (a few hundred yen each). Your guide helps you order.
 tagline: "Snack like a local."
+activity: "Street snacks"
+idealFor:
+  - "First-timers in Asakusa"
+  - "Anyone curious about street-food manners"
+  - "Travelers after a light lunch with a story"
 pattern: ichimatsu
 kamon: dango
 comingSoon: true

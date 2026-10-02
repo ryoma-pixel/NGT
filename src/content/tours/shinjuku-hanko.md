@@ -71,6 +71,11 @@ gallery:
 - src: /images/tours/shinjuku-hanko/story-4.webp
   alt: A retro coffee shop on a Shinjuku side street
 tagline: Your name, carved in kanji.
+activity: "Hanko making"
+idealFor:
+  - "Anyone who wants a souvenir with their own name on it"
+  - "Travelers looking for a daytime, weekday activity"
+  - "Fans of small local shops off the main streets"
 cardBack: /images/tours/shinjuku-hanko/story-2.webp
 pattern: kikko
 kamon: seal

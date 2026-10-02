@@ -74,6 +74,11 @@ gallery:
 - src: /images/tours/goldengai-nightlife/story-2.webp
   alt: Colorful bar signboards crowding a narrow Golden Gai alley
 tagline: 280 tiny doors. Pick yours.
+activity: "Tiny bar alleys"
+idealFor:
+  - "Travelers curious about Golden Gai but unsure which door to open"
+  - "Night owls who want a short intro before going out on their own"
+  - "Anyone keen to try a real Shinto ritual"
 pattern: shippo
 kamon: noren
 features:

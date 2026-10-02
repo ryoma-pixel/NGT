@@ -74,6 +74,11 @@ gallery:
 - src: /images/tours/asakusa-kappabashi-knife-tour/story-2.webp
   alt: Bargain ceramics piled up outside Dengama
 tagline: The street where chefs shop.
+activity: "Knife shopping"
+idealFor:
+  - "Home cooks and food lovers"
+  - "Anyone who wants help choosing a good Japanese knife"
+  - "Gift hunters after tableware or kiriko glass"
 pattern: yagasuri
 kamon: knives
 features:

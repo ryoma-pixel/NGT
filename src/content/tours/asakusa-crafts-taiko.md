@@ -31,6 +31,11 @@ itinerary:
   text: Your guide's list of craft shops nearby.
 itineraryNote: The tour ends at the Drum Museum in Nishi-Asakusa. Museum entry (adults about ¥500, children less) and any purchases are paid separately.
 tagline: "Play the drums of Edo."
+activity: "Taiko drumming"
+idealFor:
+  - "Shoppers who want souvenirs made by real makers"
+  - "Families with kids who like to make noise"
+  - "Anyone who wants to try something hands-on"
 pattern: kikko
 kamon: drum
 comingSoon: true

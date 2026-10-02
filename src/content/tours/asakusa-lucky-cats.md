@@ -29,6 +29,11 @@ itinerary:
   text: The easy route back to Asakusa or on to Tokyo Skytree.
 itineraryNote: The tour ends at Imado Shrine, about 15 minutes' walk from Asakusa Station. Charms, wish plaques and stamps are paid separately.
 tagline: "Where the lucky cat lives."
+activity: "Lucky cat shrine"
+idealFor:
+  - "Travelers who want a quiet Asakusa away from the crowds"
+  - "Cat lovers and good-luck charm collectors"
+  - "Anyone after Skytree views by the river"
 pattern: shippo
 kamon: cat
 comingSoon: true

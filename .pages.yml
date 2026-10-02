@@ -54,6 +54,8 @@ content:
           - { name: imageAlt, label: Meeting point photo description, type: string }
       - { name: hook, label: Hook (one line under the title on social/SEO), type: string }
       - { name: tagline, label: Big catchphrase (max ~5 words), type: string }
+      - { name: activity, label: What you do in 1-3 words (card chip, e.g. Hanko making), type: string }
+      - { name: idealFor, label: Perfect for (about 3 short lines; tour page only), type: string, list: true }
       - name: pattern
         label: Crest pattern (one per tour)
         type: select

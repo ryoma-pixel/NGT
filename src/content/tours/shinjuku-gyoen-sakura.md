@@ -70,6 +70,11 @@ gallery:
 - src: /images/tours/shinjuku-gyoen-sakura/story-3.webp
   alt: Guests crossing the red-railed bridge in the Japanese garden
 tagline: Sweets first, then sakura.
+activity: "Sakura & sweets"
+idealFor:
+  - "Visitors in cherry blossom season (spring only)"
+  - "Anyone who wants great photos without holding the camera"
+  - "Travelers with a sweet tooth"
 seasonal: Spring only
 pattern: seigaiha
 kamon: sakura
