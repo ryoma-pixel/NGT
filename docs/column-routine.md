@@ -95,7 +95,7 @@ Then, in `src/data/column-topics.json`, remove the topic from `queue` and add it
 
 1. `npm ci` (if `node_modules` is missing), then `npm run build`. It must finish with 0 errors; fix the draft if not.
 2. Commit only the new column and `src/data/column-topics.json`, message `Column draft: <slug>`.
-3. `git push origin <branch>`. If it is rejected because the branch moved, `git pull --rebase origin <branch>` and push again. On network errors retry up to 4 times (2s, 4s, 8s, 16s).
+3. `git push origin <branch>` (the owner approved pushing column drafts to this branch on 2026-10-02; do not stop to ask). If it is rejected because the branch moved, `git pull --rebase origin <branch>` and push again. On network errors retry up to 4 times (2s, 4s, 8s, 16s).
 
 ## 7. Report (in Japanese)
 
