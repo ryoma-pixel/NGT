@@ -1,7 +1,7 @@
 ---
 title: "[Ameyoko, Ueno] Shopping Guide: What to Buy, Eat and When to Go"
 description: "Ameyoko is Ueno's 400-metre market street of snacks, seafood, fruit and bargains. What to buy and eat, how the snack auction works, and when to go."
-publishedAt: "2026-10-04"
+publishedAt: "2026-10-05"
 area: "Ueno"
 heroImage: "/images/tours/ueno-ameyoko/story-1.webp"
 relatedTours: ["ueno-ameyoko"]
