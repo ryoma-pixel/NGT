@@ -104,3 +104,11 @@ End with a short report for the owner:
 - 使った写真（ファイル名と置いた見出し）。合わなければ確認時に差し替える
 - 公開前に確認すべき点：数字（営業時間・料金・日付）とその出典、「check before publishing」にした箇所、料金らしき記述の有無
 - 確認と公開の方法：Pages CMS の Column でその記事を開き、事実を確かめて draft を外す（外すまで本番サイトには出ない）
+
+## 8. STUDIO package (done by the production session that checks the draft, not the writer)
+
+The owner still publishes columns on the current STUDIO site, and asked (2026-10-05) to receive every new column in this form:
+
+1. `npm run build`, then `python3 scripts/studio-export.py <scratchpad> <slug>` (several slugs make one package).
+2. Send the ZIP it prints with SendUserFile (`display: attach`). It holds `STUDIO入稿シート.html` (copy buttons for title, slug, date, description, area, cover file and the rich-text body; red placeholders where each image goes; the FAQ appended; tables turned into lists; links to https://ninjagotours.com) and the JPG images.
+3. In the Japanese report, add one line: open the sheet in a browser, paste the fields and body into STUDIO, swap each red placeholder for its image.
