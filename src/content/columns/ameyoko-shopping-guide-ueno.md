@@ -28,7 +28,7 @@ sources:
   - "https://japan-food.guide/articles/Ameyoko-Shopping-Street-Enjoy-Lively-Shopping-and-Gourmet-in-Tokyo"
 keyword: "Ameyoko shopping guide"
 generated: true
-draft: true
+draft: false
 ---
 Ameyoko is Ueno's open-air market street, running about 400 metres along the train tracks from Ueno Station to Okachimachi Station, with hundreds of small shops selling snacks, seafood, dried foods, fruit, cosmetics and bargain clothes. Go for the cheap snacks and street food, stay for the noise, and come on a weekday morning if you want room to move.
 

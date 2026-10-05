@@ -28,7 +28,7 @@ sources:
   - "https://www.japan.travel/en/plan/tipping-in-japan/"
 keyword: "Japanese bar cover charge otoshi"
 generated: true
-draft: true
+draft: false
 ---
 In many Japanese izakaya and small bars you pay a per-person seat charge, and at izakaya it usually arrives as a small dish you did not order, called *otoshi*. It is a normal custom, not a scam. The simple fix is to ask about the charge before you sit down, then relax and enjoy the dish.
 
