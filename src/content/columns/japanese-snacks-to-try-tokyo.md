@@ -1,7 +1,7 @@
 ---
 title: "[Tokyo Snacks] Japanese Snacks to Try and Where to Find Them in Tokyo"
 description: "A tasting list of classic Japanese snacks to try in Tokyo, from senbei and Pocky to Kit Kat flavours and dagashi, plus where to buy them in Ueno and beyond."
-publishedAt: "2026-10-06"
+publishedAt: "2026-10-07"
 area: "Ueno"
 heroImage: "/images/tours/ueno-ameyoko/gallery-2.webp"
 relatedTours: ["ueno-ameyoko"]
@@ -71,7 +71,7 @@ This list sorts the classics by type, so you know what you are picking up, and t
 
 ## ④ Fresh sweets: dango, dorayaki and wagashi
 
-![The traditional sweet shop near the meeting point](/images/tours/shinjuku-gyoen-sakura/gallery-2.webp)![Guests choosing sweets at the shop counter](/images/tours/shinjuku-gyoen-sakura/gallery-3.webp)
+![A traditional Japanese sweet shop](/images/tours/shinjuku-gyoen-sakura/gallery-2.webp)![Choosing sweets at a shop counter](/images/tours/shinjuku-gyoen-sakura/gallery-3.webp)
 
 Not every snack comes in a packet. Traditional sweets, called *wagashi*, are made fresh at small shops and are best eaten the same day.
 
@@ -106,6 +106,6 @@ Not every snack comes in a packet. Traditional sweets, called *wagashi*, are mad
 
 ## Explore it with a local
 
-![A guest taking a photo of the Ameyoko sign on Ueno’s busy market street](/images/tours/ueno-ameyoko/hero-g1.webp)
+![A visitor taking a photo of the Ameyoko sign on Ueno’s busy market street](/images/tours/ueno-ameyoko/hero-g1.webp)
 
 Snack shopping is more fun when someone tells you what is in the packet. On our [Ueno Ameyoko walking tour](/tour/ueno-ameyoko), a local guide walks you through Ameyoko's stalls and the snack auction in 60 minutes, so you know exactly where to come back and fill your bag.
