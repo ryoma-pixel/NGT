@@ -1,7 +1,7 @@
 ---
 title: "[Asakusa at Night] Things to Do After 5 PM, and What Is Still Open"
 description: "Asakusa at night: what is still open after 5 PM, from lit-up Senso-ji and Nakamise's shutter art to a free rooftop view, rakugo, Hoppy Street and the river."
-publishedAt: "2026-10-11"
+publishedAt: "2026-10-12"
 area: "Asakusa"
 heroImage: "/images/tours/asakusa-night-photo-walk/story-1.webp"
 relatedTours: ["asakusa-night-photo-walk", "asakusa-kappabashi-knife-tour"]
@@ -94,7 +94,7 @@ Before planning your evening, it helps to know where the line falls. These times
 
 **【Azuma Bridge and Sumida Park】** A few minutes' walk east of Kaminarimon, the Sumida River opens up. The red Azuma Bridge is lit at night and frames Tokyo Skytree across the water. Sumida Park, on the riverbank, is a good place to sit after dinner.
 
-**【Sumida River Walk】** To cross on foot toward Skytree, take the Sumida River Walk, a pedestrian path running alongside the railway bridge. It closes in the evening, so check the time before you head over.
+**【Sumida River Walk】** To cross on foot toward Skytree, take the Sumida River Walk, a pedestrian path running alongside the railway bridge. It is not open all night, so check its closing time before you head over.
 
 **【What to skip at night】** Kappabashi, the kitchenware street west of Asakusa, is a daytime trip: most shops close around 5 PM and many close on Sundays. If you want a Japanese knife or tableware, go in the morning or early afternoon, for example on our [Kappabashi knife and tableware walk](/tour/asakusa-kappabashi-knife-tour).
 
