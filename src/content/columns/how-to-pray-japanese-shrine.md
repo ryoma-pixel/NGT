@@ -1,7 +1,7 @@
 ---
 title: "[Shrine Etiquette] How to Pray at a Japanese Shrine, Step by Step"
 description: "How to pray at a Japanese shrine: bow at the torii, rinse at the water basin, offer a coin, then bow twice, clap twice and bow once. Plus temple differences."
-publishedAt: "2026-10-13"
+publishedAt: "2026-10-14"
 area: "Shinjuku"
 heroImage: "/images/tours/goldengai-nightlife/story-3.webp"
 relatedTours: ["shinjuku-secret-shrine", "asakusa-night-photo-walk"]
