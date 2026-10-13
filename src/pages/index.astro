@@ -1,5 +1,4 @@
 ---
-import Usd from '../components/Usd.astro';
 import NextStep from '../components/NextStep.astro';
 import Base from '../layouts/Base.astro';
 import HeroSlideshow from '../components/HeroSlideshow.astro';
@@ -16,9 +15,9 @@ import Kamon from '../components/Kamon.astro';
 import { srcset } from '../lib/img';
 import faq from '../data/faq.json';
 import site from '../data/site.json';
-import pricing from '../data/pricing.json';
+import PriceTable from '../components/PriceTable.astro';
 import reviews from '../data/reviews.json';
-import { getTours, yen, AREA_JP, priceLabel } from '../lib/tours';
+import { getTours, AREA_JP, priceLabel } from '../lib/tours';
 import { usdAmount } from '../lib/fx';
 const tours = await getTours();
 
@@ -146,23 +145,7 @@ const firstScroll = scrollTours[firstTour.id];
     <div class="wrap">
       <p class="eyebrow">Group pricing</p>
       <Split text="Bring friends. | Pay less each." />
-      <!-- Edo gold coins (koban): gozame ridges, stamped numeral seal on top, 両 seal below -->
-      <ul class="coins" data-reveal>
-        {pricing.tiers.map((t, i) => (
-          <li class:list={['koban', { 'koban--best': i === pricing.tiers.length - 1 }]} style={`--k:${i}`}>
-            {i === pricing.tiers.length - 1 && <span class="koban__best">Best value</span>}
-            <span class="koban__seal" aria-hidden="true">{['壹', '弐', '参', '肆'][i]}</span>
-            <span class="koban__ppl" role="img" aria-label={`${t.label}: ${yen(t.pricePerPerson)} per adult`}>
-              {Array.from({ length: t.minGuests }, () => <svg viewBox="0 0 20 24" width="20" height="24" aria-hidden="true"><circle cx="10" cy="6" r="5" /><path d="M1 24c0-6.5 4-10 9-10s9 3.5 9 10z" /></svg>)}
-              {t.maxGuests > t.minGuests && <b aria-hidden="true">+</b>}
-            </span>
-            <strong aria-hidden="true">{yen(t.pricePerPerson)}</strong>
-            <Usd jpy={t.pricePerPerson} class="koban__usd" />
-            <span class="koban__ryo" aria-hidden="true">両</span>
-          </li>
-        ))}
-      </ul>
-      <p class="price__note"><span class="koban__kid" aria-hidden="true"><svg viewBox="0 0 20 24" width="14" height="17"><circle cx="10" cy="8" r="4.5" /><path d="M3 24c0-5 3-8 7-8s7 3 7 8z" /></svg></span> Kids 12 and under: free · E-Scooter tour and shop purchases: see each tour.</p>
+      <PriceTable big notes={['E-Scooter tour: ¥5,000 per person, ages 16 and over.', 'Shop purchases and entry fees are paid separately.', 'Charged in Japanese yen. US$ amounts are approximate.']} />
       <NextStep lead="Four friends? ¥2,500 each." label="Pick your tour" href="#missions" where="home_pricing" />
     </div>
   </section>
@@ -243,37 +226,6 @@ const firstScroll = scrollTours[firstTour.id];
 
 
 
-  /* Price coins: Edo koban (oval gold coins) */
-  .coins { list-style: none; padding: 0; margin: 40px auto 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 3vw, 40px); max-width: 980px; perspective: 900px; }
-  .koban { --ink: #3b2708; position: relative; aspect-ratio: 5 / 7.4; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--ink); overflow: hidden;
-    background:
-      radial-gradient(ellipse 60% 40% at 32% 18%, rgb(255 250 220 / 0.75), transparent 70%),
-      repeating-linear-gradient(0deg, rgb(110 70 5 / 0.16) 0 1.5px, transparent 1.5px 6px),
-      linear-gradient(160deg, #f8e59a 0%, #dcae45 38%, #f2d472 58%, #b98424 100%);
-    box-shadow: inset 0 0 0 3px rgb(255 244 196 / 0.55), inset 0 0 0 9px rgb(140 92 18 / 0.28), inset 0 -14px 26px rgb(110 70 5 / 0.3), 0 16px 30px -8px rgb(70 45 0 / 0.45); }
-  /* sheen that sweeps across on hover */
-  .koban::after { content: ''; position: absolute; inset: -20%; background: linear-gradient(105deg, transparent 40%, rgb(255 255 240 / 0.7) 50%, transparent 60%); transform: translateX(-80%); transition: transform 0.9s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
-  .koban:hover::after { transform: translateX(80%); }
-  .koban__seal, .koban__ryo { font-family: var(--mincho); font-weight: 800; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; line-height: 1; opacity: 0.85; }
-  .koban__seal { width: clamp(34px, 4vw, 46px); height: clamp(34px, 4vw, 46px); font-size: clamp(1.05rem, 1.6vw, 1.45rem); margin-bottom: 8px; box-shadow: inset 0 0 0 3px rgb(255 240 190 / 0.35); }
-  .koban__ryo { width: 26px; height: 26px; font-size: 0.85rem; margin-top: 8px; border-radius: 6px; }
-  .koban strong { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3.1vw, 2.7rem); line-height: 1; text-shadow: 0 1px 0 rgb(255 245 205 / 0.6); }
-  /* who pays: one figure per adult in the booking */
-  .koban__ppl { display: flex; align-items: flex-end; justify-content: center; gap: 2px; min-height: 26px; margin-bottom: 2px; }
-  .koban__ppl svg { width: clamp(14px, 1.6vw, 19px); height: auto; fill: currentColor; opacity: 0.9; }
-  .koban__ppl b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1; margin-left: 2px; }
-  .koban__kid svg { fill: currentColor; vertical-align: -2px; }
-  .koban :global(.koban__usd) { font-family: var(--mono); font-weight: 700; font-size: 0.78rem; }
-  .koban--best { transform: scale(1.06); }
-  .koban--best::after { animation: koban-shine 3.6s ease-in-out 1.6s infinite; }
-  @keyframes koban-shine { 0%, 60% { transform: translateX(-80%); } 85%, 100% { transform: translateX(80%); } }
-  .koban__best { position: absolute; top: 9%; font-family: var(--mono); font-weight: 700; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; background: var(--ai); color: var(--cream); padding: 3px 8px; border-radius: 999px; }
-  .koban--best .koban__seal { margin-top: 18px; }
-  /* coins flip in, one after another, when the section scrolls into view (.js is on <html>, hence :global) */
-  :global(.js) .coins[data-reveal] { opacity: 1; transform: none; }
-  .coins .koban { transition: transform 0.8s cubic-bezier(.3,1.4,.5,1), opacity 0.4s; transition-delay: calc(var(--k) * 0.15s); }
-  :global(.js) .coins:not(.is-in) .koban { opacity: 0; transform: translateY(-40px) rotateY(100deg); }
-  .price__note { color: var(--muted); font-size: 0.9rem; }
 
   /* How */
 
@@ -297,7 +249,6 @@ const firstScroll = scrollTours[firstTour.id];
 
   @media (max-width: 900px) {
       .missions__head { grid-template-columns: 1fr; }
-    .coins { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
     }
   @media (max-width: 700px) {
     .hero__shade { background: linear-gradient(0deg, rgb(8 8 18 / 0.95) 0%, rgb(8 8 18 / 0.6) 42%, rgb(8 8 18 / 0) 70%), linear-gradient(180deg, rgb(8 8 18 / 0.5), rgb(8 8 18 / 0) 25%); }
@@ -317,8 +268,5 @@ const firstScroll = scrollTours[firstTour.id];
   :global(html:not(.intro)) .hero__kicker { animation-delay: 0.1s; }
   @media (prefers-reduced-motion: reduce) {
     .hero__kicker, .hero__lead, .hero__cta, .hero__by, .hero__scroll span { animation: none; }
-    :global(.js) .coins:not(.is-in) .koban { opacity: 1; transform: none; }
-    .coins .koban { transition: none; }
-    .koban--best::after { animation: none; }
   }
 </style>

@@ -4,13 +4,13 @@ import type { APIRoute } from 'astro';
 import site from '../data/site.json';
 import faq from '../data/faq.json';
 import pricing from '../data/pricing.json';
-import { getTours, getColumns, priceLabel } from '../lib/tours';
+import { getTours, getColumns, priceLabel, tierSentence } from '../lib/tours';
 
 export const GET: APIRoute = async ({ site: base }) => {
   const url = (p: string) => new URL(p, base).toString();
   const tours = await getTours();
   const columns = await getColumns();
-  const tiers = pricing.tiers.map((t) => `${t.label} ¥${t.pricePerPerson.toLocaleString('en-US')}${t.minGuests > 1 ? ' each' : ''}`).join(', ');
+  const tiers = pricing.tiers.map(tierSentence).join('; ');
   const lines = [
     `# ${site.name}`,
     '',

@@ -50,6 +50,20 @@ export function yen(n: number) {
   return `¥${n.toLocaleString('en-US')}`;
 }
 
+type Tier = { label: string; minGuests: number; maxGuests: number; pricePerPerson: number };
+
+// What one booking pays in total: "¥8,400", or "¥2,500 × adults" for the open-ended last tier
+export function tierTotal(t: Tier) {
+  return t.maxGuests > t.minGuests ? `${yen(t.pricePerPerson)} × adults` : yen(t.pricePerPerson * t.minGuests);
+}
+
+// One line per tier for FAQ answers and llms.txt: "2 adults: ¥4,000 each, ¥8,000 in total"
+export function tierSentence(t: Tier) {
+  if (t.minGuests === 1 && t.maxGuests === 1) return `${t.label}: ${yen(t.pricePerPerson)}`;
+  const total = t.maxGuests > t.minGuests ? `${yen(t.pricePerPerson)} × the number of adults in total` : `${yen(t.pricePerPerson * t.minGuests)} in total`;
+  return `${t.label}: ${yen(t.pricePerPerson)} each, ${total}`;
+}
+
 export function usd(n: number) {
   return `US$${usdAmount(n)}`;
 }

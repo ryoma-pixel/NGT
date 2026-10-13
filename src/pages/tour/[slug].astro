@@ -15,7 +15,7 @@ import TourCard from '../../components/TourCard.astro';
 import { srcset } from '../../lib/img';
 import { stepIcon } from '../../lib/step-icon';
 import LanternPath from '../../components/LanternPath.astro';
-import { getTours, priceLabel, priceTiers, yen, AREA_JP } from '../../lib/tours';
+import { getTours, priceLabel, priceTiers, tierSentence, yen, AREA_JP } from '../../lib/tours';
 import pricing from '../../data/pricing.json';
 import reviews from '../../data/reviews.json';
 
@@ -55,7 +55,7 @@ const showRanges = clock > 0 && clock <= d.durationMinutes + 30;
 const tiers = priceTiers(tour);
 const priceAnswer = d.fixedPricePerPerson
   ? `${yen(d.fixedPricePerPerson)} per person.`
-  : `${tiers.map((t) => `${t.label}: ${yen(t.pricePerPerson)} per adult`).join(' · ')}. ${pricing.childPolicy}`;
+  : `It depends on how many adults are in your booking. ${tiers.map(tierSentence).join('. ')}. ${pricing.childPolicy}`;
 const faq = [
   ...(d.meetingPoint ? [{ q: 'Where do we meet?', a: [d.meetingPoint.name, d.meetingPoint.access, d.meetingPoint.lookFor].filter(Boolean).map((t) => (/[.!?]$/.test(t!.trim()) ? t!.trim() : `${t!.trim()}.`)).join(' '), map: d.meetingPoint.mapUrl }] : []),
   ...(d.startTimes ? [{ q: 'When does it start?', a: `${d.startTimes}. The tour takes about ${d.durationMinutes} minutes.` }] : []),

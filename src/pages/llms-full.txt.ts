@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import site from '../data/site.json';
 import faq from '../data/faq.json';
 import pricing from '../data/pricing.json';
-import { getTours, priceLabel } from '../lib/tours';
+import { getTours, priceLabel, tierSentence } from '../lib/tours';
 
 export const GET: APIRoute = async ({ site: base }) => {
   const url = (p: string) => new URL(p, base).toString();
@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ site: base }) => {
     '',
     '## How pricing works',
     `- ${pricing.note}`,
-    ...pricing.tiers.map((t) => `- ${t.label}: ¥${t.pricePerPerson.toLocaleString('en-US')} per adult`),
+    ...pricing.tiers.map((t) => `- ${tierSentence(t)}`),
     `- ${pricing.childPolicy}`,
     '- The E-Scooter tour has a fixed price of ¥5,000 per person and is for ages 16 and over.',
     '- Anything bought during a tour (a hanko seal, a knife, food, drinks, entry fees) is paid separately.',
