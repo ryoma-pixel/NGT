@@ -1,7 +1,7 @@
 ---
 title: "[Godzilla Head, Shinjuku] Where to See It and What Is on That Street"
 description: "The Godzilla Head sits on the 8th floor of the Shinjuku Toho Building in Kabukicho. How to find it, the best free views, and what to see nearby."
-publishedAt: "2026-10-15"
+publishedAt: "2026-10-16"
 area: "Shinjuku"
 heroImage: "/images/tours/goldengai-nightlife/gallery-6.webp"
 relatedTours: ["shinjuku-secret-shrine", "goldengai-nightlife"]
