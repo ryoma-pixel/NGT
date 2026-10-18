@@ -1,7 +1,6 @@
 {
   "_note": "Queue for the daily column generator (scripts/generate-column.ts). The first item in 'queue' is written next and then moved to 'done'. Add, remove or reorder freely. When the queue is empty the generator picks a topic itself.",
   "queue": [
-    { "keyword": "Shinjuku Station exits guide", "angle": "A survival guide to the world's busiest station: which exit for which area, meeting spots that are easy to find", "area": "Shinjuku", "relatedTours": ["shinjuku-secret-shrine", "shinjuku-hanko", "goldengai-nightlife"] },
     { "keyword": "food sample replica Kappabashi", "angle": "Why Japanese restaurants display plastic food, and where to buy or make your own", "area": "Asakusa", "relatedTours": ["asakusa-kappabashi-knife-tour"] },
     { "keyword": "kanji for my name", "angle": "How foreign names are written in Japanese (katakana vs kanji) and how to choose characters for a name seal", "area": "Shinjuku", "relatedTours": ["shinjuku-hanko"] },
     { "keyword": "Shinjuku Ni-chome guide for first-timers", "angle": "Respectful introduction to Tokyo's LGBTQ+ district: history, etiquette, what to expect", "area": "Shinjuku", "relatedTours": ["shinjuku-nichome-lgbtq"] },
@@ -30,6 +29,7 @@
     { "keyword": "how to draw omikuji fortune", "angle": "Step-by-step: drawing a fortune at a temple or shrine, what the results mean, what to do with a bad one", "area": "Asakusa", "relatedTours": ["asakusa-night-photo-walk", "shinjuku-secret-shrine"], "slug": "how-to-draw-omikuji-fortune", "date": "2026-10-09" },
     { "keyword": "Asakusa at night things to do", "angle": "What is still open and worth seeing in Asakusa after 5 PM", "area": "Asakusa", "relatedTours": ["asakusa-night-photo-walk", "asakusa-kappabashi-knife-tour"], "slug": "asakusa-at-night-things-to-do", "date": "2026-10-11" },
     { "keyword": "how to pray at a Japanese shrine", "angle": "Shrine and temple etiquette for visitors: purification, bowing, clapping, coins", "area": "Shinjuku", "relatedTours": ["shinjuku-secret-shrine", "asakusa-night-photo-walk"], "slug": "how-to-pray-japanese-shrine", "date": "2026-10-13" },
-    { "keyword": "Godzilla head Shinjuku", "angle": "How to see the Godzilla head on the Toho building and what else is on that street", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "shinjuku-secret-shrine"], "slug": "godzilla-head-shinjuku-guide", "date": "2026-10-15" }
+    { "keyword": "Godzilla head Shinjuku", "angle": "How to see the Godzilla head on the Toho building and what else is on that street", "area": "Shinjuku", "relatedTours": ["goldengai-nightlife", "shinjuku-secret-shrine"], "slug": "godzilla-head-shinjuku-guide", "date": "2026-10-15" },
+    { "keyword": "Shinjuku Station exits guide", "angle": "A survival guide to the world's busiest station: which exit for which area, meeting spots that are easy to find", "area": "Shinjuku", "relatedTours": ["shinjuku-secret-shrine", "shinjuku-hanko", "goldengai-nightlife"], "slug": "shinjuku-station-exits-guide", "date": "2026-10-19" }
   ]
 }
