@@ -11,7 +11,7 @@ faq:
   - q: "Which exit do I need for Busta Shinjuku, the highway bus terminal?"
     a: "Take the JR South Exit or the New South Exit. Busta Shinjuku sits right by the south side of the station, and its signs are clear once you are through the gates."
   - q: "Can I cross from the east side to the west side without a ticket?"
-    a: "Yes. The East-West Free Passage, which opened in July 2020, links the two sides inside the station without ticket gates. Look for signs to it near the Central East and Central West exits."
+    a: "Yes. The East-West Free Passage, which opened in July 2020, links the two sides inside the station without ticket gates. It runs between the JR East and West gates, so follow the signs from either the East Exit or the West Exit."
   - q: "Is Seibu-Shinjuku the same station as Shinjuku Station?"
     a: "No. Seibu-Shinjuku is a separate station a short walk north of the JR East Exit, near Kabukicho. Allow extra time if you are changing between them."
   - q: "Where is the tourist information center at Shinjuku Station?"
@@ -24,6 +24,7 @@ sources:
   - "https://livejapan.com/en/in-shinjuku/article-a0001085/"
   - "https://www.japan-experience.com/plan-your-trip/travel-by-train/around-tokyo/discover-shinjuku-station"
   - "https://soranews24.com/2021/07/09/tokyo-starts-massive-renovation-project-for-entrances-to-the-worlds-busiest-train-station/amp/"
+  - "https://trafficnews.jp/post/96852"
   - "https://japantoday.com/category/national/it%E2%80%99s-time-to-say-goodbye-to-one-of-tokyo%E2%80%99s-most-famous-landmark-meeting-spots"
 keyword: "Shinjuku Station exits guide"
 generated: true
@@ -49,9 +50,9 @@ The JR exits are the ones most visitors use. Here is what each one is good for.
 
 | JR exit | Where it takes you |
 | --- | --- |
-| East Exit | Kabukicho, Golden Gai, Shinjuku-dori shopping, Seibu-Shinjuku Station |
-| Central East Exit | Kabukicho, the east end of the East-West Free Passage |
-| West Exit | The skyscraper district, the Tokyo Metropolitan Government Building, Odakyu and Keio lines |
+| East Exit | Kabukicho, Golden Gai, Shinjuku-dori shopping, Seibu-Shinjuku Station, the east end of the East-West Free Passage |
+| Central East Exit | Kabukicho and the east-side shopping streets |
+| West Exit | The skyscraper district, the Tokyo Metropolitan Government Building, Odakyu and Keio lines, the west end of the East-West Free Passage |
 | South Exit | Koshu-kaido avenue, Busta Shinjuku |
 | New South Exit | Busta Shinjuku, NEWoMan, Takashimaya Times Square, the walk to Shinjuku Gyoen |
 
@@ -67,13 +68,13 @@ The JR exits are the ones most visitors use. Here is what each one is good for.
 
 ## ④ West and South: skyscrapers, buses and the park
 
-![Shinjuku skyline glowing at night](/images/tours/shinjuku-secret-shrine/gallery-4.webp)
+![Guests with e-scooters in front of the Tokyo Metropolitan Government Building](/images/tours/shinjuku-escooter-ride/story-2.webp)
 
 **【West Exit】** This side is the business district: office towers, hotels and the Tokyo Metropolitan Government Building. The Odakyu and Keio lines start from here, as do underground passages that lead towards the towers.
 
 **【South and New South exits】** These open onto Busta Shinjuku, the large highway bus terminal, and the shopping buildings around it. Busta also has a Tokyo Tourist Information Center where you can pick up maps; check the official Go Tokyo site for its current hours. From the New South Exit it is an easy walk to Shinjuku Gyoen.
 
-**【Crossing sides for free】** The East-West Free Passage opened in July 2020. It is about 100 metres long and links the east and west sides inside the station without ticket gates, so you no longer need a ticket or a long detour to cross.
+**【Crossing sides for free】** The East-West Free Passage opened in July 2020. It is about 100 metres long, runs between the JR East and West gates, and links the two sides without passing through ticket gates, so you no longer need a ticket or a long detour to cross.
 
 ## ⑤ Meeting spots that are easy to find
 
@@ -89,7 +90,7 @@ The classic answer used to be "in front of Alta", the building with the big scre
 
 ## ⑥ Five habits that keep you from getting lost
 
-![A Shinjuku shopping street](/images/tours/shinjuku-hanko/gallery-7.webp)
+![A shop front on a Shinjuku shopping street](/images/tours/shinjuku-hanko/gallery-7.webp)
 
 1. **Decide your exit before you leave the platform.** Exit signs start on the platform, and the right staircase saves you a long walk.
 2. **Follow the yellow exit signs.** Look for the exit name, not just the direction of a street.
@@ -99,6 +100,6 @@ The classic answer used to be "in front of Alta", the building with the big scre
 
 ## Explore it with a local
 
-![Guests laughing with the Ninja guide in a back alley](/images/tours/goldengai-nightlife/gallery-2.webp)
+![Two guests and the Ninja guide in a narrow Shinjuku alley at night](/images/tours/goldengai-nightlife/gallery-2.webp)
 
 Once you are out of the station, Shinjuku gets much friendlier. On our [Golden Gai night walk](/tour/goldengai-nightlife) you meet your guide right outside the JR East Exit and head straight for Hanazono Shrine and the tiny bars, and the [hanko seal tour](/tour/shinjuku-hanko) starts under the Busta Shinjuku sign on the south side.
