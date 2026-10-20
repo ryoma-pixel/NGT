@@ -1,7 +1,7 @@
 ---
 title: "[Kappabashi] Food Sample Replicas: Why Japan Shows Plastic Food"
 description: "Why Japanese restaurants display plastic food, how the replicas began, and where in Kappabashi to buy a food sample souvenir or try making your own."
-publishedAt: "2026-10-20"
+publishedAt: "2026-10-21"
 area: "Asakusa"
 heroImage: "/images/tours/asakusa-kappabashi-knife-tour/gallery-2.webp"
 relatedTours: ["asakusa-kappabashi-knife-tour"]
@@ -55,7 +55,7 @@ Real food on display spoils quickly. A well-made replica keeps its look for year
 
 ## ② Wax, an omelette and a disputed origin story
 
-The invention is usually credited to Takizo Iwasaki, who is said to have made a wax model of omurice (omelette over rice) in 1932. He went on to found the company now called Iwasaki Mokei Seizo in his hometown, Gujo Hachiman in Gifu Prefecture, and it is widely described as Japan's largest maker of food samples.
+The invention is usually credited to Takizo Iwasaki, who is said to have made a wax model of omurice (omelette over rice) in 1932. He came from Gujo Hachiman in Gifu Prefecture and founded the company now called Iwasaki Mokei Seizo, which is widely described as Japan's largest maker of food samples.
 
 The story is not as tidy as it sounds. Other accounts point to earlier models in Kyoto around 1917, and department store cafeterias in the 1920s already used simple food models to show their dishes. What most sources agree on is the timing: as Western-style dishes spread in Japan in the early 20th century, restaurants needed a way to show customers food they had never seen.
 
@@ -96,7 +96,7 @@ Look closely before you buy. On good pieces the edges of fried batter are uneven
 
 ## ⑤ Make your own: the tempura and lettuce workshop
 
-At Ganso Shokuhin Sample-ya (3-7-6 Nishi-Asakusa), you can make your own replicas in a class of about 40 minutes. You pour coloured wax into warm water to form a lettuce leaf, then shape a piece of tempura, and take both home.
+At Ganso Shokuhin Sample-ya (3-7-6 Nishi-Asakusa), you can make your own replicas in a short hands-on class. You pour coloured wax into warm water to form a lettuce leaf, then shape a piece of tempura, and take both home.
 
 **【Before you go】**
 
