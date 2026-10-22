@@ -278,6 +278,13 @@
 - 「12歳以下は無料」は紺の帯で大きく、それ以外の注釈（大人の定義と相乗り・Eスクーター・買い物代・円建て）は ※ の小さい文字。トップの小判（koban）のCSSは削除。
 - FAQ（トップ・ツアー詳細）と llms.txt／llms-full.txt の料金の説明も同じ形（各人数の1人あたり＋合計）に統一（`tierSentence`／`tierTotal`、`src/lib/tours.ts`）。`pricing.json` の4名以上のラベルは「4 or more adults」。
 
+## 2026-10-22 現行サイト（STUDIO）の現状診断
+- 報告ページ（非公開）：https://claude.ai/artifact/6z4jz5iX3HVzKBCcuWwwbY 。データはご本人のスプレッドシート（GA4 チャネル別・ランディングページ別、サーチコンソール クエリ別。Driveの同じフォルダ）。
+- 要点（2026年9月）：訪問4,099回に対し公式直販の予約1件（OTA経由18件）。訪問の82%はディスプレイ広告（IGLOOO、遷移先トップ）で、エンゲージメント率13%・キーイベント1件。広告は9/28から急減し10/1は3回（停止か予算切れ、要確認）。広告以外は月約700回。検索クリック44回のうち68%が社名検索。キーイベント（9月38件）は予約完了ではない。
+- 現行サイトの問題：スマホのLighthouse トップ49点・ツアー41点（LCP 13〜14秒）、トップに予約リンクなし、料金が「$17」表示、Googleプロフィールのリンク先 `/comic-lp` が404、ツアー・コラムに構造化データなし、全ページで問い合わせ完了文がH1。GTM（GTM-P4N8TRKL）は全ページに設置済み → 新サイトも同じコンテナを使う。
+- **新サイトへの切り替え前に直すURLのずれ**：STUDIOだけにあるコラム `ginza-pedestrian-paradise-hours`・`ginza-yurakucho-under-the-tracks`（取り込みが必要）／`/column/HanazonoShrine`→`hanazono-shrine-shinjuku-guide`、`/column/KabukichoatNight`→`is-kabukicho-safe-at-night`、`/column/asakusa-at-night-things-to-dov`（STUDIO側の誤字）→`asakusa-at-night-things-to-do`、`/tour/asakusa-night`→`asakusa-night-photo-walk` の転送／STUDIOで公開済みなのに新サイトでは下書き：omikuji・how-to-pray・asakusa-at-night／浅草ナイトは LINKTIVITY-UXZAM で予約受付中（新サイトはまだ「準備中」）。
+- 計測の注意：googletagmanager.com には作業環境から接続できない（GTMの中身は未確認）。Lighthouse はプロキシのCA鍵だけを許可する `--ignore-certificate-errors-spki-list` で実行した。
+
 ## 旧サイトから見つかった問題（要対応）
 - ~~利用規約・プライバシーポリシーが NINJA GO RIDE 専用~~ → 2026-09-25 ウォークツアー向けに書き直し（法務確認待ち）。ウォークツアー（子ども・キャンセル規定など）を対象にした規約がない。改訂は法務確認のうえ行う（文面は勝手に書き換えない）。
 - 特商法表記のサービスURL・メールアドレスが旧ドメイン（ninja-kabukitokyo.com / info_ninja-go-ride@…）のまま。
