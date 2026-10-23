@@ -95,6 +95,6 @@ What do you think? Shinjuku is overflowing with a mountain of cute souvenirs tha
 
 Want a souvenir nobody else will be carrying? Get your own hanko seal made with your name in kanji, then walk the local shopping streets with a guide.
 
-Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by party size · kids 12 and under free
+Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–5,000 per person, by party size · kids 12 and under free
 
 [→ Book now](/tour/shinjuku-hanko)

@@ -34,7 +34,7 @@ export function fromPrice(tour: Tour) {
 
 /**
  * Price as guests should read it. Showing only "¥2,500 (4+ guests)" made people think
- * the tour needs 4 people, so tiered tours show the full range: "¥2,500–8,000", "per person, by party size".
+ * the tour needs a group, so tiered tours show the full range: "¥2,500–5,000", "per person, by party size".
  */
 export function priceLabel(tour: Tour): { amount: string; note: string; jpy: [number, number] } {
   if (tour.data.fixedPricePerPerson) {
@@ -52,12 +52,12 @@ export function yen(n: number) {
 
 type Tier = { label: string; minGuests: number; maxGuests: number; pricePerPerson: number };
 
-// What one booking pays in total: "¥8,400", or "¥2,500 × adults" for the open-ended last tier
+// What one booking pays in total: "¥6,000", or "¥2,500 × adults" for the open-ended last tier
 export function tierTotal(t: Tier) {
   return t.maxGuests > t.minGuests ? `${yen(t.pricePerPerson)} × adults` : yen(t.pricePerPerson * t.minGuests);
 }
 
-// One line per tier for FAQ answers and llms.txt: "2 adults: ¥4,000 each, ¥8,000 in total"
+// One line per tier for FAQ answers and llms.txt: "2 adults: ¥3,000 each, ¥6,000 in total"
 export function tierSentence(t: Tier) {
   if (t.minGuests === 1 && t.maxGuests === 1) return `${t.label}: ${yen(t.pricePerPerson)}`;
   const total = t.maxGuests > t.minGuests ? `${yen(t.pricePerPerson)} × the number of adults in total` : `${yen(t.pricePerPerson * t.minGuests)} in total`;

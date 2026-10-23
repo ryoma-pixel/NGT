@@ -55,6 +55,6 @@ Rather than just buying a hanko, it is an experience where you can enjoy learnin
 
 Skip the airport snack aisle. Get a hanko seal made with your own name and take home the one omiyage no shop can sell you.
 
-Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–8,000 per person, by party size · kids 12 and under free
+Make Your Own "Hanko" Seal & Local Shopping Walk — 60 min · ¥2,500–5,000 per person, by party size · kids 12 and under free
 
 [→ Book now](/tour/shinjuku-hanko)
