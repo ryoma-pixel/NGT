@@ -1,6 +1,6 @@
 ---
-# New tour (planned for October 2026, from the guide manual in Drive: 2609｜浅草ナイトツアー / 夜の浅草ナイトツアー_ガイドマニュアル).
-# Shown as "Coming soon" until bookingUrl is set. Add story photos from Drive (素材_2609｜浅草ナイトツアー) to get the picture scroll.
+# Written from the guide manual in Drive (2609｜浅草ナイトツアー / 夜の浅草ナイトツアー_ガイドマニュアル); bookable on LINKTIVITY since October 2026.
+# The old STUDIO URL /tour/asakusa-night redirects here (public/_redirects).
 title: "Asakusa After Dark: A Photogenic Night Walk"
 shortTitle: "Asakusa Night Photo Walk"
 seoTitle: "Asakusa Night Photo Walk Tour, Tokyo"
@@ -10,6 +10,8 @@ area: Asakusa
 themes: [Culture, Nightlife, History, Walk]
 durationMinutes: 60
 startTimes: 5:00 PM – 9:00 PM (every 30 minutes)
+bookingDeadline: Reserve by 12:00 PM the day before
+bookingUrl: https://ars-ninjagoride.triplabo.com/activity/en/LINKTIVITY-UXZAM
 heroImage: "/images/tours/asakusa-night-photo-walk.webp"
 heroAlt: "The giant red lantern of Kaminarimon gate lit up at night in Asakusa"
 meetingPoint:
@@ -34,7 +36,6 @@ idealFor:
   - "The curious: how does a temple differ from a shrine?"
 pattern: seigaiha
 kamon: lantern
-comingSoon: true
 noCostume: true
 outfit: "Your guide dresses in black with a black mask or bandana."
 story:
@@ -85,6 +86,8 @@ faq:
     a: The Main Hall doors close at 5:00 PM, but the light-up and the temple grounds can be enjoyed from outside.
   - q: Is the omikuji fortune included?
     a: It is optional and not included (about 100–200 JPY).
+  - q: Can I take photos at Asakusa Shrine?
+    a: You can photograph the torii gate and the grounds. Out of respect, please don’t photograph the main shrine building directly. Your guide will show you the best spots.
   - q: What if it rains?
     a: The tour runs rain or shine. If we cancel for stormy weather, you get a full refund.
   - q: Can I bring my kids?

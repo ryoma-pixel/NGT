@@ -102,4 +102,4 @@ Before planning your evening, it helps to know where the line falls. These times
 
 ![Looking up at the red lanterns of Kaminarimon](/images/tours/asakusa-night-photo-walk/gallery-4.webp)
 
-NINJA GO TOURS is preparing a 60-minute night walk through lit-up Senso-ji, Nakamise's shutter art, Asakusa Shrine and Denboin-dori, with a local guide who helps you find the best angles. The [Asakusa Night Photo Walk](/tour/asakusa-night-photo-walk) is coming soon, and the tour page will show when it opens for booking.
+NINJA GO TOURS runs a 60-minute night walk through lit-up Senso-ji, Nakamise's shutter art, Asakusa Shrine and Denboin-dori, with a local guide who helps you find the best angles. See the [Asakusa Night Photo Walk](/tour/asakusa-night-photo-walk) for start times and booking.

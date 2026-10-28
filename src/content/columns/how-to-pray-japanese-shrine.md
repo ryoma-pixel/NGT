@@ -110,4 +110,4 @@ At temples such as Senso-ji in Asakusa, the routine is quieter.
 
 ![A guest and the Ninja guide at the steps of Hanazono Shrine](/images/tours/shinjuku-secret-shrine/story-4.webp)
 
-The easiest way to learn this is to do it once with someone beside you. On the [secret shrine and neon backstreets walk](/tour/shinjuku-secret-shrine), a NINJA GO TOURS guide in a Ninja costume leads you from Kabukicho to a hidden shrine behind the neon and on to Hanazono Shrine, so you can practise the steps for real. An Asakusa night walk around Senso-ji is also coming soon.
+The easiest way to learn this is to do it once with someone beside you. On the [secret shrine and neon backstreets walk](/tour/shinjuku-secret-shrine), a NINJA GO TOURS guide in a Ninja costume leads you from Kabukicho to a hidden shrine behind the neon and on to Hanazono Shrine, so you can practise the steps for real. On our [Asakusa night photo walk](/tour/asakusa-night-photo-walk), you can practise passing through a torii gate at Asakusa Shrine, and your guide explains how a shrine differs from a temple.

@@ -102,4 +102,4 @@ Look for the large character near the top. Ranks vary by place, but this is the 
 
 ![Guests with the Ninja guide on the steps of Hanazono Shrine](/images/tours/shinjuku-secret-shrine/gallery-11.webp)
 
-Omikuji is more fun with someone who can read the small print with you. Our [Asakusa night photo walk](/tour/asakusa-night-photo-walk) (coming soon) includes a stop at lit-up Senso-ji, where your guide shows you how to draw a fortune, while the [Shinjuku secret shrine tour](/tour/shinjuku-secret-shrine) takes you to Hanazono Shrine with a Ninja guide.
+Omikuji is more fun with someone who can read the small print with you. Our [Asakusa night photo walk](/tour/asakusa-night-photo-walk) includes a stop at lit-up Senso-ji, where your guide shows you how to draw a fortune, while the [Shinjuku secret shrine tour](/tour/shinjuku-secret-shrine) takes you to Hanazono Shrine with a Ninja guide.

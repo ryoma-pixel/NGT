@@ -284,7 +284,7 @@
 - 報告ページ（非公開）：https://claude.ai/artifact/6z4jz5iX3HVzKBCcuWwwbY 。データはご本人のスプレッドシート（GA4 チャネル別・ランディングページ別、サーチコンソール クエリ別。Driveの同じフォルダ）。
 - 要点（2026年9月）：訪問4,099回に対し公式直販の予約1件（OTA経由18件）。訪問の82%はディスプレイ広告（IGLOOO、遷移先トップ）で、エンゲージメント率13%・キーイベント1件。広告は9/28から急減し10/1は3回（停止か予算切れ、要確認）。広告以外は月約700回。検索クリック44回のうち68%が社名検索。キーイベント（9月38件）は予約完了ではない。
 - 現行サイトの問題：スマホのLighthouse トップ49点・ツアー41点（LCP 13〜14秒）、トップに予約リンクなし、料金が「$17」表示、Googleプロフィールのリンク先 `/comic-lp` が404、ツアー・コラムに構造化データなし、全ページで問い合わせ完了文がH1。GTM（GTM-P4N8TRKL）は全ページに設置済み → 新サイトも同じコンテナを使う。
-- **新サイトへの切り替え前に直すURLのずれ**：STUDIOだけにあるコラム `ginza-pedestrian-paradise-hours`・`ginza-yurakucho-under-the-tracks`（取り込みが必要）／`/column/HanazonoShrine`→`hanazono-shrine-shinjuku-guide`、`/column/KabukichoatNight`→`is-kabukicho-safe-at-night`、`/column/asakusa-at-night-things-to-dov`（STUDIO側の誤字）→`asakusa-at-night-things-to-do`、`/tour/asakusa-night`→`asakusa-night-photo-walk` の転送／STUDIOで公開済みなのに新サイトでは下書き：omikuji・how-to-pray・asakusa-at-night／浅草ナイトは LINKTIVITY-UXZAM で予約受付中（新サイトはまだ「準備中」）。
+- **新サイトへの切り替え前に直すURLのずれ**：STUDIOだけにあるコラム `ginza-pedestrian-paradise-hours`・`ginza-yurakucho-under-the-tracks`（取り込みが必要）／`/column/HanazonoShrine`→`hanazono-shrine-shinjuku-guide`、`/column/KabukichoatNight`→`is-kabukicho-safe-at-night`、`/column/asakusa-at-night-things-to-dov`（STUDIO側の誤字）→`asakusa-at-night-things-to-do`、`/tour/asakusa-night`→`asakusa-night-photo-walk` の転送／STUDIOで公開済みなのに新サイトでは下書き：omikuji・how-to-pray・asakusa-at-night／浅草ナイトは LINKTIVITY-UXZAM で予約受付中（新サイトも2026-10-28に予約受付中へ切り替え、`/tour/asakusa-night` の転送も追加済み）。
 - 計測の注意：googletagmanager.com には作業環境から接続できない（GTMの中身は未確認）。Lighthouse はプロキシのCA鍵だけを許可する `--ignore-certificate-errors-spki-list` で実行した。
 
 ## 旧サイトから見つかった問題（要対応）
@@ -313,7 +313,7 @@
 - [ ] ロゴを取り込む（現在は「忍」の仮ロゴ）。
 - [ ] Netlify Forms の通知先メールを設定する（Netlify 管理画面）。
 - [ ] `.pages.yml` の設定を、Pages CMS に初回ログインした時点で動作確認する。
-- [ ] 浅草ナイトツアーの本文・集合場所・予約URLを用意して公開する。
+- [x] 浅草ナイトツアー：2026-10-28 予約受付中に切り替え（ご本人「すでにリリース済み」）。`bookingUrl`＝LINKTIVITY-UXZAM、`comingSoon` を削除、予約締切（前日12:00）とFAQ（浅草神社の本殿は撮影しない）を追加。予約画面と照合済み（開始17:00–21:00の30分おき、集合＝浅草文化観光センター1F、行程6つ、おみくじ代別）。旧STUDIOのURL `/tour/asakusa-night` は `_redirects` で新URLへ301。コラム3本の「coming soon」表記を直した（STUDIOに載っている同じ記事はご本人側で要修正）。Googleプロフィール運用キットに商品9として追加（リンクは /tour/asakusa-night）。
 - [x] 合羽橋の写真（2026-09-25）：Drive「素材_2608｜浅草 合羽橋ツアー」の厳選版 H2〜H15（2048px）に全面差し替え（行程・集合場所・ギャラリー。以前は旧サイトの1100〜1400px）。ギャラリー1枚目はヒーローと重複していた巨大コックを外し、新聞紙で包んだ包丁（H7）に。切子ギャラリーの店内（H11）を追加（9枚）。元素材98枚（Pixel撮影の未編集）はDriveコネクタが途中で切れたため未確認。
 
 ## 公開手順（ご本人の作業・手順書を別途用意）
