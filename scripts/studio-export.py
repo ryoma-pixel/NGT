@@ -20,6 +20,14 @@ import sys
 import zipfile
 
 CIRC = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮'
+# URLs that differ on the current STUDIO site (its sitemap, checked 2026-11-06). Links in the body
+# are rewritten to the STUDIO URL so they do not 404 there. Remove this once the new site is live.
+STUDIO_PATHS = {
+    'tour/asakusa-night-photo-walk': 'tour/asakusa-night',
+    'column/hanazono-shrine-shinjuku-guide': 'column/HanazonoShrine',
+    'column/is-kabukicho-safe-at-night': 'column/KabukichoatNight',
+    'column/asakusa-at-night-things-to-do': 'column/asakusa-at-night-things-to-dov',
+}
 e = html.escape
 
 
@@ -65,6 +73,8 @@ def build(slug, out):
     body = re.sub(r' data-astro-cid-\w+', '', body)
     body = re.sub(r'<table>.*?</table>', table_to_list, body, flags=re.S)
     body = body.replace('href="/', 'href="https://ninjagotours.com/')
+    for new, old in STUDIO_PATHS.items():  # pages whose URL on STUDIO differs from the new site
+        body = body.replace(f'href="https://ninjagotours.com/{new}"', f'href="https://ninjagotours.com/{old}"')
     cover = f'{slug}-00-cover.jpg'
     to_jpg(d['hero'], f'{out}/{slug}/{cover}')
     imgs = [dict(n='カバー', file=cover, alt='（カバー画像）')]
@@ -167,13 +177,13 @@ def main():
         dates.append(m['date'])
     page = f'''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STUDIO入稿シート</title>
 <style>{CSS}</style></head><body><main>
-<h1>STUDIO入稿シート：コラム{len(slugs)}本</h1><p class="lead">NINJA GO TOURS／Column（{"・".join(x.replace("-", "/") for x in dates)}）</p>
+<h1>STUDIO入稿シート：コラム{len(slugs)}本</h1><p class="lead">NINJA GO TOURS／Column（{"・".join(x.replace("-", "/") for x in sorted(set(dates)))}）</p>
 <nav>{"".join(nav)}</nav>
 <div class="note">・画像はこのファイルと同じフォルダ（記事のスラッグ名）に入っています。<br>・本文の表は STUDIO の本文欄で崩れる可能性があるため、箇条書きに変換済みです。<br>・リンクは <code>https://ninjagotours.com/…</code>（STUDIO の現行サイトと同じURL）にしています。<br>・FAQは本文の最後に見出しとして入れています。</div>
 {"".join(secs)}
 </main><script>{JS}</script></body></html>'''
     open(os.path.join(out, 'STUDIO入稿シート.html'), 'w').write(page)
-    tag = '-'.join(x[5:].replace('-', '') for x in dates)
+    tag = '-'.join(x[5:].replace('-', '') for x in sorted(set(dates)))  # one date once
     zp = os.path.join(base, f'NGT_column_STUDIO_{tag}.zip')
     with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(out):

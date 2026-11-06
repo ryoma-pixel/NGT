@@ -61,7 +61,7 @@ gallery:
 - src: /images/tours/shinjuku-hanko/gallery-4.webp
   alt: Japanese folding fans on display
 - src: /images/tours/shinjuku-hanko/gallery-5.webp
-  alt: The Kinokuniya building in Shinjuku
+  alt: The Isetan department store in Shinjuku
 - src: /images/tours/shinjuku-hanko/gallery-6.webp
   alt: Shelves of retro Japanese goods
 - src: /images/tours/shinjuku-hanko/gallery-7.webp
