@@ -106,7 +106,7 @@ function makeGmail(clock) {
 }
 
 // ---------- 読み込み ----------
-function load() {
+function load(src) {
   let clockT = J('2026-11-12T10:00').getTime();
   const clock = () => new Date(clockT);
   const ss = new FakeSpreadsheet();
@@ -132,11 +132,14 @@ function load() {
       newTrigger: () => { const b = { timeBased: () => b, everyMinutes: () => b, atHour: () => b, everyDays: () => b, inTimezone: () => b, create: () => b }; return b; }
     },
     GmailApp: gmail,
-    HtmlService: { createTemplateFromFile: () => { const t = { evaluate: () => ({ setTitle() { return this; }, addMetaTag() { return this; }, view: t.view }) }; return t; } },
+    HtmlService: {
+      createTemplateFromFile: () => { const t = { from: 'file', evaluate: () => ({ setTitle() { return this; }, addMetaTag() { return this; }, view: t.view, from: t.from }) }; return t; },
+      createTemplate: (html) => { const t = { from: 'inline', html, evaluate: () => ({ setTitle() { return this; }, addMetaTag() { return this; }, view: t.view, from: t.from }) }; return t; }
+    },
     ContentService: { createTextOutput: (s) => s }
   };
   vm.createContext(ctx);
-  vm.runInContext(SRC, ctx, { filename: 'Code.gs' });
+  vm.runInContext(src || SRC, ctx, { filename: 'Code.gs' });
   ctx.now_ = clock;
   return { ctx, ss, props, mails, fetches, gmail, setNow: (s) => { clockT = J(s).getTime(); }, clock };
 }
@@ -485,6 +488,23 @@ test('毎朝のまとめ', () => {
   const m = env.mails[env.mails.length - 1];
   assert.ok(m.subject.includes('今日のまとめ'));
   assert.ok(m.body.includes('■ 詳細待ち（1件）'));
+});
+
+test('1ファイル版：画面の HTML が入り、設定の初期値が入る', () => {
+  const { execFileSync } = require('child_process');
+  const tmp = path.join(require('os').tmpdir(), 'ngt-overrides-' + process.pid + '.json');
+  fs.writeFileSync(tmp, JSON.stringify({ '通知先メール': 'me@example.com', 'リールの宛先': 'reelu@example.com' }));
+  const bundle = execFileSync(process.execPath, [path.join(__dirname, '..', 'build.cjs'), tmp], { encoding: 'utf8' });
+  fs.unlinkSync(tmp);
+  const env = load(bundle);
+  env.ctx.setup();
+  const cfg = env.ctx.settings_();
+  assert.deepStrictEqual(Array.from(cfg.notifyTo), ['me@example.com']);
+  assert.deepStrictEqual(Array.from(cfg.reeluTo), ['reelu@example.com']);
+  assert.strictEqual(cfg.orderMode, 'draft');
+  const out = env.ctx.doGet({ parameter: { k: env.props.LIST_TOKEN } });
+  assert.strictEqual(out.from, 'inline');
+  assert.strictEqual(JSON.parse(out.view).page, 'list');
 });
 
 let ng = 0;

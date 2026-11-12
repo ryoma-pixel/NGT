@@ -81,6 +81,10 @@ var SETTING_DEFAULTS = [
 
 var LOG_HEADERS = ['日時', '種類', '案件ID', '予約番号', '内容', 'メールID'];
 
+// 1ファイル版（build.cjs で作る）では、画面の HTML と設定の初期値がこのファイルの最後で入る
+var INDEX_HTML = '';
+var SETTING_OVERRIDES = {};
+
 var LABEL_DONE = 'NGT台帳/取込済';
 var LABEL_ERROR = 'NGT台帳/取込不可';
 var MAIL_QUERY = '(from:no-reply@linktivity.co.jp OR subject:"予約が入りました" OR subject:"予約がキャンセル")';
@@ -849,7 +853,7 @@ function doGet(e) {
   } else if (p.k && p.k === PropertiesService.getScriptProperties().getProperty('LIST_TOKEN')) {
     view = { page: 'list', data: listView_(L, settings_()) };
   }
-  var t = HtmlService.createTemplateFromFile('Index');
+  var t = INDEX_HTML ? HtmlService.createTemplate(INDEX_HTML) : HtmlService.createTemplateFromFile('Index');
   t.view = JSON.stringify(view).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('NGT 手配ボード').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
@@ -1031,7 +1035,10 @@ function setup() {
   var set = ss.getSheetByName(SHEETS.SETTINGS) || ss.insertSheet(SHEETS.SETTINGS);
   if (set.getLastRow() === 0) {
     set.appendRow(['項目', '値', '説明']);
-    set.getRange(2, 1, SETTING_DEFAULTS.length, 3).setNumberFormat('@').setValues(SETTING_DEFAULTS);
+    var seed = SETTING_DEFAULTS.map(function (r) {
+      return [r[0], Object.prototype.hasOwnProperty.call(SETTING_OVERRIDES, r[0]) ? String(SETTING_OVERRIDES[r[0]]) : r[1], r[2]];
+    });
+    set.getRange(2, 1, seed.length, 3).setNumberFormat('@').setValues(seed);
   }
   set.setFrozenRows(1);
   // 取り込み開始が空なら、いまを入れる（過去の通知メールをまとめて取り込まないため）
