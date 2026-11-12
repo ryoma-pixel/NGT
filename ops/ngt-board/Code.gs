@@ -142,18 +142,29 @@ function toDate_(v) {
   return isNaN(d) ? null : d;
 }
 
+// 台帳に人が直接書いた形（2026-11-12／2026/11/12／20261112／2026年11月12日）も読む
 function toYmd_(v) {
   if (!v) return '';
   if (isDate_(v)) return isNaN(v) ? '' : ymd_(v);
-  var m = String(v).match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
-  return m ? m[1] + '-' + pad2_(+m[2]) + '-' + pad2_(+m[3]) : '';
+  var s = String(v).trim();
+  var m = s.match(/(\d{4})\s*[-\/.年]\s*(\d{1,2})\s*[-\/.月]\s*(\d{1,2})/) || s.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (!m) return '';
+  var mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  return m[1] + '-' + pad2_(mo) + '-' + pad2_(d);
 }
 
+// 17:00／1700／17時／17時30分／17 も読む（数字だけの 1700 は 17:00、17 は 17:00）
 function toHm_(v) {
   if (v === '' || v == null) return '';
   if (isDate_(v)) { var p = jst_(v); return pad2_(p.h) + ':' + pad2_(p.mi); }
-  var m = String(v).match(/(\d{1,2}):(\d{2})/);
-  return m ? pad2_(+m[1]) + ':' + m[2] : '';
+  if (typeof v === 'number' && v > 0 && v < 1) { var t = Math.round(v * 1440); return pad2_(Math.floor(t / 60) % 24) + ':' + pad2_(t % 60); }
+  var s = String(v).trim().replace(/[０-９：]/g, function (c) { return c === '：' ? ':' : String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+  var m = s.match(/(\d{1,2})\s*[:時]\s*(\d{1,2})?/) || s.match(/^(\d{1,2})(\d{2})$/) || s.match(/^(\d{1,2})$/);
+  if (!m) return '';
+  var h = +m[1], mi = m[2] ? +m[2] : 0;
+  if (h > 23 || mi > 59) return '';
+  return pad2_(h) + ':' + pad2_(mi);
 }
 
 function tourStart_(c) {
@@ -924,6 +935,7 @@ function apiSave(id, token, data) {
     if (!(kids >= 0)) throw new Error('子どもの人数を0以上で入れてください。');
     var key = function (o) { return [o['ツアー'], toYmd_(o['催行日']), toHm_(o['開始時刻']), Number(o['大人']), Number(o['子ども'] || 0)].join('|'); };
     var before = key(c);
+    var hadDetails = !!(toYmd_(c['催行日']) && toHm_(c['開始時刻']));
     var a = day.split('-');
     c['ツアー'] = data.tour;
     c['催行日'] = jstDate_(+a[0], +a[1], +a[2], 0, 0);
@@ -935,7 +947,8 @@ function apiSave(id, token, data) {
     c['メモ'] = String(data.memo || '').trim();
     var st = c['状態'], msg = '保存しました。';
     var ordered = st === ST.WAIT_REPLY || st === ST.ARRANGED;
-    if (st === ST.WAIT_DETAIL || (ordered && before !== key(c)) || st === ST.WAIT_ORDER) {
+    // 日時を入れないまま手で「手配済み」にした案件に初めて入れるときは、【変更】のメールを作らない
+    if (st === ST.WAIT_DETAIL || (ordered && hadDetails && before !== key(c)) || st === ST.WAIT_ORDER) {
       if (ordered || (st === ST.WAIT_ORDER && c['発注日時'])) msg = '変更を保存しました。';
       if (st !== ST.WAIT_ORDER || !c['下書きID']) {
         c['入力日時'] = now_();

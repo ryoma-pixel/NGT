@@ -507,6 +507,53 @@ test('1ファイル版：画面の HTML が入り、設定の初期値が入る'
   assert.strictEqual(JSON.parse(out.view).page, 'list');
 });
 
+test('台帳に直接書いた日付・時刻（区切りなし・日本語）も読む', () => {
+  const env = load();
+  const y = env.ctx.toYmd_, h = env.ctx.toHm_;
+  assert.strictEqual(y('20261112'), '2026-11-12');
+  assert.strictEqual(y(20261112), '2026-11-12');
+  assert.strictEqual(y('2026/11/2'), '2026-11-02');
+  assert.strictEqual(y('2026年11月12日'), '2026-11-12');
+  assert.strictEqual(y('20261399'), '');
+  assert.strictEqual(h('1700'), '17:00');
+  assert.strictEqual(h(1700), '17:00');
+  assert.strictEqual(h('930'), '09:30');
+  assert.strictEqual(h('17時'), '17:00');
+  assert.strictEqual(h('17時30分'), '17:30');
+  assert.strictEqual(h('１７：３０'), '17:30');
+  assert.strictEqual(h('17'), '17:00');
+  assert.strictEqual(h(0.75), '18:00');
+  assert.strictEqual(h('2500'), '');
+});
+
+test('台帳に「20261121」「1830」と直接書いても発注に進む', () => {
+  const env = ready();
+  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS15'), date: J('2026-11-12T10:05') });
+  env.setNow('2026-11-12T10:06'); env.ctx.poll();
+  const sh = env.ss.getSheetByName('台帳');
+  const H = env.ctx.LEDGER_HEADERS;
+  sh.set(2, H.indexOf('催行日') + 1, 20261121);
+  sh.set(2, H.indexOf('開始時刻') + 1, '1830');
+  sh.set(2, H.indexOf('大人') + 1, 2);
+  env.setNow('2026-11-12T10:20'); env.ctx.poll();
+  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '発注待ち');
+  assert.ok(Object.values(env.gmail.drafts)[0].subject.includes('11月21日(土) 18:30'));
+});
+
+test('日時なしで手配済みにした案件に初めて日時を入れても【変更】は作らない', () => {
+  const env = ready();
+  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS16'), date: J('2026-11-12T10:05') });
+  env.setNow('2026-11-12T10:06'); env.ctx.poll();
+  const sh = env.ss.getSheetByName('台帳');
+  const H = env.ctx.LEDGER_HEADERS;
+  sh.set(2, H.indexOf('状態') + 1, '手配済み');
+  const c = caseOf(env, 'NGT-0001');
+  env.setNow('2026-11-12T10:30');
+  env.ctx.apiSave('NGT-0001', c['トークン'], { tour: '秘境神社 Ninja Walk', date: '2026-11-20', time: '19:00', adults: '2', children: '0', guest: 'T', contact: 'x', memo: '' });
+  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '手配済み');
+  assert.strictEqual(Object.keys(env.gmail.drafts).length, 0);
+});
+
 let ng = 0;
 results.forEach((r) => { if (r[0] === 'NG') { ng++; console.log('NG  ' + r[1] + '\n    ' + (r[2] && r[2].stack ? r[2].stack.split('\n').slice(0, 3).join('\n    ') : r[2])); } else console.log('ok  ' + r[1]); });
 console.log('\n' + (results.length - ng) + '/' + results.length + ' ok');
