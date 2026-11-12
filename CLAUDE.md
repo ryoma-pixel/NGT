@@ -321,3 +321,21 @@
 2. Netlify でカスタムドメイン `ninjagotours.com` を追加する。
 3. 現在のDNSでは、Webサイト用のレコード（Aレコード／www の CNAME）だけを Netlify 向けに変える。**ネームサーバーは変えず、MXなど Google Workspace のレコードには触れない**。
 4. STUDIO の公開を停止するのは、新サイトの表示とSSLを確認してから。
+
+## 運営の仕組み「NGT 手配ボード」（2026-11-10〜）
+- 目的：予約 → キラナ担当 → Reelu の手配の漏れを防ぐ（2026-10-24 浅草ナイトのインフルエンサー招待でガイドと合流できなかった件）。あわせて新ツアーのレクチャーの記録、ガイドの完了報告で改善につなげる。案と動く画面の見本：https://claude.ai/artifact/VNkHvnF9xAYhoCzUoogig1 （非公開。Reelu との打ち合わせ用）。
+- 実装：`ops/ngt-board/`（Google Apps Script。共有アカウント info_ninja-go-ride@ninja-kabukitokyo.com のスプレッドシートと Gmail で動かす）。公開サイトのビルドの対象外（`tsconfig.json` の exclude）。手順は `ops/ngt-board/README.md`、テストは `node ops/ngt-board/test/run.cjs`。お客様の情報はスプレッドシートの中だけに置き、リポジトリには入れない。
+- 流れ：LINKTIVITY の通知メールを5分おきに取り込み「詳細待ち」で1行つくる → キラナ担当が管理画面で日時・人数・代表者名を見て入力（遅れたら催促）→ リールへの発注メールを下書き（設定で自動送信も可）→ 件名の［NGT-0001］で送信とリールの返信を確認 → キャンセルは予約番号で照合して、発注済みならリールへの連絡まで追いかける。LINE は公式アカウント（Messaging API）で至急の通知だけ（任意）。
+- ご本人の決定（2026-11-12）：
+  - LINKTIVITY の管理画面への自動ログインはしない。日時・人数・代表者名は手入力し、催促で漏れを防ぐ。
+  - **LINKTIVITY（シンディ様）には問い合わせない。**
+  - 仕組み・スプレッドシートは共有アカウントに置く。Reelu との連絡はメールのまま。
+  - info@ninja-kabukitokyo.com と info_ninja-go-ride@ は同じ Google Workspace。
+- 分かったこと：
+  - 通知メール（no-reply@linktivity.co.jp）に載るのは、予約番号・代理店予約番号・PLAN名・販売経路（備考の site=）だけ。日時・人数・氏名はない。キャンセルの件名は「予約がキャンセルされまし # 番号」で途中で切れている（本文で判定する）。
+  - 予約番号の頭で経路が分かる：ARS_NINJAGORIDE＝公式直販、ARS_TRYHARD＝NKT 直販、ARS_TRIPLABO_WEB＝別の経路、VIATOR- など。
+  - 日時の変更は通知が来ない。LINKTIVITY の仕様で成立済みの予約の日時は変えられず、Viator でお客様が変えた例（2026-01）は担当者がメールで連絡してきた。GetYourGuide は新しい予約＋元の予約のキャンセルになる（Ventrata の資料）。
+  - NKT セットのプラン名は「新宿を遊び尽くす！SHINJUKU NINJA -LIVE- SHOW チケット＆ローカルツアーセット」。通知は info@ninja-kabukitokyo.com（株式会社TryHard Japan 宛て、ARS_TRYHARD-）に届くので、Gmail のフィルタで共有アカウントへ転送する。予約上の時刻は NKT 公演の 15:00／18:00、ウォークは 16:30／19:30。
+  - 新CMS（supplier.linktivity.io）は商品・在庫の管理で、予約の詳細は別の管理画面にある。新CMS のパスワードが平文のメールで共有されている（変更を勧めた）。
+  - 通知の宛先に、綴り違いと思われるものと、個人のアドレスと思われるものがある → ご本人に確認を依頼（アドレスはここに書かない）。
+- 残り：ご本人による共有アカウントへのセットアップ、LINE 公式アカウントを Kiranah 名義で作るか（加藤様の判断）、Reelu との打ち合わせ（加藤様が 2026-11-10 に申し入れ）で期限・キャンセル時のガイド費・完了報告の頼み方・契約の種類を決める。ガイドの画面と完了報告は打ち合わせの後に作る。

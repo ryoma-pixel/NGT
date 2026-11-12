@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root { --bg:#f3f4f7; --card:#fff; --ink:#18203a; --muted:#5b6380; --line:#d9dce5; --ai:#1f2d52; --ok:#2b7550; --okbg:#e0f0e6; --warn:#9a6200; --warnbg:#faedd2; --crit:#bf331c; --critbg:#fbe2dc; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.7 "Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:16px; display:grid; gap:14px; }
+  h1 { font-size:20px; margin:0; }
+  h2 { font-size:16px; margin:0 0 6px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; display:grid; gap:10px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .pill { display:inline-block; font-size:12px; font-weight:700; padding:1px 10px; border-radius:999px; background:#e6e9f0; color:var(--ink); }
+  .pill.ok { background:var(--okbg); color:var(--ok); } .pill.warn { background:var(--warnbg); color:var(--warn); } .pill.crit { background:var(--critbg); color:var(--crit); }
+  .note { border-radius:10px; padding:10px 12px; background:var(--warnbg); color:#5a3c00; font-size:14px; }
+  .note.crit { background:var(--critbg); color:#6b1a0d; }
+  .note.ok { background:var(--okbg); color:#174a31; }
+  dl { display:grid; grid-template-columns:7em 1fr; gap:4px 10px; margin:0; font-size:14px; }
+  dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; }
+  form { display:grid; gap:12px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px) { .grid { grid-template-columns:1fr; } }
+  label { display:grid; gap:4px; font-size:13px; color:var(--muted); }
+  input, select, textarea { font:inherit; font-size:16px; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%; background:#fff; }
+  textarea { min-height:4.5em; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; }
+  button { font:inherit; font-size:15px; border-radius:8px; padding:10px 16px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  button.primary { background:var(--ai); border-color:var(--ai); color:#fff; font-weight:700; }
+  button.danger { color:var(--crit); border-color:var(--crit); }
+  button:disabled { opacity:.5; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--ai); outline-offset:2px; }
+  a { color:var(--ai); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; color:var(--muted); font-weight:500; }
+  .tbl { overflow-x:auto; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+var VIEW = <?!= view ?>;
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pillClass(st, ST, overdue) {
+  if (overdue) return 'crit';
+  if (st === ST.ARRANGED || st === ST.DONE || st === ST.CX_DONE || st === ST.CX_NO_ORDER || st === ST.TEST) return 'ok';
+  return 'warn';
+}
+var app = document.getElementById('app');
+
+function render() {
+  if (VIEW.page === 'case') return renderCase(VIEW.data, '');
+  if (VIEW.page === 'list') return renderList(VIEW.data);
+  app.innerHTML = '<div class="card"><h1>NGT 手配ボード</h1><p>' + esc(VIEW.msg) + '</p></div>';
+}
+
+function renderList(d) {
+  var ST = d.ST;
+  var groups = [
+    ['対応が必要（期限切れ）', function (x) { return x.overdue; }],
+    [ST.WAIT_DETAIL, function (x) { return x.status === ST.WAIT_DETAIL && !x.overdue; }],
+    [ST.WAIT_ORDER, function (x) { return x.status === ST.WAIT_ORDER && !x.overdue; }],
+    [ST.WAIT_REPLY, function (x) { return x.status === ST.WAIT_REPLY && !x.overdue; }],
+    ['キャンセルの対応中', function (x) { return (x.status === ST.CX_WAIT_SEND || x.status === ST.CX_WAIT_REPLY || x.status === ST.CX_UNKNOWN) && !x.overdue; }],
+    ['手配済み（これから）', function (x) { return x.status === ST.ARRANGED; }]
+  ];
+  var html = '<div class="card"><h1>NGT 手配ボード</h1><span class="muted">' + esc(d.now) + ' 時点</span></div>';
+  groups.forEach(function (g) {
+    var xs = d.items.filter(g[1]).sort(function (a, b) { return (a.ts || 9e15) - (b.ts || 9e15); });
+    if (!xs.length) return;
+    html += '<div class="card"><h2>' + esc(g[0]) + '（' + xs.length + '件）</h2><div class="tbl"><table><thead><tr><th>案件</th><th>ツアー</th><th>催行</th><th>状態</th><th>期限</th></tr></thead><tbody>';
+    xs.forEach(function (x) {
+      html += '<tr><td class="mono">' + (x.url ? '<a href="' + esc(x.url) + '">' + esc(x.id) + '</a>' : esc(x.id)) + '</td><td>' + esc(x.tour) + (x.adults ? '<div class="muted">大人' + esc(x.adults) + '名・' + esc(x.channel) + '</div>' : '<div class="muted">' + esc(x.channel) + '</div>') + '</td><td>' + (esc(x.when) || '<span class="muted">未入力</span>') + '</td><td><span class="pill ' + pillClass(x.status, ST, x.overdue) + '">' + esc(x.status) + '</span></td><td>' + esc(x.due) + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  });
+  if (html.indexOf('<table') < 0) html += '<div class="card"><p>対応が必要な案件はありません。</p></div>';
+  app.innerHTML = html;
+}
+
+function renderCase(d, flash) {
+  var ST = d.ST;
+  var st = d.status;
+  var editable = [ST.WAIT_DETAIL, ST.WAIT_ORDER, ST.WAIT_REPLY, ST.ARRANGED].indexOf(st) >= 0;
+  var html = '<div class="card"><span class="muted mono">' + esc(d.id) + '・' + esc(d.channel) + '</span><h1>' + esc(d.tour || d.plan || '（ツアー未判定）') + '</h1>' +
+    '<div><span class="pill ' + pillClass(st, ST, d.overdue) + '">' + esc(st) + '</span></div>';
+  if (flash) html += '<div class="note ok">' + esc(flash) + '</div>';
+  if (d.dueMsg) html += '<div class="note' + (d.overdue ? ' crit' : '') + '">' + esc(d.dueMsg) + (d.due ? '<br>期限：' + esc(d.due) : '') + '</div>';
+  html += '<dl><dt>予約番号</dt><dd class="mono">' + esc(d.bookingNo || '（なし）') + '</dd><dt>PLAN名</dt><dd>' + esc(d.plan) + '</dd><dt>通知の受信</dt><dd>' + esc(d.received || '—') + '</dd>' +
+    (d.orderedAt ? '<dt>発注</dt><dd>' + esc(d.orderedAt) + '</dd>' : '') + (d.repliedAt ? '<dt>リールの返信</dt><dd>' + esc(d.repliedAt) + '</dd>' : '') +
+    (d.cancelAt ? '<dt>キャンセル</dt><dd>' + esc(d.cancelAt) + '</dd>' : '') + '</dl></div>';
+
+  if (st === ST.WAIT_DETAIL) {
+    html += '<div class="card"><h2>入力のしかた</h2><p class="muted">LINKTIVITY の管理画面で予約番号 <span class="mono">' + esc(d.bookingNo) + '</span> を検索し、下の欄に写してください。テスト予約（氏名が Test など）のときは、いちばん下の「テスト予約として閉じる」を押してください。</p></div>';
+  }
+
+  if (editable) {
+    var tourOpts = d.tours.map(function (t) { return '<option' + (t.name === d.tour ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('');
+    html += '<div class="card"><h2>' + (st === ST.WAIT_DETAIL ? '予約の詳細' : '予約の内容（直すと、リールに【変更】のメールを用意します）') + '</h2>' +
+      '<form id="f"><label>ツアー<select id="tour" required><option value="">選んでください</option>' + tourOpts + '</select></label>' +
+      '<div id="tourInfo" class="muted"></div>' +
+      '<div class="grid"><label>催行日<input type="date" id="date" required value="' + esc(d.date) + '"></label>' +
+      '<label>開始時刻<select id="time" required></select></label>' +
+      '<label>大人の人数<input type="number" id="adults" min="1" required value="' + esc(d.adults) + '"></label>' +
+      '<label>12歳以下の人数<input type="number" id="children" min="0" value="' + esc(d.children) + '"></label></div>' +
+      '<label>代表者名<input type="text" id="guest" value="' + esc(d.guest) + '" autocomplete="off"></label>' +
+      '<label>連絡先（メールアドレス・WhatsApp など）<input type="text" id="contact" value="' + esc(d.contact) + '" autocomplete="off"></label>' +
+      '<label>メモ（リールへの備考）<textarea id="memo">' + esc(d.memo) + '</textarea></label>' +
+      '<div id="err" class="note crit" hidden></div>' +
+      '<div class="row"><button class="primary" type="submit" id="save">' + (st === ST.WAIT_DETAIL ? '保存して発注に進む' : '保存する') + '</button></div></form></div>';
+  }
+
+  var acts = [];
+  if ((st === ST.WAIT_DETAIL || st === ST.WAIT_ORDER) && !d.orderedAt) acts.push(['test', 'テスト予約として閉じる', 'danger']);
+  if (st === ST.WAIT_ORDER) acts.push(['ordered', '発注済みにする（別の方法で発注した）', '']);
+  if (st === ST.WAIT_REPLY) acts.push(['acked', 'リールの返信を確認した', '']);
+  if (st === ST.CX_WAIT_SEND) acts.push(['cx_sent', 'キャンセルを連絡した（別の方法で）', '']);
+  if (st === ST.CX_WAIT_REPLY || st === ST.CX_UNKNOWN || st === ST.CX_WAIT_SEND) acts.push(['cx_acked', st === ST.CX_UNKNOWN ? '確認した（対応済み）' : 'リールの確認がとれた', '']);
+  if (acts.length) {
+    html += '<div class="card"><h2>操作</h2><div class="row">' + acts.map(function (a) { return '<button type="button" class="' + a[2] + '" data-act="' + a[0] + '">' + esc(a[1]) + '</button>'; }).join('') + '</div><div id="aerr" class="note crit" hidden></div><p class="muted" id="ahint">押すと確認の表示が出ます。もう一度押すと確定します。</p></div>';
+  }
+  if (d.listUrl) html += '<p class="muted"><a href="' + esc(d.listUrl) + '">台帳の一覧へ</a></p>';
+  app.innerHTML = html;
+
+  if (editable) bindForm(d);
+  bindActions(d);
+}
+
+function bindForm(d) {
+  var tourSel = document.getElementById('tour'), timeSel = document.getElementById('time'), info = document.getElementById('tourInfo');
+  function fillTimes() {
+    var t = d.tours.filter(function (x) { return x.name === tourSel.value; })[0];
+    var times = t ? t.times.slice() : [];
+    if (d.time && times.indexOf(d.time) < 0) times.unshift(d.time);
+    timeSel.innerHTML = '<option value="">選んでください</option>' + times.map(function (x) { return '<option' + (x === d.time ? ' selected' : '') + '>' + x + '</option>'; }).join('');
+    info.textContent = t ? '集合：' + t.meet + (t.note ? '　／　' + t.note : '') : '';
+  }
+  tourSel.addEventListener('change', fillTimes);
+  fillTimes();
+  document.getElementById('f').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('save'), err = document.getElementById('err');
+    btn.disabled = true; err.hidden = true;
+    var data = { tour: tourSel.value, date: document.getElementById('date').value, time: timeSel.value,
+      adults: document.getElementById('adults').value, children: document.getElementById('children').value,
+      guest: document.getElementById('guest').value, contact: document.getElementById('contact').value, memo: document.getElementById('memo').value };
+    google.script.run.withSuccessHandler(function (r) { VIEW.data = r.view; renderCase(r.view, r.msg); window.scrollTo(0, 0); })
+      .withFailureHandler(function (x) { btn.disabled = false; err.textContent = x.message || String(x); err.hidden = false; })
+      .apiSave(d.id, d.token, data);
+  });
+}
+
+function bindActions(d) {
+  var armed = null;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-act]'), function (b) {
+    b.addEventListener('click', function () {
+      var act = b.getAttribute('data-act');
+      if (armed !== act) { armed = act; b.textContent = 'もう一度押すと確定：' + b.textContent.replace(/^もう一度押すと確定：/, ''); return; }
+      b.disabled = true;
+      var aerr = document.getElementById('aerr');
+      google.script.run.withSuccessHandler(function (r) { VIEW.data = r.view; renderCase(r.view, r.msg); window.scrollTo(0, 0); })
+        .withFailureHandler(function (x) { b.disabled = false; aerr.textContent = x.message || String(x); aerr.hidden = false; })
+        .apiAction(d.id, d.token, act);
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>
