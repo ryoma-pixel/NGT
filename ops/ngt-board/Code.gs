@@ -806,6 +806,7 @@ function renderTodo_(L, cfg, now, list) {
     var d = c._d;
     if (!d.who) return;
     if (d.step === 'report' && !started(c)) return;
+    if (d.step === 'cxok') return;                      // キャンセルは別の欄に出す
     if (d.who === WHO.KIRA) kira.push(c); else reelu.push(c);
   });
   list.forEach(function (c) {
@@ -817,34 +818,50 @@ function renderTodo_(L, cfg, now, list) {
 
   push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 8: { size: 10, fc: '#666666' } } });
 
-  // 本日の取り込み（件数と、どの予約が新規・キャンセル・変更か）
-  if (t) {
-    var byId = {};
-    list.forEach(function (c) { byId[String(c[H.ID])] = c; });
-    var evs = (t.events || []).filter(function (e) { return byId[e.id]; });
-    var nOf = function (k, fallback) { return t.events ? evs.filter(function (e) { return e.k === k; }).length : fallback; };
-    var nAdd = nOf('新規', t.added), nCx = nOf('キャンセル', t.cancelled), nCh = nOf('変更', t.changed), nHeld = nOf('要確認', t.held);
-    push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
-    push(['新規 ' + nAdd + '件', '', 'キャンセル ' + nCx + '件', '変更 ' + nCh + '件', nHeld ? '要確認 ' + nHeld + '件' : ''], {
-      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: '#d9ead3' }, 2: { bg: nCx ? COLORS.LATE : '#eeeeee' }, 3: { bg: nCh ? COLORS.SOON : '#eeeeee' }, 4: { bg: nHeld ? COLORS.LATE : COLORS.WHITE } }
+  // 本日の取り込み：件数は台帳から数える（取り込みの記録ではなく、いま台帳にある予約で数えるので食い違わない）
+  var today = ymd_(now), md = fmtMD_(today);
+  var dayOf = function (v) { var d = toDate_(v); return d ? ymd_(d) : ''; };
+  var fromCsv = function (c) { return /CSV$/.test(String(c[H.SRC] || '')); };
+  var added = list.filter(function (c) { return fromCsv(c) && dayOf(c[H.T_CREATED]) === today; });
+  var changed = list.filter(function (c) { return String(c[H.NOTE] || '').split('\n').some(function (l) { return l.indexOf(md) === 0 && l.indexOf('変更：') >= 0; }); });
+  var cancelled = list.filter(function (c) { return c[H.T_CX] && (dayOf(c[H.T_CX]) === today || c._d.step === 'cxok'); });
+  var held = list.filter(function (c) { return String(c[H.NOTE]).indexOf(md) >= 0 && String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') >= 0 && !c[H.T_CX]; });
+  var nCxToday = cancelled.filter(function (c) { return dayOf(c[H.T_CX]) === today; }).length;
+  push(['本日の取り込み' + (t ? '（' + t.files.join('・') + '）' : (noonPassed ? '：まだ取り込まれていません' : '：12:00 にキラナがCSVを取り込みます'))],
+    { bold: true, size: 11, fc: !t && noonPassed ? '#b42318' : '#555555' });
+  push(['新規 ' + added.length + '件', '', 'キャンセル ' + nCxToday + '件', '変更 ' + changed.length + '件', held.length ? '要確認 ' + held.length + '件' : ''], {
+    bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: '#d9ead3' }, 2: { bg: nCxToday ? COLORS.LATE : '#eeeeee' }, 3: { bg: changed.length ? COLORS.SOON : '#eeeeee' }, 4: { bg: held.length ? COLORS.LATE : COLORS.WHITE } }
+  });
+  // 本日のお知らせ（新規・変更）
+  var news = changed.map(function (c) { return { k: '変更', c: c }; }).concat(held.map(function (c) { return { k: '要確認', c: c }; }), added.map(function (c) { return { k: '新規', c: c }; }));
+  if (news.length) {
+    var se = out.length + 1;
+    push(['本日のお知らせ', '', 'いまの状態', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    news.forEach(function (e) {
+      var c = e.c, kc = e.k === '新規' ? '#d9ead3' : e.k === '要確認' ? COLORS.LATE : COLORS.SOON;
+      push([e.k, '', c._d.st, String(c[H.TOUR] || ''), when(c), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+        { cells: { 0: { bg: kc, bold: true }, 2: { bg: whoColor_(c._d, now) } } });
     });
-    if (evs.length) {
-      var order = { 'キャンセル': 0, '要確認': 1, '変更': 2, 'キャンセル取り消し': 3, '新規': 4 };
-      evs.sort(function (a, b) { return order[a.k] - order[b.k]; });
-      var se = out.length + 1;
-      push(['本日のお知らせ', '取込', 'いまの状態', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
-      evs.forEach(function (e) {
-        var c = byId[e.id], kc = e.k === 'キャンセル' || e.k === '要確認' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : COLORS.SOON;
-        var st = c._d.st + (e.k === 'キャンセル' && c._d.step === 'cxdone' && !truthy_(c[H.ACCEPT]) ? '（受注前なので対応不要）' : '');
-        push([e.k, e.at, st, String(c[H.TOUR] || ''), when(c), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
-          { cells: { 0: { bg: kc, bold: true }, 2: { bg: whoColor_(c._d, now) } } });
-      });
-      tables.push([se, out.length]);
-    }
-  } else {
-    push(['本日の取り込み'], { bold: true, size: 11, fc: '#555555' });
-    push([noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナがCSVを取り込みます'], { bold: true, size: 13, fc: noonPassed ? '#b42318' : '#555555' });
+    tables.push([se, out.length]);
   }
+  push([''], {});
+
+  // キャンセル（別の欄）：リール様の確認待ちと、今日キャンセルになったもの
+  cancelled.sort(function (a, b) { return (toDate_(b[H.T_CX]) || 0) - (toDate_(a[H.T_CX]) || 0); });
+  var waitCx = cancelled.filter(function (c) { return c._d.step === 'cxok'; }).length;
+  push(['■ キャンセルが発生しました　' + cancelled.length + '件' + (waitCx ? '（リール様の確認待ち ' + waitCx + '件）' : '')],
+    { bold: true, size: 14, bg: cancelled.length ? '#e06666' : '#d9d9d9', fc: cancelled.length ? '#ffffff' : '#1b2440' });
+  if (cancelled.length) {
+    var sc = out.length + 1;
+    push(['キャンセル日時', '', 'いまの状態', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f4cccc', size: 10 });
+    cancelled.forEach(function (c) {
+      var wait = c._d.step === 'cxok';
+      var st = wait ? 'リール様の確認待ち（台帳の「キャンセル確認」に✓）' : truthy_(c[H.ACCEPT]) ? '確認済み' : '受注前のため対応不要';
+      push([fmtDT_(toDate_(c[H.T_CX])), '', st, String(c[H.TOUR] || ''), when(c), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+        { bg: wait ? '#fdecea' : COLORS.WHITE, cells: { 2: { bold: wait, fc: wait ? '#b42318' : '#555555' } } });
+    });
+    tables.push([sc, out.length]);
+  } else push(['いまはありません'], { fc: COLORS.MUTED });
   push([''], {});
 
   // リール様・キラナ それぞれ1つの表

@@ -533,7 +533,8 @@ test('CSVを取り込む画面：同じ種類は1つずつ。結果にはキャ�
   assert.strictEqual(r2.files[0].cancelled.length, 1);
   assert.ok(/NGT-0002/.test(r2.files[0].cancelled[0]));
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /^キャンセル\|/.test(r) && /受注前なので対応不要/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /キャンセルが発生しました　1件/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /受注前のため対応不要/.test(r)));
   assert.ok(rows.some((r) => /^新規\|/.test(r)));
   assert.ok(rows.some((r) => /^新規 2件\|\|キャンセル 1件\|変更 0件/.test(r)));
 });
@@ -547,6 +548,21 @@ test('対応一覧の件数は、台帳に残っている予約で数える（�
   env.ctx.clearTest();
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
   assert.ok(rows.some((r) => /^新規 1件\|\|キャンセル 0件/.test(r)), rows.join('\n'));
+});
+
+
+test('対応一覧：キャンセルは別の欄。リール様のやることには入らない', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-CX01', '2026-11-22', '17:00', 2) + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-CX02', '2026-11-23', '17:00', 1) + '\n');
+  env.edit(env.caseBy('ARS_NINJAGORIDE-20261116-CX01')._row, '①受注（リール）', true);
+  env.importText('kiranah-resort-2.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-CX02', '2026-11-23', '17:00', 1) + '\n');
+  env.ctx.poll();
+  const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
+  const iCx = rows.findIndex((r) => /キャンセルが発生しました　1件（リール様の確認待ち 1件）/.test(r));
+  const iRe = rows.findIndex((r) => /リール様がやること/.test(r));
+  assert.ok(iCx > 0 && iCx < iRe, rows.join('\n'));
+  assert.ok(!rows.slice(iRe).some((r) => /\|キャンセルが発生しました\|/.test(r)), 'リール様の表にキャンセルを入れない');
+  assert.ok(/^新規 2件\|\|キャンセル 1件\|変更 0件/.test(rows.find((r) => /^新規 /.test(r))));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));
