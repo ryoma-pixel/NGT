@@ -295,7 +295,7 @@ test('前日20時に未手配ならキラナとリールに1回だけ知らせ�
   env.ctx.poll();
   assert.strictEqual(env.mails.length, 1, '同じ段階では2回送らない');
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /ガイドを手配してください　1件/.test(r)));
+  assert.ok(rows.some((r) => /\|ガイドを手配してください（期限切れ）\|/.test(r)), rows.join('\n'));
   assert.ok(!rows.some((r) => /キャンセル対応/.test(r)));
 });
 
@@ -471,8 +471,9 @@ test('今やること：本日の取り込み件数と、段階ごとの「や�
   env.files.push({ getName: () => 'kiranah-resort-x.csv', getDateCreated: () => J('2026-11-16T12:01'), getBlob: () => ({ getDataAsString: () => text }), moveTo: () => {} });
   env.ctx.poll();
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件\|変更 0件/.test(r)), rows.join('\n'));
-  assert.ok(rows.some((r) => /受注してください　1件/.test(r)));
+  assert.ok(rows.some((r) => /^新規 1件\|\|キャンセル 0件\|変更 0件/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /\|受注してください\|/.test(r)));
+  assert.ok(rows.some((r) => /リール様がやること　1件/.test(r)));
   assert.ok(rows.some((r) => /キラナがやること　0件/.test(r)));
 });
 
@@ -534,7 +535,7 @@ test('CSVを取り込む画面：同じ種類は1つずつ。結果にはキャ�
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
   assert.ok(rows.some((r) => /^キャンセル\|/.test(r) && /受注前なので対応不要/.test(r)), rows.join('\n'));
   assert.ok(rows.some((r) => /^新規\|/.test(r)));
-  assert.ok(rows.some((r) => /^新規 2件\|キャンセル 1件\|変更 0件/.test(r)));
+  assert.ok(rows.some((r) => /^新規 2件\|\|キャンセル 1件\|変更 0件/.test(r)));
 });
 
 
@@ -545,7 +546,7 @@ test('対応一覧の件数は、台帳に残っている予約で数える（�
   env.ctx.importUploaded([{ name: 'kiranah-resort-1.csv', b64: b64(HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-KEEP', '2026-11-19', '17:00', 2) + '\n') }]);
   env.ctx.clearTest();
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /^新規 1件\|\|キャンセル 0件/.test(r)), rows.join('\n'));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

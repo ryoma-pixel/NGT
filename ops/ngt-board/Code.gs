@@ -754,36 +754,37 @@ function paxText_(c) {
   return (a ? '大人' + a : '') + (k ? (a ? '・' : '') + '子' + k : '');
 }
 
-// 「対応一覧」の見出し：段階ごとに「何をしてほしいか」と「どこを押すか」
-var TASKS = {
-  REELU: [
-    { step: 'accept', title: '受注してください' },
-    { step: 'arrange', title: 'ガイドを手配してください', also: ['unarranged'] },
-    { step: 'guest', title: 'ゲストに連絡してください（ガイドが連絡しても可）' },
-    { step: 'report', title: 'ガイドに完了報告を送ってもらってください' },
-    { step: 'cxok', title: 'キャンセルが発生しました' }
-  ],
-  KIRA: [
-    { step: 'import', title: '今日のCSVを取り込んでください' },
-    { step: 'input', title: '手入力の予約に、足りない項目を入れてください' },
-    { step: 'receive', title: '完了報告を読んで、受領してください' },
-    { step: 'held', title: 'CSVに載っていない予約を確認してください' }
-  ]
+// 「対応一覧」でのやることの言い方（段階ごと）
+var TODO_TEXT = {
+  accept: '受注してください',
+  arrange: 'ガイドを手配してください',
+  unarranged: 'ガイドを手配してください（期限切れ）',
+  guest: 'ゲストに連絡してください（ガイドでも可）',
+  report: 'ガイドに完了報告を送ってもらってください',
+  cxok: 'キャンセルが発生しました',
+  receive: '完了報告を読んで、受領してください',
+  input: '足りない項目（催行日・開始・ツアー・人数）を入れてください',
+  held: 'CSVに載っていない予約を確認してください'
 };
+function todoText_(c) {
+  var st = c._d.step;
+  if (st === 'guest' && !String(c[H.GUIDE] || '').trim()) return 'ガイド名を入れて、ゲストに連絡してください';
+  return TODO_TEXT[st] || c._d.todo;
+}
 
-// 「対応一覧」のシートを作り直す（値は1回で書き、書式もまとめて付ける）
 function todoSheet_() {
   var ss = ss_(), sh = ss.getSheetByName(SHEETS.TODO);
   if (!sh) { var old = ss.getSheetByName(SHEETS.OLD_TODO); if (old) { old.setName(SHEETS.TODO); sh = old; } }
   return sh;
 }
 
+// 「対応一覧」のシートを作り直す。リール様・キラナそれぞれ1つの表に、期限の近い順で並べる
 function renderTodo_(L, cfg, now, list) {
   var sh = todoSheet_();
   if (!sh) return;
   list = list || L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; });
   var gid = L.sh.getSheetId();
-  var W = 8;
+  var W = 9;
   var out = [], bg = [], fw = [], fc = [], fs = [], tables = [];
   var push = function (row, style) {
     style = style || {};
@@ -795,50 +796,48 @@ function renderTodo_(L, cfg, now, list) {
     bg.push(b); fw.push(w); fc.push(f); fs.push(z);
   };
   var link = function (c) { return '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","' + c[H.ID] + ' を開く")'; };
+  var when = function (c) { return fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]); };
   var byDue = function (a, b) { return (a._d.due ? a._d.due.getTime() : 9e15) - (b._d.due ? b._d.due.getTime() : 9e15); };
   var started = function (c) { var t = startOf_(c); return t && now.getTime() >= t.getTime(); };
 
-  // 段階ごとに分ける（ツアー前の「完了報告待ち」は、まだやることがないので出さない）
-  var groups = {};
+  // だれの作業か（ツアー前の「完了報告待ち」は、まだやることがないので出さない）
+  var reelu = [], kira = [];
   list.forEach(function (c) {
-    var st = c._d.step;
-    if (!c._d.who) return;
-    if (st === 'report' && !started(c)) return;
-    (groups[st] = groups[st] || []).push(c);
-    if (String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') >= 0 && !c[H.T_CX]) (groups.held = groups.held || []).push(c);
+    var d = c._d;
+    if (!d.who) return;
+    if (d.step === 'report' && !started(c)) return;
+    if (d.who === WHO.KIRA) kira.push(c); else reelu.push(c);
   });
+  list.forEach(function (c) {
+    if (String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') >= 0 && !c[H.T_CX]) kira.push({ _held: true, _row: c._row, _d: { step: 'held', due: null, who: WHO.KIRA }, src: c });
+  });
+  reelu.sort(byDue); kira.sort(byDue);
   var t = todayImport_(now);
   var noonPassed = minOfDay_(now) >= hmToMin_(cfg.checkTime) - 30;   // 12:30 を過ぎても取り込みがなければ知らせる
-  var itemsOf = function (g) { var a = (groups[g.step] || []).slice(); (g.also || []).forEach(function (st) { a = a.concat(groups[st] || []); }); return a; };
-  var count = function (side) { return TASKS[side].reduce(function (n, g) { return n + (g.step === 'import' ? (!t && noonPassed ? 1 : 0) : itemsOf(g).length); }, 0); };
-  var lateIn = function (side) {
-    return TASKS[side].reduce(function (n, g) { return n + itemsOf(g).filter(function (c) { return isOverdue_(c._d, now); }).length; }, 0);
-  };
 
-  push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
-  // 本日の取り込み
+  push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 8: { size: 10, fc: '#666666' } } });
+
+  // 本日の取り込み（件数と、どの予約が新規・キャンセル・変更か）
   if (t) {
-    // 本日のお知らせ：どの予約が新規・キャンセル・変更になったか（件数もこの一覧から数える。消した見本などは数えない）
     var byId = {};
     list.forEach(function (c) { byId[String(c[H.ID])] = c; });
     var evs = (t.events || []).filter(function (e) { return byId[e.id]; });
     var nOf = function (k, fallback) { return t.events ? evs.filter(function (e) { return e.k === k; }).length : fallback; };
     var nAdd = nOf('新規', t.added), nCx = nOf('キャンセル', t.cancelled), nCh = nOf('変更', t.changed), nHeld = nOf('要確認', t.held);
     push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
-    push(['新規 ' + nAdd + '件', 'キャンセル ' + nCx + '件', '変更 ' + nCh + '件', nHeld ? '要確認 ' + nHeld + '件' : ''], {
-      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: nCx ? COLORS.LATE : '#eeeeee' }, 2: { bg: nCh ? COLORS.SOON : '#eeeeee' }, 3: { bg: nHeld ? COLORS.LATE : COLORS.WHITE } }
+    push(['新規 ' + nAdd + '件', '', 'キャンセル ' + nCx + '件', '変更 ' + nCh + '件', nHeld ? '要確認 ' + nHeld + '件' : ''], {
+      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: '#d9ead3' }, 2: { bg: nCx ? COLORS.LATE : '#eeeeee' }, 3: { bg: nCh ? COLORS.SOON : '#eeeeee' }, 4: { bg: nHeld ? COLORS.LATE : COLORS.WHITE } }
     });
-
     if (evs.length) {
       var order = { 'キャンセル': 0, '要確認': 1, '変更': 2, 'キャンセル取り消し': 3, '新規': 4 };
       evs.sort(function (a, b) { return order[a.k] - order[b.k]; });
       var se = out.length + 1;
-      push(['本日のお知らせ', '取込', 'ツアー', '催行日・開始', '人数', '経路', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+      push(['本日のお知らせ', '取込', 'いまの状態', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
       evs.forEach(function (e) {
-        var c = byId[e.id], kc = e.k === 'キャンセル' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : e.k === '要確認' ? COLORS.LATE : COLORS.SOON;
+        var c = byId[e.id], kc = e.k === 'キャンセル' || e.k === '要確認' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : COLORS.SOON;
         var st = c._d.st + (e.k === 'キャンセル' && c._d.step === 'cxdone' && !truthy_(c[H.ACCEPT]) ? '（受注前なので対応不要）' : '');
-        push([e.k, e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), st, link(c)],
-          { cells: { 0: { bg: kc, bold: true }, 6: { bg: whoColor_(c._d, now) } } });
+        push([e.k, e.at, st, String(c[H.TOUR] || ''), when(c), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+          { cells: { 0: { bg: kc, bold: true }, 2: { bg: whoColor_(c._d, now) } } });
       });
       tables.push([se, out.length]);
     }
@@ -848,34 +847,32 @@ function renderTodo_(L, cfg, now, list) {
   }
   push([''], {});
 
-  var side = function (key, title, color, hi) {
-    var n = count(key), late = lateIn(key);
-    push([title + '　' + n + '件' + (late ? '（うち期限切れ ' + late + '件）' : '')], { bold: true, size: 14, bg: hi, fc: '#1b2440' });
+  // リール様・キラナ それぞれ1つの表
+  var table = function (title, items, color, hi, extra) {
+    var late = items.filter(function (c) { return c._d.due && isOverdue_(c._d, now); }).length;
+    var n = items.length + (extra ? 1 : 0);
+    push([title + '　' + n + '件' + (late ? '（うち期限切れ ' + late + '件）' : '')], { bold: true, size: 14, bg: hi });
     if (!n) { push(['いまはありません'], { fc: COLORS.MUTED }); push([''], {}); return; }
-    TASKS[key].forEach(function (g) {
-      if (g.step === 'import') {
-        if (!t && noonPassed) { push([g.title], { bold: true, size: 12, bg: color }); push([''], {}); }
-        return;
-      }
-      var items = itemsOf(g).sort(byDue);
-      if (!items.length) return;
-      push([g.title + '　' + items.length + '件'], { bold: true, size: 12, bg: color });
-      var start = out.length + 1;
-      push(['期限', '残り', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
-      items.forEach(function (c) {
-        var d = c._d, isLate = isOverdue_(d, now);
-        var softOver = !isLate && d.soft && now.getTime() > d.soft.getTime();
-        var soonDue = !isLate && (softOver || (d.due && d.due.getTime() - now.getTime() < 2 * H_MS));
-        push([fmtDT_(d.due), rel_(d.due, now) + (softOver ? '（目安超え）' : ''), String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c),
-          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
-          { bg: isLate ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE, cells: { 1: { bold: true, fc: isLate ? '#b42318' : '#1b2440' } } });
-      });
-      tables.push([start, out.length]);
-      push([''], {});
+    var st0 = out.length + 1;
+    push(['期限', '残り', 'やること', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: color, size: 10 });
+    if (extra) push(['', '', extra, '', '', '', '', '', ''], { bg: COLORS.LATE, cells: { 2: { bold: true, fc: '#b42318' } } });
+    items.forEach(function (x) {
+      var c = x._held ? x.src : x, d = x._d;
+      var isLate = d.due && isOverdue_(d, now);
+      var softOver = !isLate && d.soft && now.getTime() > d.soft.getTime();
+      var soonDue = !isLate && (softOver || (d.due && d.due.getTime() - now.getTime() < 2 * H_MS));
+      var text = x._held ? TODO_TEXT.held : todoText_(c);
+      var cx = d.step === 'cxok';
+      push([d.due ? fmtDT_(d.due) : '', d.due ? rel_(d.due, now) + (softOver ? '（目安超え）' : '') : '', text, String(c[H.TOUR] || ''), when(c),
+        paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+        { bg: isLate ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE,
+          cells: { 1: { bold: true, fc: isLate ? '#b42318' : '#1b2440' }, 2: { bold: true, fc: cx ? '#b42318' : '#1b2440', bg: cx && !isLate ? '#f4cccc' : undefined } } });
     });
+    tables.push([st0, out.length]);
+    push([''], {});
   };
-  side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
-  side('KIRA', '■ キラナがやること', COLORS.KIRA, COLORS.KIRA_HI);
+  table('■ リール様がやること', reelu, COLORS.REELU, COLORS.REELU_HI);
+  table('■ キラナがやること', kira, COLORS.KIRA, COLORS.KIRA_HI, !t && noonPassed ? '今日のCSVを取り込んでください（メニュー「CSVを取り込む」）' : '');
 
   // 直近3日のツアー（今日・明日・明後日）を1つの表に。日ごとに色を交互に変え、手配の状況を色で見せる
   var days = [0, 1, 2].map(function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); });
@@ -885,18 +882,18 @@ function renderTodo_(L, cfg, now, list) {
   var summary = days.map(function (day, n) {
     var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; });
     var rd = tm.filter(function (c) { return arrangedSteps.indexOf(c._d.step) >= 0; }).length;
-    return { label: ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件' + (tm.length ? '（手配済み ' + rd + '）' : ''), short: tm.length > rd, n: n };
+    return { label: ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件' + (tm.length ? '（手配済み ' + rd + '）' : ''), short: tm.length > rd };
   });
-  push([summary[0].label, '', summary[1].label, '', '', summary[2].label], {
+  push([summary[0].label, '', summary[1].label, '', summary[2].label], {
     bold: true, size: 12, cells: {
-      0: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' },
-      2: { bg: summary[1].short ? COLORS.SOON : '#d9ead3', fc: summary[1].short ? '#b42318' : '#1b2440' },
-      5: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' } }
+      0: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' }, 1: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' },
+      2: { bg: summary[1].short ? COLORS.SOON : '#d9ead3', fc: summary[1].short ? '#b42318' : '#1b2440' }, 3: { bg: summary[1].short ? COLORS.SOON : '#d9ead3' },
+      4: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' }, 5: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' } }
   });
   if (summary[1].short) push(['※ 明日のツアーは、今日' + cfg.arrangeDeadline + 'までに全件「手配済み」にしてください'], { fc: '#b42318', bold: true });
   if (near.length) {
     var s2 = out.length + 1;
-    push(['日付', '開始', 'ツアー', '人数', '経路', 'ガイド', '手配の状況', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    push(['日付', '開始', '手配の状況', 'ツアー', '次にやる人', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
     days.forEach(function (day, n) {
       var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
       var band = n % 2 ? '#f7f9fc' : COLORS.WHITE;
@@ -906,9 +903,9 @@ function renderTodo_(L, cfg, now, list) {
           d.step === 'unarranged' ? '未手配・期限切れ' : d.step === 'cxok' ? 'キャンセルが発生しました' :
           d.step === 'accept' ? '未手配（受注待ち）' : d.step === 'input' ? '入力待ち' : '未手配（手配中）';
         var col = ok ? '#d9ead3' : (d.step === 'unarranged' || d.step === 'cxok') ? COLORS.LATE : COLORS.REELU;
-        push([i === 0 ? ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) : '', toHm_(c[H.TIME]), String(c[H.TOUR] || ''), paxText_(c),
-          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), label, link(c)],
-          { bg: band, cells: { 0: { bold: true }, 6: { bg: col, bold: !ok } } });
+        push([i === 0 ? ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) : '', toHm_(c[H.TIME]), label, String(c[H.TOUR] || ''), d.who || '—',
+          paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+          { bg: band, cells: { 0: { bold: true }, 2: { bg: col, bold: !ok } } });
       });
     });
     tables.push([s2, out.length]);
@@ -920,7 +917,7 @@ function renderTodo_(L, cfg, now, list) {
   tables.forEach(function (x) {
     sh.getRange(x[0], 1, x[1] - x[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
   });
-  [150, 180, 210, 140, 100, 180, 130, 150].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
+  [140, 130, 300, 190, 130, 80, 170, 120, 130].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
   sh.setRowHeights(1, out.length, 28);
   sh.setRowHeight(1, 40);
   sh.setFrozenRows(1);
