@@ -818,29 +818,33 @@ function renderTodo_(L, cfg, now, list) {
   push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
   // 本日の取り込み
   if (t) {
-    push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
-    push(['新規 ' + t.added + '件', 'キャンセル ' + t.cancelled + '件', '変更 ' + t.changed + '件', t.held ? '要確認 ' + t.held + '件' : ''], {
-      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: t.cancelled ? COLORS.LATE : '#eeeeee' }, 2: { bg: t.changed ? COLORS.SOON : '#eeeeee' }, 3: { bg: t.held ? COLORS.LATE : COLORS.WHITE } }
-    });
-    // 本日のキャンセル：どの予約がキャンセルになったか
+    // 本日のお知らせ：どの予約が新規・キャンセル・変更になったか（件数もこの一覧から数える。消した見本などは数えない）
     var byId = {};
     list.forEach(function (c) { byId[String(c[H.ID])] = c; });
-    var cxs = (t.events || []).filter(function (e) { return e.k === 'キャンセル' && byId[e.id]; });
-    push(['本日のキャンセル　' + cxs.length + '件'], { bold: true, size: 12, bg: cxs.length ? COLORS.LATE : '#eeeeee', fc: cxs.length ? '#b42318' : '#555555' });
-    if (cxs.length) {
+    var evs = (t.events || []).filter(function (e) { return byId[e.id]; });
+    var nOf = function (k, fallback) { return t.events ? evs.filter(function (e) { return e.k === k; }).length : fallback; };
+    var nAdd = nOf('新規', t.added), nCx = nOf('キャンセル', t.cancelled), nCh = nOf('変更', t.changed), nHeld = nOf('要確認', t.held);
+    push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
+    push(['新規 ' + nAdd + '件', 'キャンセル ' + nCx + '件', '変更 ' + nCh + '件', nHeld ? '要確認 ' + nHeld + '件' : ''], {
+      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: nCx ? COLORS.LATE : '#eeeeee' }, 2: { bg: nCh ? COLORS.SOON : '#eeeeee' }, 3: { bg: nHeld ? COLORS.LATE : COLORS.WHITE } }
+    });
+
+    if (evs.length) {
+      var order = { 'キャンセル': 0, '要確認': 1, '変更': 2, 'キャンセル取り消し': 3, '新規': 4 };
+      evs.sort(function (a, b) { return order[a.k] - order[b.k]; });
       var se = out.length + 1;
-      push(['取込', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
-      cxs.forEach(function (e) {
-        var c = byId[e.id];
-        var st = c._d.step === 'cxdone' ? (truthy_(c[H.ACCEPT]) ? 'キャンセル済み（リール様 確認済み）' : 'キャンセル済み（受注前）') : 'リール様の確認待ち';
-        push([e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''),
-          String(c[H.GUIDE] || ''), st, link(c)], { cells: { 6: { bg: c._d.step === 'cxdone' ? COLORS.DONE : '#f4cccc', bold: c._d.step !== 'cxdone' } } });
+      push(['本日のお知らせ', '取込', 'ツアー', '催行日・開始', '人数', '経路', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+      evs.forEach(function (e) {
+        var c = byId[e.id], kc = e.k === 'キャンセル' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : e.k === '要確認' ? COLORS.LATE : COLORS.SOON;
+        var st = c._d.st + (e.k === 'キャンセル' && c._d.step === 'cxdone' && !truthy_(c[H.ACCEPT]) ? '（受注前なので対応不要）' : '');
+        push([e.k, e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), st, link(c)],
+          { cells: { 0: { bg: kc, bold: true }, 6: { bg: whoColor_(c._d, now) } } });
       });
       tables.push([se, out.length]);
     }
   } else {
     push(['本日の取り込み'], { bold: true, size: 11, fc: '#555555' });
-    push([noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナ様がCSVを取り込みます'], { bold: true, size: 13, fc: noonPassed ? '#b42318' : '#555555' });
+    push([noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナがCSVを取り込みます'], { bold: true, size: 13, fc: noonPassed ? '#b42318' : '#555555' });
   }
   push([''], {});
 
@@ -873,26 +877,42 @@ function renderTodo_(L, cfg, now, list) {
   side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
   side('KIRA', '■ キラナがやること', COLORS.KIRA, COLORS.KIRA_HI);
 
-  // 直近3日のツアー（今日・明日・明後日）：手配の進み具合を日ごとに見る
+  // 直近3日のツアー（今日・明日・明後日）を1つの表に。日ごとに色を交互に変え、手配の状況を色で見せる
   var days = [0, 1, 2].map(function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); });
   var near = list.filter(function (c) { return days.indexOf(toYmd_(c[H.DATE])) >= 0 && c._d.step !== 'cxdone'; });
+  var arrangedSteps = ['guest', 'report', 'receive', 'done'];
   push(['■ 直近3日のツアー　' + near.length + '件'], { bold: true, size: 14, bg: '#d9d9d9' });
-  days.forEach(function (day, n) {
-    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
-    var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
-    var label = ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件　手配済み ' + ready + '／' + tm.length +
-      (n === 1 && tm.length > ready ? '　← 今日' + cfg.arrangeDeadline + 'が手配の期限' : '');
-    push([label], { bold: true, size: 12, bg: '#efefef', fc: n === 1 && tm.length > ready ? '#b42318' : '#1b2440' });
-    if (!tm.length) return;
+  var summary = days.map(function (day, n) {
+    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; });
+    var rd = tm.filter(function (c) { return arrangedSteps.indexOf(c._d.step) >= 0; }).length;
+    return { label: ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件' + (tm.length ? '（手配済み ' + rd + '）' : ''), short: tm.length > rd, n: n };
+  });
+  push([summary[0].label, '', summary[1].label, '', '', summary[2].label], {
+    bold: true, size: 12, cells: {
+      0: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' },
+      2: { bg: summary[1].short ? COLORS.SOON : '#d9ead3', fc: summary[1].short ? '#b42318' : '#1b2440' },
+      5: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' } }
+  });
+  if (summary[1].short) push(['※ 明日のツアーは、今日' + cfg.arrangeDeadline + 'までに全件「手配済み」にしてください'], { fc: '#b42318', bold: true });
+  if (near.length) {
     var s2 = out.length + 1;
-    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f7f7f7', size: 10 });
-    tm.forEach(function (c) {
-      var d = c._d, col = whoColor_(d, now);
-      push([toHm_(c[H.TIME]), d.st, String(c[H.TOUR] || ''), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), d.who || '—', link(c)],
-        { cells: { 1: { bg: col }, 6: { bg: col } } });
+    push(['日付', '開始', 'ツアー', '人数', '経路', 'ガイド', '手配の状況', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    days.forEach(function (day, n) {
+      var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+      var band = n % 2 ? '#f7f9fc' : COLORS.WHITE;
+      tm.forEach(function (c, i) {
+        var d = c._d, ok = arrangedSteps.indexOf(d.step) >= 0;
+        var label = ok ? '手配済み' + (d.step === 'guest' ? '（ゲスト連絡まだ）' : '') :
+          d.step === 'unarranged' ? '未手配・期限切れ' : d.step === 'cxok' ? 'キャンセルが発生しました' :
+          d.step === 'accept' ? '未手配（受注待ち）' : d.step === 'input' ? '入力待ち' : '未手配（手配中）';
+        var col = ok ? '#d9ead3' : (d.step === 'unarranged' || d.step === 'cxok') ? COLORS.LATE : COLORS.REELU;
+        push([i === 0 ? ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) : '', toHm_(c[H.TIME]), String(c[H.TOUR] || ''), paxText_(c),
+          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), label, link(c)],
+          { bg: band, cells: { 0: { bold: true }, 6: { bg: col, bold: !ok } } });
+      });
     });
     tables.push([s2, out.length]);
-  });
+  }
 
   sh.clear();
   var rg = sh.getRange(1, 1, out.length, W);

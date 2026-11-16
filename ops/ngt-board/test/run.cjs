@@ -532,8 +532,20 @@ test('CSVを取り込む画面：同じ種類は1つずつ。結果にはキャ�
   assert.strictEqual(r2.files[0].cancelled.length, 1);
   assert.ok(/NGT-0002/.test(r2.files[0].cancelled[0]));
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /本日のキャンセル　1件/.test(r)), rows.join('\n'));
-  assert.ok(rows.some((r) => /キャンセル済み（受注前）/.test(r)));
+  assert.ok(rows.some((r) => /^キャンセル\|/.test(r) && /受注前なので対応不要/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /^新規\|/.test(r)));
+  assert.ok(rows.some((r) => /^新規 2件\|キャンセル 1件\|変更 0件/.test(r)));
+});
+
+
+test('対応一覧の件数は、台帳に残っている予約で数える（見本を消すと件数も減る）', () => {
+  const env = makeEnv();
+  const b64 = (t) => Buffer.from(t, 'utf8').toString('base64');
+  env.ctx.importUploaded([{ name: 'kiranah-resort-test.csv', b64: b64(HEAD + '\n' + ngtRow('TEST-NGT-0001', '2026-11-18', '17:00', 1) + '\n') }]);
+  env.ctx.importUploaded([{ name: 'kiranah-resort-1.csv', b64: b64(HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-KEEP', '2026-11-19', '17:00', 2) + '\n') }]);
+  env.ctx.clearTest();
+  const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
+  assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件/.test(r)), rows.join('\n'));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));
