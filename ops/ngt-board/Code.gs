@@ -821,13 +821,17 @@ function renderTodo_(L, cfg, now, list) {
   // 本日の取り込み：件数は台帳から数える（取り込みの記録ではなく、いま台帳にある予約で数えるので食い違わない）
   var today = ymd_(now), md = fmtMD_(today);
   var dayOf = function (v) { var d = toDate_(v); return d ? ymd_(d) : ''; };
-  var fromCsv = function (c) { return /CSV$/.test(String(c[H.SRC] || '')); };
-  var added = list.filter(function (c) { return fromCsv(c) && dayOf(c[H.T_CREATED]) === today; });
+  // 新規＝今日台帳に入った予約（CSV・手入力・見本のどれでも）
+  var added = list.filter(function (c) { return dayOf(c[H.T_CREATED]) === today; });
   var changed = list.filter(function (c) { return String(c[H.NOTE] || '').split('\n').some(function (l) { return l.indexOf(md) === 0 && l.indexOf('変更：') >= 0; }); });
   var cancelled = list.filter(function (c) { return c[H.T_CX] && (dayOf(c[H.T_CX]) === today || c._d.step === 'cxok'); });
   var held = list.filter(function (c) { return String(c[H.NOTE]).indexOf(md) >= 0 && String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') >= 0 && !c[H.T_CX]; });
   var nCxToday = cancelled.filter(function (c) { return dayOf(c[H.T_CX]) === today; }).length;
-  push(['本日の取り込み' + (t ? '（' + t.files.join('・') + '）' : (noonPassed ? '：まだ取り込まれていません' : '：12:00 にキラナがCSVを取り込みます'))],
+  // CSVの取り込み時刻は、種類ごとに最後の1回だけ出す
+  var lastBySrc = {};
+  (t ? t.files : []).forEach(function (f) { var p = String(f).split(' '); lastBySrc[p[0]] = p[1]; });
+  var imp = Object.keys(lastBySrc).sort().map(function (k) { return k + ' ' + lastBySrc[k]; }).join('・');
+  push(['本日の予約　（CSVの取り込み：' + (imp || (noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナが取り込みます')) + '）'],
     { bold: true, size: 11, fc: !t && noonPassed ? '#b42318' : '#555555' });
   push(['新規 ' + added.length + '件', '', 'キャンセル ' + nCxToday + '件', '変更 ' + changed.length + '件', held.length ? '要確認 ' + held.length + '件' : ''], {
     bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: '#d9ead3' }, 2: { bg: nCxToday ? COLORS.LATE : '#eeeeee' }, 3: { bg: changed.length ? COLORS.SOON : '#eeeeee' }, 4: { bg: held.length ? COLORS.LATE : COLORS.WHITE } }
@@ -1540,15 +1544,15 @@ function seedTest() {
       { id: 'TEST-03', d: 2, t: '18:00', tour: '浅草ナイト', a: 2, k: 1, route: 'Viator', name: '見本 C', accept: 20, arrange: 5, guide: 'ガイドA（見本）' },
       { id: 'TEST-04', d: -1, t: '17:00', tour: 'ゴールデン街ナイト', a: 3, route: '公式直販', name: '見本 D', accept: 50, arrange: 40, guest: 30, guide: 'ガイドB（見本）' },
       { id: 'TEST-05', d: -2, t: '11:00', tour: 'ハンコ作り', a: 1, route: 'Klook', name: '見本 E', accept: 80, arrange: 70, guest: 60, guide: 'ガイドC（見本）', report: 40 },
-      { id: 'TEST-06', d: 0, t: '21:00', tour: '秘境神社 Ninja Walk', a: 2, route: 'GetYourGuide', name: '見本 F' },
+      { id: 'TEST-06', d: 0, t: '21:00', tour: '秘境神社 Ninja Walk', a: 2, route: 'GetYourGuide', name: '見本 F', created: 30 },
       { id: 'TEST-07', d: 4, t: '17:30', tour: '新宿二丁目 LGBTQ+', a: 2, route: '公式直販', name: '見本 G', accept: 3, cancel: 1 },
-      { id: 'TEST-08', d: 5, t: '11:00', tour: '合羽橋', a: 2, route: 'Klook', name: '見本 H', cancel: 2 }
+      { id: 'TEST-08', d: 5, t: '11:00', tour: '合羽橋', a: 2, route: 'Klook', name: '見本 H', cancel: 2, created: 3 }
     ];
     samples.forEach(function (x) {
       var c = {};
       c[H.ID] = x.id; c[H.DATE] = day(x.d); c[H.TIME] = x.t; c[H.TOUR] = x.tour; c[H.ADULT] = x.a; c[H.CHILD] = x.k || '';
       c[H.NAME] = x.name + '（見本）'; c[H.CONTACT] = 'sample@example.com'; c[H.ROUTE] = x.route; c[H.MEMO] = 'テスト用の見本です';
-      c[H.BOOKING] = 'TEST-' + x.id.slice(5); c[H.SRC] = 'テスト'; c[H.T_CREATED] = x.accept ? ago(x.accept + 1) : now;
+      c[H.BOOKING] = 'TEST-' + x.id.slice(5); c[H.SRC] = 'テスト'; c[H.T_CREATED] = x.created ? ago(x.created) : x.accept ? ago(x.accept + 1) : now;
       if (x.guide) c[H.GUIDE] = x.guide;
       if (x.accept) { c[H.ACCEPT] = true; c[H.T_ACCEPT] = ago(x.accept); }
       if (x.arrange) { c[H.ARRANGE] = true; c[H.T_ARRANGE] = ago(x.arrange); }
