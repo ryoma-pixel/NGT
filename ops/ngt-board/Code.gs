@@ -561,8 +561,10 @@ function tours_() {
 // 台帳を読む。案件IDがなくても、人が書きかけた行（手入力の予約）は拾う
 function ledger_() {
   var sh = ss_().getSheetByName(SHEETS.LEDGER);
+  if (!sh) throw new Error('「台帳」のシートがありません。先に関数「setup」を実行してください。');
   var values = sh.getDataRange().getValues();
   var head = values[0].map(String);
+  if (head.indexOf(H.WHO) < 0) throw new Error('台帳が第2版の形になっていません。先に関数「setup」を実行してください。');
   var rows = [];
   for (var r = 1; r < values.length; r++) {
     var o = { _row: r + 1 };
