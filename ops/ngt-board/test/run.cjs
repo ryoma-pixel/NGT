@@ -276,7 +276,7 @@ test('ボタン（✓）で進む：②に✓すると①も付く → ③ → �
   assert.strictEqual(env.derive(env.caseBy('ARS_NINJAGORIDE-20261116-EEEE')).st, '完了');
 });
 
-test('前日20時に未手配ならキラナとリールに1回だけ知らせ、キラナのキャンセル対応で閉じる', () => {
+test('前日20時に未手配ならキラナとリールに1回だけ知らせる（台帳では期限切れの手配としてリールに残る）', () => {
   const env = makeEnv();
   env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-FFFF', '2026-11-18', '17:00', 1) + '\n');
   env.at('2026-11-16T13:20');
@@ -284,18 +284,19 @@ test('前日20時に未手配ならキラナとリールに1回だけ知らせ�
   env.at('2026-11-17T20:05');
   env.mails.length = 0;
   env.ctx.poll();
-  let c = env.caseBy('ARS_NINJAGORIDE-20261116-FFFF');
+  const c = env.caseBy('ARS_NINJAGORIDE-20261116-FFFF');
   assert.strictEqual(env.derive(c).st, '未手配（期限切れ）');
-  assert.strictEqual(env.derive(c).who, 'キラナ');
+  assert.strictEqual(env.derive(c).who, 'リール');
   assert.strictEqual(env.mails.length, 1);
   assert.ok(/未手配/.test(env.mails[0].subject));
   assert.ok(/kira@example.com/.test(env.mails[0].to) && /reelu@example.com/.test(env.mails[0].to));
+  assert.ok(!/キャンセル対応/.test(env.mails[0].body));
   env.at('2026-11-17T20:15');
   env.ctx.poll();
   assert.strictEqual(env.mails.length, 1, '同じ段階では2回送らない');
-  env.edit(c._row, 'キャンセル対応（キラナ）', true);
-  c = env.caseBy('ARS_NINJAGORIDE-20261116-FFFF');
-  assert.strictEqual(env.derive(c).st, 'キャンセル（リール確認待ち）');
+  const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
+  assert.ok(rows.some((r) => /ガイドを手配してください　1件/.test(r)));
+  assert.ok(!rows.some((r) => /キャンセル対応/.test(r)));
 });
 
 test('受注の期限切れ（14:00）を通知。夜間は送らない', () => {
@@ -531,8 +532,8 @@ test('CSVを取り込む画面：同じ種類は1つずつ。結果にはキャ�
   assert.strictEqual(r2.files[0].cancelled.length, 1);
   assert.ok(/NGT-0002/.test(r2.files[0].cancelled[0]));
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
-  assert.ok(rows.some((r) => /^キャンセル\|/.test(r) && /受注前なので対応不要/.test(r)), rows.join('\n'));
-  assert.ok(rows.some((r) => /^新規\|/.test(r)));
+  assert.ok(rows.some((r) => /本日のキャンセル　1件/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /キャンセル済み（受注前）/.test(r)));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

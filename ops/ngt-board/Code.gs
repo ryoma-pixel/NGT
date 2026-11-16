@@ -11,7 +11,7 @@
  *        → 新しい予約は「新規（リールの受注待ち）」、CSV から消えた予約は「キャンセル」として台帳に出る
  *  13:00 リールが「対応一覧」を見て、新規に ①受注 ✓ → ガイドを手配して ②手配完了 ✓
  *        → ガイドがゲストと連絡できたら ③ゲスト連絡 ✓
- *  前日20:00 までに翌日分の手配を終える。過ぎたら、キラナとリールに通知（原則キラナでキャンセル対応）
+ *  前日20:00 までに翌日分の手配を終える。過ぎたら、キラナとリールに通知（キャンセルの手続きは手配ボードの外で行う）
  *  ツアー後 ガイドが ④完了報告フォーム（チェック項目・アンケート）を送る → キラナが ⑤受領 ✓ で完了
  *  メール・インフルエンサーの予約は、台帳の空いている行にキラナが手で書く（経路を選ぶ）
  *
@@ -29,7 +29,7 @@ var H = {
   ROUTE: '経路', MEMO: 'メモ', GUIDE: 'ガイド名',
   ACCEPT: '①受注（リール）', ARRANGE: '②手配完了（リール）', GUEST: '③ゲスト連絡（リール・ガイド）',
   REPORT: '④完了報告（ガイド）', RECEIVE: '⑤受領（キラナ）',
-  CXOK: 'キャンセル確認（リール）', CXKIRA: 'キャンセル対応（キラナ）',
+  CXOK: 'キャンセル確認（リール）', CXKIRA: 'キャンセル対応（キラナ）',   // CXKIRA は第2版の途中で廃止（初期設定で列を消す）
   NOTE: '変更・注意',
   BOOKING: '予約番号', AGENT: '代理店予約番号', PLAN: 'PLAN名', SRC: '取込元',
   T_CREATED: '登録日時', T_ACCEPT: '受注日時', T_ARRANGE: '手配日時', T_GUEST: '連絡日時', T_REPORT: '報告日時',
@@ -40,7 +40,7 @@ var H = {
 var LEDGER_HEADERS = [
   H.ID, H.WHO, H.TODO, H.DUE, H.ST,
   H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO, H.GUIDE,
-  H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA, H.NOTE,
+  H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.NOTE,
   H.BOOKING, H.AGENT, H.PLAN, H.SRC,
   H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST, H.T_REPORT, H.T_RECEIVE, H.T_CX, H.CX_REASON, H.T_CXOK,
   H.ALERTED, H.REPORT_SUM
@@ -52,8 +52,7 @@ var CHECKS = [
   { col: H.ARRANGE, stamp: H.T_ARRANGE, implies: [H.ACCEPT] },
   { col: H.GUEST, stamp: H.T_GUEST, implies: [H.ACCEPT, H.ARRANGE] },
   { col: H.RECEIVE, stamp: H.T_RECEIVE, implies: [] },
-  { col: H.CXOK, stamp: H.T_CXOK, implies: [] },
-  { col: H.CXKIRA, stamp: null, implies: [] }
+  { col: H.CXOK, stamp: H.T_CXOK, implies: [] }
 ];
 // スクリプトが書く列（人は触らない）
 var AUTO_COLS = [H.ID, H.WHO, H.TODO, H.DUE, H.ST, H.NOTE, H.SRC, H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST,
@@ -63,7 +62,7 @@ var FORMULA_COLS = [H.REPORT];
 
 // 見出しの表示（チェック欄は「だれが」を2行目に。読むときは改行を外してキーにする）
 function dispHeader_(h) {
-  return [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].indexOf(h) >= 0 ? h.replace('（', '\n（') : h;
+  return [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK].indexOf(h) >= 0 ? h.replace('（', '\n（') : h;
 }
 
 var WHO = { REELU: 'リール', KIRA: 'キラナ', GUIDE: 'ガイド' };
@@ -101,7 +100,7 @@ var SETTING_DEFAULTS = [
   ['リールの通知先', '', 'リールの担当者・共有アドレス。複数はカンマ区切り'],
   ['リールの確認時刻', '13:00', 'リールが毎日台帳を見る時刻'],
   ['受注の猶予（分）', '60', '確認時刻からこの時間までに ①受注 がなければ通知'],
-  ['手配の期限（前日の時刻）', '20:00', 'この時刻までに翌日分の ②手配完了 がなければ通知（原則キラナでキャンセル対応）'],
+  ['手配の期限（前日の時刻）', '20:00', 'この時刻までに翌日分の ②手配完了 がなければ、キラナとリールに通知'],
   ['手配の目安（何日前）', '3', 'これより前に入った予約は、催行のこの日数前の手配の期限の時刻を「目安」にする（過ぎると黄色・19時のお知らせに入る）。0で使わない'],
   ['手配の事前確認（時刻）', '19:00', '翌日分に未手配があれば、この時刻にキラナとリールへ知らせる'],
   ['ゲスト連絡の期限（開始の何時間前）', '3', '仮置き。打ち合わせで決まったら直す'],
@@ -320,11 +319,11 @@ function derive_(c, cfg, now) {
   var accepted = truthy_(c[H.ACCEPT]), arranged = truthy_(c[H.ARRANGE]), guested = truthy_(c[H.GUEST]);
   var r = { st: '', who: '', todo: '', due: null, step: '' };
 
-  if (c[H.T_CX] || truthy_(c[H.CXKIRA])) {
+  if (c[H.T_CX]) {
     if ((accepted || arranged) && !truthy_(c[H.CXOK])) {
       var cx = toDate_(c[H.T_CX]) || now;
       return { st: 'キャンセル（リール確認待ち）', who: WHO.REELU, step: 'cxok',
-        todo: 'キャンセルをガイドに伝えてください',
+        todo: 'キャンセルが発生しました',
         due: new Date(cx.getTime() + cfg.cxHours * H_MS) };
     }
     return { st: 'キャンセル済み', who: '', todo: '', due: null, step: 'cxdone' };
@@ -352,8 +351,8 @@ function derive_(c, cfg, now) {
   }
   var arrangeDue = dayAt_(ymd, -1, cfg.arrangeDeadline);
   if (now.getTime() >= arrangeDue.getTime()) {
-    return { st: '未手配（期限切れ）', who: WHO.KIRA, step: 'unarranged', due: arrangeDue,
-      todo: '未手配です。キャンセル対応してください' };
+    return { st: '未手配（期限切れ）', who: WHO.REELU, step: 'unarranged', due: arrangeDue,
+      todo: 'ガイドを手配してください（期限切れ）' };
   }
   // 手配の目安：余裕のある予約は「催行の◯日前」を目安にする（期限ではないので、キャンセルにはしない）
   var soft = cfg.softDays > 0 ? dayAt_(ymd, -cfg.softDays, cfg.arrangeDeadline) : null;
@@ -490,7 +489,7 @@ function importCsv_(fileName, text, L, cfg, tours, now) {
     }
     // CSV から一度消えてキャンセル扱いにした予約が、また載っていたら戻す
     if (c[H.T_CX] && /^CSVに載っていない/.test(String(c[H.CX_REASON]))) {
-      c[H.T_CX] = ''; c[H.CX_REASON] = ''; c[H.CXKIRA] = false;
+      c[H.T_CX] = ''; c[H.CX_REASON] = '';
       addNote_(c, stamp + ' CSVに再び載ったため、キャンセルを取り消しました');
       saveCase_(L, c); res.restored.push(c);
     }
@@ -647,10 +646,7 @@ function applyCheck_(c, colName, now, user) {
   CHECKS.forEach(function (d) { if (d.col === colName) def = d; });
   if (!def) return false;
   var on = truthy_(c[colName]);
-  if (colName === H.CXKIRA) {
-    if (on && !c[H.T_CX]) cancelCase_(c, now, 'キラナでキャンセル対応');
-    if (!on && c[H.CX_REASON] === 'キラナでキャンセル対応') { c[H.T_CX] = ''; c[H.CX_REASON] = ''; addNote_(c, fmtDT_(now) + ' キラナのキャンセル対応を取り消し'); }
-  } else if (on) {
+  if (on) {
     if (!c[def.stamp]) c[def.stamp] = now;
     def.implies.forEach(function (k) {
       if (!truthy_(c[k])) {
@@ -687,7 +683,7 @@ function whoHi_(who, late) {
 // 段階ごとに「次に押すチェック欄」（台帳ではこの欄に色を付ける）
 var STEP_COLS = {
   accept: [H.ACCEPT], arrange: [H.ARRANGE, H.GUIDE], guest: [H.GUEST], report: [H.REPORT], receive: [H.RECEIVE],
-  cxok: [H.CXOK], unarranged: [H.CXKIRA, H.ARRANGE]
+  cxok: [H.CXOK], unarranged: [H.ARRANGE, H.GUIDE]
 };
 
 // 「あと1時間20分」「45分 過ぎ」
@@ -711,7 +707,7 @@ function refreshAll_(L, cfg, now) {
   if (last < 2) return [];
   var byRow = {};
   L.rows.forEach(function (c) { byRow[c._row] = c; });
-  var span = colOf_(L, H.CXKIRA);            // A列〜「キャンセル対応（キラナ）」まで色を付ける
+  var span = colOf_(L, H.CXOK);              // A列〜「キャンセル確認（リール）」まで色を付ける
   var vals = [], bgs = [], fcs = [], fls = [], list = [];
   for (var r = 2; r <= last; r++) {
     var c = byRow[r];
@@ -762,14 +758,13 @@ function paxText_(c) {
 var TASKS = {
   REELU: [
     { step: 'accept', title: '受注してください' },
-    { step: 'arrange', title: 'ガイドを手配してください' },
+    { step: 'arrange', title: 'ガイドを手配してください', also: ['unarranged'] },
     { step: 'guest', title: 'ゲストに連絡してください（ガイドが連絡しても可）' },
     { step: 'report', title: 'ガイドに完了報告を送ってもらってください' },
-    { step: 'cxok', title: 'キャンセルをガイドに伝えてください' }
+    { step: 'cxok', title: 'キャンセルが発生しました' }
   ],
   KIRA: [
     { step: 'import', title: '今日のCSVを取り込んでください' },
-    { step: 'unarranged', title: '未手配です。キャンセル対応してください' },
     { step: 'input', title: '手入力の予約に、足りない項目を入れてください' },
     { step: 'receive', title: '完了報告を読んで、受領してください' },
     { step: 'held', title: 'CSVに載っていない予約を確認してください' }
@@ -814,9 +809,10 @@ function renderTodo_(L, cfg, now, list) {
   });
   var t = todayImport_(now);
   var noonPassed = minOfDay_(now) >= hmToMin_(cfg.checkTime) - 30;   // 12:30 を過ぎても取り込みがなければ知らせる
-  var count = function (side) { return TASKS[side].reduce(function (n, g) { return n + (g.step === 'import' ? (!t && noonPassed ? 1 : 0) : (groups[g.step] || []).length); }, 0); };
+  var itemsOf = function (g) { var a = (groups[g.step] || []).slice(); (g.also || []).forEach(function (st) { a = a.concat(groups[st] || []); }); return a; };
+  var count = function (side) { return TASKS[side].reduce(function (n, g) { return n + (g.step === 'import' ? (!t && noonPassed ? 1 : 0) : itemsOf(g).length); }, 0); };
   var lateIn = function (side) {
-    return TASKS[side].reduce(function (n, g) { return n + (groups[g.step] || []).filter(function (c) { return isOverdue_(c._d, now); }).length; }, 0);
+    return TASKS[side].reduce(function (n, g) { return n + itemsOf(g).filter(function (c) { return isOverdue_(c._d, now); }).length; }, 0);
   };
 
   push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
@@ -826,20 +822,19 @@ function renderTodo_(L, cfg, now, list) {
     push(['新規 ' + t.added + '件', 'キャンセル ' + t.cancelled + '件', '変更 ' + t.changed + '件', t.held ? '要確認 ' + t.held + '件' : ''], {
       bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: t.cancelled ? COLORS.LATE : '#eeeeee' }, 2: { bg: t.changed ? COLORS.SOON : '#eeeeee' }, 3: { bg: t.held ? COLORS.LATE : COLORS.WHITE } }
     });
-    // 本日のお知らせ：どの予約が新規・キャンセル・変更になったか
+    // 本日のキャンセル：どの予約がキャンセルになったか
     var byId = {};
     list.forEach(function (c) { byId[String(c[H.ID])] = c; });
-    var evs = (t.events || []).filter(function (e) { return byId[e.id]; });
-    if (evs.length) {
-      var order = { 'キャンセル': 0, '要確認': 1, '変更': 2, 'キャンセル取り消し': 3, '新規': 4 };
-      evs.sort(function (a, b) { return order[a.k] - order[b.k]; });
+    var cxs = (t.events || []).filter(function (e) { return e.k === 'キャンセル' && byId[e.id]; });
+    push(['本日のキャンセル　' + cxs.length + '件'], { bold: true, size: 12, bg: cxs.length ? COLORS.LATE : '#eeeeee', fc: cxs.length ? '#b42318' : '#555555' });
+    if (cxs.length) {
       var se = out.length + 1;
-      push(['本日のお知らせ', '取込', 'ツアー', '催行日・開始', '人数', '経路', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
-      evs.forEach(function (e) {
-        var c = byId[e.id], kc = e.k === 'キャンセル' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : e.k === '要確認' ? COLORS.LATE : COLORS.SOON;
-        var st = c._d.st + (e.k === 'キャンセル' && c._d.step === 'cxdone' && !truthy_(c[H.ACCEPT]) ? '（受注前なので対応不要）' : '');
-        push([e.k, e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), st, link(c)],
-          { cells: { 0: { bg: kc, bold: true }, 6: { bg: whoColor_(c._d, now) } } });
+      push(['取込', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+      cxs.forEach(function (e) {
+        var c = byId[e.id];
+        var st = c._d.step === 'cxdone' ? (truthy_(c[H.ACCEPT]) ? 'キャンセル済み（リール様 確認済み）' : 'キャンセル済み（受注前）') : 'リール様の確認待ち';
+        push([e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''),
+          String(c[H.GUIDE] || ''), st, link(c)], { cells: { 6: { bg: c._d.step === 'cxdone' ? COLORS.DONE : '#f4cccc', bold: c._d.step !== 'cxdone' } } });
       });
       tables.push([se, out.length]);
     }
@@ -858,7 +853,7 @@ function renderTodo_(L, cfg, now, list) {
         if (!t && noonPassed) { push([g.title], { bold: true, size: 12, bg: color }); push([''], {}); }
         return;
       }
-      var items = (groups[g.step] || []).sort(byDue);
+      var items = itemsOf(g).sort(byDue);
       if (!items.length) return;
       push([g.title + '　' + items.length + '件'], { bold: true, size: 12, bg: color });
       var start = out.length + 1;
@@ -878,42 +873,26 @@ function renderTodo_(L, cfg, now, list) {
   side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
   side('KIRA', '■ キラナがやること', COLORS.KIRA, COLORS.KIRA_HI);
 
-  // 直近3日のツアー（今日・明日・明後日）を1つの表に。日ごとに色を交互に変え、手配の状況を色で見せる
+  // 直近3日のツアー（今日・明日・明後日）：手配の進み具合を日ごとに見る
   var days = [0, 1, 2].map(function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); });
   var near = list.filter(function (c) { return days.indexOf(toYmd_(c[H.DATE])) >= 0 && c._d.step !== 'cxdone'; });
-  var arrangedSteps = ['guest', 'report', 'receive', 'done'];
   push(['■ 直近3日のツアー　' + near.length + '件'], { bold: true, size: 14, bg: '#d9d9d9' });
-  var summary = days.map(function (day, n) {
-    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; });
-    var rd = tm.filter(function (c) { return arrangedSteps.indexOf(c._d.step) >= 0; }).length;
-    return { label: ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件' + (tm.length ? '（手配済み ' + rd + '）' : ''), short: tm.length > rd, n: n };
-  });
-  push([summary[0].label, '', summary[1].label, '', '', summary[2].label], {
-    bold: true, size: 12, cells: {
-      0: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' },
-      2: { bg: summary[1].short ? COLORS.SOON : '#d9ead3', fc: summary[1].short ? '#b42318' : '#1b2440' },
-      5: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' } }
-  });
-  if (summary[1].short) push(['※ 明日のツアーは、今日' + cfg.arrangeDeadline + 'までに全件「手配済み」にしてください'], { fc: '#b42318', bold: true });
-  if (near.length) {
+  days.forEach(function (day, n) {
+    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+    var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
+    var label = ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件　手配済み ' + ready + '／' + tm.length +
+      (n === 1 && tm.length > ready ? '　← 今日' + cfg.arrangeDeadline + 'が手配の期限' : '');
+    push([label], { bold: true, size: 12, bg: '#efefef', fc: n === 1 && tm.length > ready ? '#b42318' : '#1b2440' });
+    if (!tm.length) return;
     var s2 = out.length + 1;
-    push(['日付', '開始', 'ツアー', '人数', '経路', 'ガイド', '手配の状況', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
-    days.forEach(function (day, n) {
-      var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
-      var band = n % 2 ? '#f7f9fc' : COLORS.WHITE;
-      tm.forEach(function (c, i) {
-        var d = c._d, ok = arrangedSteps.indexOf(d.step) >= 0;
-        var label = ok ? '手配済み' + (d.step === 'guest' ? '（ゲスト連絡まだ）' : '') :
-          d.step === 'unarranged' ? '未手配・期限切れ' : d.step === 'cxok' ? 'キャンセル（ガイドに連絡を）' :
-          d.step === 'accept' ? '未手配（受注待ち）' : d.step === 'input' ? '入力待ち' : '未手配（手配中）';
-        var col = ok ? '#d9ead3' : (d.step === 'unarranged' || d.step === 'cxok') ? COLORS.LATE : COLORS.REELU;
-        push([i === 0 ? ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) : '', toHm_(c[H.TIME]), String(c[H.TOUR] || ''), paxText_(c),
-          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), label, link(c)],
-          { bg: band, cells: { 0: { bold: true }, 6: { bg: col, bold: !ok } } });
-      });
+    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f7f7f7', size: 10 });
+    tm.forEach(function (c) {
+      var d = c._d, col = whoColor_(d, now);
+      push([toHm_(c[H.TIME]), d.st, String(c[H.TOUR] || ''), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), d.who || '—', link(c)],
+        { cells: { 1: { bg: col }, 6: { bg: col } } });
     });
     tables.push([s2, out.length]);
-  }
+  });
 
   sh.clear();
   var rg = sh.getRange(1, 1, out.length, W);
@@ -997,7 +976,7 @@ function alertOverdue_(L, cfg, now, list) {
   var unarranged = hits.filter(function (c) { return c._d.step === 'unarranged'; });
   var lines = ['期限を過ぎた案件があります。台帳の「対応一覧」で確認してください。', ''];
   if (unarranged.length) {
-    lines.push('▼ 前日' + cfg.arrangeDeadline + 'までに手配できていない（原則キラナでキャンセル対応）');
+    lines.push('▼ 前日' + cfg.arrangeDeadline + 'を過ぎても手配できていない');
     unarranged.forEach(function (c) { lines.push(caseLine_(c)); });
     lines.push('');
   }
@@ -1436,7 +1415,7 @@ function eveningCheck() {
   if (!hard.length && !soft.length) return;
   var lines = [];
   if (hard.length) {
-    lines.push('▼ 明日（' + fmtMD_(tomorrow) + '）のツアーで未手配 ' + hard.length + '件。今日' + cfg.arrangeDeadline + 'が期限です（過ぎたら原則キラナでキャンセル対応）');
+    lines.push('▼ 明日（' + fmtMD_(tomorrow) + '）のツアーで未手配 ' + hard.length + '件。今日' + cfg.arrangeDeadline + 'が期限です');
     hard.forEach(function (c) { lines.push(caseLine_(c)); });
     lines.push('');
   }
@@ -1595,12 +1574,12 @@ function writeTestGuide_() {
     ['4', 'リール・ガイド', 'TEST-03（ゲストに連絡してください）の色の付いた欄（③ゲスト連絡）に✓。ガイドが付けてもよい', '「ガイドに完了報告を送ってもらってください」に移る（ツアーの後に出る）'],
     ['5', 'ガイド', 'TEST-04（ツアー済み）の台帳④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', 'キラナ様の「完了報告を読んで、受領してください」に移る。「合流できなかった」を選ぶと【至急】メールが届く'],
     ['6', 'キラナ', 'TEST-05 の「報告の要約」を読み、色の付いた欄（⑤受領）に✓', '行が灰色になり「完了」'],
-    ['7', 'キラナ', 'TEST-06（未手配です。キャンセル対応してください）の色の付いた欄（キャンセル対応）に✓', '「キャンセル済み」になる'],
-    ['8', 'リール', 'TEST-07（受注した後にキャンセル）の色の付いた欄（キャンセル確認）に✓', '「キャンセル済み」になる。TEST-08 は受注前のキャンセルなので、はじめから「キャンセル済み」（だれも何もしなくてよい）'],
+    ['7', 'リール', 'TEST-06（今日のツアーで、前日20時を過ぎても未手配）を見る。赤い「期限切れ」で出ている。手配できたらガイド名を入れて ②手配完了 に✓', '「ゲストに連絡してください」に移る。※キャンセルの手続きは手配ボードの外で行い、CSVから消えると「キャンセルが発生しました」に出る'],
+    ['8', 'リール', 'TEST-07（キャンセルが発生しました）を確認し、色の付いた欄（キャンセル確認）に✓', '対応一覧から消え、台帳は灰色＋取り消し線になる。TEST-08 は受注前のキャンセルなので、はじめから「キャンセル済み」（だれも何もしなくてよい）'],
     ['9', 'キラナ', 'メニュー「予約を手入力する」で、経路「インフルエンサー」・催行日・開始・ツアー・人数・代表者名を入れて登録', '案件ID（NGT-…）が付き、リール様の「受注してください」に出る。※見本ではないので、試した後は台帳の行ごと削除'],
     ['10', 'キラナ', 'メニュー「CSVを取り込む」で、テスト用のCSV（kiranah-resort-test.csv と tryhard-test.csv）を選ぶ', '本日の取り込みに「新規 3件」。NKTはセット商品の1件だけ、時刻は19:30で入る'],
     ['11', 'リール', '取り込まれた「見本 I（テスト）」（11/18 秘境神社）を受注する', '「ガイドを手配してください」に移る'],
-    ['12', 'キラナ', 'メニュー「CSVを取り込む」で、kiranah-resort-test-cancel.csv を選ぶ（見本 I が載っていないCSV＝キャンセルされた想定）', '見本 I が「キャンセルをガイドに伝えてください」に出て、本日の取り込みに「キャンセル 1件」。お知らせメールも届く'],
+    ['12', 'キラナ', 'メニュー「CSVを取り込む」で、kiranah-resort-test-cancel.csv だけを選ぶ（見本 I が載っていないCSV＝キャンセルされた想定）', '取り込み画面に「キャンセルになった予約」として見本 I が出る。対応一覧の「本日のキャンセル」と、リール様の「キャンセルが発生しました」に出る。お知らせメールも届く'],
     ['13', 'リール', '見本 I の色の付いた欄（キャンセル確認）に✓', '「キャンセル済み」になる'],
     ['14', 'みんな', '終わったら、メニュー「テスト：見本の予約を消す」', '見本（TEST-…）と、このシートが消える'],
     ['', '', '※ 見本は、✓を付けるなどして触るまでは期限切れの通知を送りません。触ったあとは本番と同じように、通知先（いまはご本人だけ）にメールが届きます。テスト用CSVは見本どうしだけで照らし合わせるので、本物の予約がキャンセル扱いになることはありません。', '']
@@ -1689,6 +1668,15 @@ function setup() {
   todo.setColumnWidths(1, 1, 150).setColumnWidth(2, 380).setColumnWidths(3, 7, 110);
 
   var led = ss.getSheetByName(SHEETS.LEDGER) || ss.insertSheet(SHEETS.LEDGER, 1);
+  // 廃止した列（キャンセル対応（キラナ））が残っていれば、列ごと消す（ほかの列の位置を見出しとそろえるため）
+  if (led.getLastColumn() > 0) {
+    var hd = led.getRange(1, 1, 1, led.getLastColumn()).getValues()[0].map(function (h) { return String(h).replace(/\n/g, ''); });
+    var gone = hd.indexOf(H.CXKIRA);
+    if (gone >= 0) {
+      led.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(function (p) { if (/^NGT/.test(p.getDescription())) p.remove(); });
+      led.deleteColumn(gone + 1);
+    }
+  }
   var n = LEDGER_HEADERS.length, rows = led.getMaxRows() - 1;
   var col = function (name) { return LEDGER_HEADERS.indexOf(name) + 1; };
   led.getRange(1, 1, 1, n).setValues([LEDGER_HEADERS.map(dispHeader_)]);
@@ -1697,7 +1685,7 @@ function setup() {
   led.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#ffffff').setBackground('#6b7280').setWrap(true).setVerticalAlignment('middle');
   [H.ACCEPT, H.ARRANGE, H.CXOK, H.GUIDE].forEach(function (h) { led.getRange(1, col(h)).setBackground('#c2560c'); });
   led.getRange(1, col(H.GUEST)).setBackground('#3d8a94');
-  [H.RECEIVE, H.CXKIRA].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1d4ed8'); });
+  led.getRange(1, col(H.RECEIVE)).setBackground('#1d4ed8');
   led.getRange(1, col(H.REPORT)).setBackground('#15803d');
   [H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1f2d52'); });
   led.setRowHeight(1, 48);
@@ -1715,13 +1703,13 @@ function setup() {
     led.getRange(2, col(h), rows, 1).setNumberFormat('m/d(ddd) hh:mm');
   });
   var cb = SpreadsheetApp.newDataValidation().requireCheckbox().build();
-  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setDataValidation(cb); });
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK].forEach(function (h) { led.getRange(2, col(h), rows, 1).setDataValidation(cb); });
   led.getRange(2, col(H.ROUTE), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ROUTE_CHOICES, true).setAllowInvalid(true).build());
   var widths = {}; widths[H.ID] = 95; widths[H.WHO] = 95; widths[H.TODO] = 260; widths[H.DUE] = 125; widths[H.ST] = 175;
   widths[H.DATE] = 100; widths[H.TIME] = 60; widths[H.TOUR] = 180; widths[H.ADULT] = 55; widths[H.CHILD] = 60; widths[H.NAME] = 160;
   widths[H.CONTACT] = 200; widths[H.ROUTE] = 160; widths[H.MEMO] = 200; widths[H.GUIDE] = 120; widths[H.NOTE] = 280; widths[H.REPORT_SUM] = 360;
-  [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { widths[h] = 92; });
-  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setHorizontalAlignment('center'); });
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK].forEach(function (h) { widths[h] = 92; });
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK].forEach(function (h) { led.getRange(2, col(h), rows, 1).setHorizontalAlignment('center'); });
   Object.keys(widths).forEach(function (h) { led.setColumnWidth(col(h), widths[h]); });
   led.getRange(2, col(H.TODO), rows, 1).setWrap(true);
   led.getRange(2, col(H.NOTE), rows, 1).setWrap(true);
@@ -1733,12 +1721,11 @@ function setup() {
   notes[H.GUEST] = 'リールかガイド：ゲストと連絡できたら✓（どちらが付けてもよい）';
   notes[H.REPORT] = 'ガイド：ツアー後、このリンクの完了報告フォームを送る（リールからガイドに渡す）';
   notes[H.RECEIVE] = 'キラナ：完了報告を読んだら✓。これで完了';
-  notes[H.CXOK] = 'リール：キャンセルを確認し、手配していたガイドに連絡したら✓';
-  notes[H.CXKIRA] = 'キラナ：未手配などでキャンセル対応をしたら✓（お客様・予約システム側の手続きはキラナで）';
+  notes[H.CXOK] = 'リール：キャンセルが発生したことを確認したら✓（対応一覧から消える）';
   Object.keys(notes).forEach(function (h) { led.getRange(1, col(h)).setNote(notes[h]); });
   // 触ってよいのはチェック欄・ガイド名・メモだけ。ほかはロック（共有アカウント＝持ち主だけが編集できる）
   led.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) { if (/^NGT/.test(p.getDescription())) p.remove(); });
-  lockSheet_(led, [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA, H.GUIDE, H.MEMO].map(function (h) { return led.getRange(2, col(h), rows, 1); }));
+  lockSheet_(led, [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.GUIDE, H.MEMO].map(function (h) { return led.getRange(2, col(h), rows, 1); }));
 
   var tours = ss.getSheetByName(SHEETS.TOURS) || ss.insertSheet(SHEETS.TOURS);
   if (tours.getLastRow() === 0) {
