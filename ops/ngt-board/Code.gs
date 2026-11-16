@@ -712,12 +712,12 @@ function refreshAll_(L, cfg, now) {
   var byRow = {};
   L.rows.forEach(function (c) { byRow[c._row] = c; });
   var span = colOf_(L, H.CXKIRA);            // A列〜「キャンセル対応（キラナ）」まで色を付ける
-  var vals = [], bgs = [], fcs = [], list = [];
+  var vals = [], bgs = [], fcs = [], fls = [], list = [];
   for (var r = 2; r <= last; r++) {
     var c = byRow[r];
-    var bg = [], fc = [];
-    for (var k = 0; k < span; k++) { bg.push(COLORS.WHITE); fc.push('#000000'); }
-    if (!c || !c[H.ID]) { vals.push(['', '', '', '']); bgs.push(bg); fcs.push(fc); continue; }
+    var bg = [], fc = [], fl = [];
+    for (var k = 0; k < span; k++) { bg.push(COLORS.WHITE); fc.push('#000000'); fl.push('none'); }
+    if (!c || !c[H.ID]) { vals.push(['', '', '', '']); bgs.push(bg); fcs.push(fc); fls.push(fl); continue; }
     var d = derive_(c, cfg, now);
     c._d = d;
     list.push(c);
@@ -725,6 +725,11 @@ function refreshAll_(L, cfg, now) {
     vals.push([d.who ? (late ? '⚠ ' : '') + d.who : '—', d.todo, d.due || '', d.st]);
     var col = whoColor_(d, now);
     for (k = 0; k < 5; k++) bg[k] = col;
+    var cancelled = d.step === 'cxok' || d.step === 'cxdone';
+    if (cancelled) {                          // キャンセル：日付〜経路に取り消し線
+      for (k = colOf_(L, H.DATE) - 1; k < colOf_(L, H.ROUTE); k++) fl[k] = 'line-through';
+    }
+    if (d.step === 'cxok') for (k = 0; k < 5; k++) bg[k] = isOverdue_(d, now) ? COLORS.LATE : '#f4cccc';
     if (!d.who) {                             // 完了・キャンセル済みは薄く
       for (k = 0; k < span; k++) { bg[k] = COLORS.DONE; fc[k] = COLORS.MUTED; }
     } else {
@@ -736,10 +741,10 @@ function refreshAll_(L, cfg, now) {
         bg[idx] = i === 0 ? (d.step === 'guest' && !late ? COLORS.BOTH_HI : whoHi_(who, late)) : (who === WHO.REELU ? COLORS.REELU : COLORS.KIRA);
       });
     }
-    bgs.push(bg); fcs.push(fc);
+    bgs.push(bg); fcs.push(fc); fls.push(fl);
   }
   L.sh.getRange(2, colOf_(L, H.WHO), vals.length, 4).setValues(vals);
-  L.sh.getRange(2, 1, bgs.length, span).setBackgrounds(bgs).setFontColors(fcs);
+  L.sh.getRange(2, 1, bgs.length, span).setBackgrounds(bgs).setFontColors(fcs).setFontLines(fls);
   return list;
 }
 
@@ -821,6 +826,23 @@ function renderTodo_(L, cfg, now, list) {
     push(['新規 ' + t.added + '件', 'キャンセル ' + t.cancelled + '件', '変更 ' + t.changed + '件', t.held ? '要確認 ' + t.held + '件' : ''], {
       bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: t.cancelled ? COLORS.LATE : '#eeeeee' }, 2: { bg: t.changed ? COLORS.SOON : '#eeeeee' }, 3: { bg: t.held ? COLORS.LATE : COLORS.WHITE } }
     });
+    // 本日のお知らせ：どの予約が新規・キャンセル・変更になったか
+    var byId = {};
+    list.forEach(function (c) { byId[String(c[H.ID])] = c; });
+    var evs = (t.events || []).filter(function (e) { return byId[e.id]; });
+    if (evs.length) {
+      var order = { 'キャンセル': 0, '要確認': 1, '変更': 2, 'キャンセル取り消し': 3, '新規': 4 };
+      evs.sort(function (a, b) { return order[a.k] - order[b.k]; });
+      var se = out.length + 1;
+      push(['本日のお知らせ', '取込', 'ツアー', '催行日・開始', '人数', '経路', 'いまの状態', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+      evs.forEach(function (e) {
+        var c = byId[e.id], kc = e.k === 'キャンセル' ? COLORS.LATE : e.k === '新規' ? '#d9ead3' : e.k === '要確認' ? COLORS.LATE : COLORS.SOON;
+        var st = c._d.st + (e.k === 'キャンセル' && c._d.step === 'cxdone' && !truthy_(c[H.ACCEPT]) ? '（受注前なので対応不要）' : '');
+        push([e.k, e.at, String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), st, link(c)],
+          { cells: { 0: { bg: kc, bold: true }, 6: { bg: whoColor_(c._d, now) } } });
+      });
+      tables.push([se, out.length]);
+    }
   } else {
     push(['本日の取り込み'], { bold: true, size: 11, fc: '#555555' });
     push([noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナ様がCSVを取り込みます'], { bold: true, size: 13, fc: noonPassed ? '#b42318' : '#555555' });
@@ -854,32 +876,48 @@ function renderTodo_(L, cfg, now, list) {
     });
   };
   side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
-  side('KIRA', '■ キラナ様がやること', COLORS.KIRA, COLORS.KIRA_HI);
+  side('KIRA', '■ キラナがやること', COLORS.KIRA, COLORS.KIRA_HI);
 
-  // 直近3日のツアー（今日・明日・明後日）：手配の進み具合を日ごとに見る
+  // 直近3日のツアー（今日・明日・明後日）を1つの表に。日ごとに色を交互に変え、手配の状況を色で見せる
   var days = [0, 1, 2].map(function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); });
   var near = list.filter(function (c) { return days.indexOf(toYmd_(c[H.DATE])) >= 0 && c._d.step !== 'cxdone'; });
+  var arrangedSteps = ['guest', 'report', 'receive', 'done'];
   push(['■ 直近3日のツアー　' + near.length + '件'], { bold: true, size: 14, bg: '#d9d9d9' });
-  days.forEach(function (day, n) {
-    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
-    var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
-    var label = ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件　手配済み ' + ready + '／' + tm.length +
-      (n === 1 && tm.length > ready ? '　← 今日' + cfg.arrangeDeadline + 'が手配の期限' : '');
-    push([label], { bold: true, size: 12, bg: '#efefef', fc: n === 1 && tm.length > ready ? '#b42318' : '#1b2440' });
-    if (!tm.length) return;
+  var summary = days.map(function (day, n) {
+    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; });
+    var rd = tm.filter(function (c) { return arrangedSteps.indexOf(c._d.step) >= 0; }).length;
+    return { label: ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件' + (tm.length ? '（手配済み ' + rd + '）' : ''), short: tm.length > rd, n: n };
+  });
+  push([summary[0].label, '', summary[1].label, '', '', summary[2].label], {
+    bold: true, size: 12, cells: {
+      0: { bg: summary[0].short ? COLORS.LATE : '#d9ead3' },
+      2: { bg: summary[1].short ? COLORS.SOON : '#d9ead3', fc: summary[1].short ? '#b42318' : '#1b2440' },
+      5: { bg: summary[2].short ? '#fff8e1' : '#d9ead3' } }
+  });
+  if (summary[1].short) push(['※ 明日のツアーは、今日' + cfg.arrangeDeadline + 'までに全件「手配済み」にしてください'], { fc: '#b42318', bold: true });
+  if (near.length) {
     var s2 = out.length + 1;
-    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f7f7f7', size: 10 });
-    tm.forEach(function (c) {
-      var d = c._d, col = whoColor_(d, now);
-      push([toHm_(c[H.TIME]), d.st, String(c[H.TOUR] || ''), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), d.who || '—', link(c)],
-        { cells: { 1: { bg: col }, 6: { bg: col } } });
+    push(['日付', '開始', 'ツアー', '人数', '経路', 'ガイド', '手配の状況', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    days.forEach(function (day, n) {
+      var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+      var band = n % 2 ? '#f7f9fc' : COLORS.WHITE;
+      tm.forEach(function (c, i) {
+        var d = c._d, ok = arrangedSteps.indexOf(d.step) >= 0;
+        var label = ok ? '手配済み' + (d.step === 'guest' ? '（ゲスト連絡まだ）' : '') :
+          d.step === 'unarranged' ? '未手配・期限切れ' : d.step === 'cxok' ? 'キャンセル（ガイドに連絡を）' :
+          d.step === 'accept' ? '未手配（受注待ち）' : d.step === 'input' ? '入力待ち' : '未手配（手配中）';
+        var col = ok ? '#d9ead3' : (d.step === 'unarranged' || d.step === 'cxok') ? COLORS.LATE : COLORS.REELU;
+        push([i === 0 ? ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) : '', toHm_(c[H.TIME]), String(c[H.TOUR] || ''), paxText_(c),
+          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), label, link(c)],
+          { bg: band, cells: { 0: { bold: true }, 6: { bg: col, bold: !ok } } });
+      });
     });
     tables.push([s2, out.length]);
-  });
+  }
 
   sh.clear();
   var rg = sh.getRange(1, 1, out.length, W);
-  rg.setValues(out).setBackgrounds(bg).setFontWeights(fw).setFontColors(fc).setFontSizes(fs).setVerticalAlignment('middle');
+  rg.setValues(out).setBackgrounds(bg).setFontWeights(fw).setFontColors(fc).setFontSizes(fs).setVerticalAlignment('middle').setHorizontalAlignment('left');
   tables.forEach(function (x) {
     sh.getRange(x[0], 1, x[1] - x[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
   });
@@ -1025,7 +1063,7 @@ function importFromFolder_(cfg, L, tours, now) {
 function describe_(r) {
   if (r.error) return r.file + '：' + r.error;
   return r.src + ' ' + r.file + '：新規' + r.added.length + '・キャンセル' + r.cancelled.length + '・変更' + r.changed.length +
-    (r.held.length ? '・要確認' + r.held.length : '') + '（対象外 ' + r.skipped + '行）';
+    (r.restored.length ? '・キャンセル取り消し' + r.restored.length : '') + (r.held.length ? '・要確認' + r.held.length : '') + '（対象外 ' + r.skipped + '行）';
 }
 
 function rememberImport_(results, now) {
@@ -1040,11 +1078,15 @@ function rememberImport_(results, now) {
   // 今日の合計（「対応一覧」のいちばん上に出す）
   var today = ymd_(now), t = {};
   try { t = JSON.parse(props.getProperty('TODAY_IMPORT') || '{}'); } catch (e) { t = {}; }
-  if (t.day !== today) t = { day: today, added: 0, cancelled: 0, changed: 0, held: 0, files: [] };
+  if (t.day !== today) t = { day: today, added: 0, cancelled: 0, changed: 0, held: 0, files: [], events: [] };
+  t.events = t.events || [];
+  var ev = function (kind, list) { list.forEach(function (c) { t.events.push({ k: kind, id: String(c[H.ID]), at: fmtDT_(now).slice(-5) }); }); };
   ok.forEach(function (r) {
     t.added += r.added.length; t.cancelled += r.cancelled.length; t.changed += r.changed.length; t.held += r.held.length;
     t.files.push(r.src + ' ' + fmtDT_(now).slice(-5));
+    ev('キャンセル', r.cancelled); ev('変更', r.changed); ev('キャンセル取り消し', r.restored); ev('要確認', r.held); ev('新規', r.added);
   });
+  if (t.events.length > 80) t.events = t.events.slice(-80);
   props.setProperty('TODAY_IMPORT', JSON.stringify(t));
 }
 
@@ -1063,6 +1105,11 @@ function importUploaded(files) {
     initManual_(L, now);
     var folder = null;
     try { folder = cfg.folderId ? DriveApp.getFolderById(cfg.folderId) : null; } catch (e) { folder = null; }
+    // 同じ種類（NGT／NKT）のCSVを一度に2つ入れると、後のCSVで前のCSVの結果が打ち消されるため、1つずつにしてもらう
+    var kinds = {};
+    (files || []).forEach(function (f) { var k = sourceOf_(f.name, null) || f.name; kinds[k] = (kinds[k] || 0) + 1; });
+    var dup = Object.keys(kinds).filter(function (k) { return kinds[k] > 1 && (k === 'NGT' || k === 'NKT'); });
+    if (dup.length) return { ok: false, message: dup.join('・') + ' のCSVが2つ以上選ばれています。種類ごとに1つずつ選んでください（NGT＝kiranah-resort-、NKT＝tryhard-）。' };
     var results = (files || []).map(function (f) {
       var blob = Utilities.newBlob(Utilities.base64Decode(f.b64), 'text/csv', f.name);
       var r = importCsv_(f.name, decodeBlob_(blob), L, cfg, tours, now);
@@ -1076,22 +1123,45 @@ function importUploaded(files) {
     ensureReportLinks_(L, list);
     renderTodo_(L, cfg, now, list);
     importSummaryMail_(cfg, results);
-    return results.map(describe_).join('\n');
+    var lines = function (list) { return list.map(caseLine_); };
+    return { ok: true, files: results.map(function (r) {
+      return { src: r.src, file: r.file, error: r.error, skipped: r.skipped, added: lines(r.added), cancelled: lines(r.cancelled),
+        changed: lines(r.changed), restored: lines(r.restored), held: lines(r.held) };
+    }) };
   } finally { lock.releaseLock(); }
 }
 
-var UPLOAD_HTML = '<!doctype html><html><head><base target="_top"><style>body{font-family:sans-serif;font-size:14px;padding:4px}' +
-  'button{background:#1f2d52;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:14px;margin-top:10px}' +
-  'pre{white-space:pre-wrap;background:#f5f5f5;padding:8px;border-radius:6px}</style></head><body>' +
-  '<p>LINKTIVITY から書き出した CSV（<b>kiranah-resort-…</b> と <b>tryhard-…</b>）を選んでください。2つ同時に選べます。</p>' +
-  '<input type="file" id="f" accept=".csv" multiple><br><button id="b" onclick="go()">取り込む</button><pre id="o"></pre>' +
+var UPLOAD_HTML = '<!doctype html><html><head><base target="_top"><style>' +
+  'body{font-family:sans-serif;font-size:14px;margin:0;padding:6px;color:#1b2440}' +
+  'button{background:#1f2d52;color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:14px;margin-top:10px;cursor:pointer}' +
+  '#done{display:none;margin-top:12px}.ok{background:#e6f4ea;border:2px solid #34a853;border-radius:10px;padding:12px 14px;font-size:18px;font-weight:bold;color:#137333}' +
+  '.ng{background:#fce8e6;border:2px solid #d93025;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:bold;color:#b42318}' +
+  '.file{border:1px solid #ddd;border-radius:8px;padding:10px 12px;margin-top:10px}.file b{font-size:15px}' +
+  '.nums{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}.nums span{border-radius:6px;padding:4px 10px;font-weight:bold}' +
+  '.n1{background:#d9ead3}.n2{background:#f8c9c4}.n3{background:#fff2cc}.n0{background:#eee;color:#777}' +
+  '.lst{margin:4px 0 0 0;padding-left:18px;font-size:13px}.lst li{margin:2px 0}.cap{font-weight:bold;font-size:13px;margin-top:6px}' +
+  '</style></head><body>' +
+  '<p>LINKTIVITY から書き出した CSV を選んでください。<br><b>kiranah-resort-…（NGT）</b>と<b>tryhard-…（NKT）</b>を1つずつ、同時に選べます。</p>' +
+  '<input type="file" id="f" accept=".csv" multiple><br><button id="b" onclick="go()">取り込む</button><div id="msg" style="margin-top:10px"></div><div id="done"></div>' +
   '<script>function b64(buf){var s="",a=new Uint8Array(buf);for(var i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)}' +
-  'function go(){var fs=[].slice.call(document.getElementById("f").files);var o=document.getElementById("o");if(!fs.length){o.textContent="ファイルを選んでください";return}' +
-  'document.getElementById("b").disabled=true;o.textContent="取り込み中…";Promise.all(fs.map(function(f){return f.arrayBuffer().then(function(b){return{name:f.name,b64:b64(b)}})}))' +
-  '.then(function(x){google.script.run.withSuccessHandler(function(r){o.textContent=r+"\\n\\n完了しました。この画面を閉じてください。"}).withFailureHandler(function(e){o.textContent="エラー："+e.message;document.getElementById("b").disabled=false}).importUploaded(x)})}</script></body></html>';
+  'function esc(t){return String(t).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}' +
+  'function lst(cap,a){return a.length?"<div class=cap>"+cap+"</div><ul class=lst>"+a.map(function(x){return"<li>"+esc(x)+"</li>"}).join("")+"</ul>":""}' +
+  'function show(r){var d=document.getElementById("done");d.style.display="block";document.getElementById("msg").textContent="";' +
+  'if(!r.ok){d.innerHTML="<div class=ng>"+esc(r.message)+"</div>";document.getElementById("b").disabled=false;return}' +
+  'var t={a:0,c:0,ch:0};r.files.forEach(function(f){if(!f.error){t.a+=f.added.length;t.c+=f.cancelled.length;t.ch+=f.changed.length}});' +
+  'var err=r.files.some(function(f){return f.error});' +
+  'var h=err?"<div class=ng>取り込めなかったファイルがあります（下をご覧ください）</div>":"<div class=ok>✓ 取り込みが終わりました　新規 "+t.a+"件・キャンセル "+t.c+"件・変更 "+t.ch+"件</div>";' +
+  'r.files.forEach(function(f){h+="<div class=file><b>"+(f.src||"？")+"　"+esc(f.file)+"</b>";' +
+  'if(f.error){h+="<div style=\'color:#b42318;margin-top:6px\'>× "+esc(f.error)+"</div></div>";return}' +
+  'h+="<div class=nums><span class="+(f.added.length?"n1":"n0")+">新規 "+f.added.length+"件</span><span class="+(f.cancelled.length?"n2":"n0")+">キャンセル "+f.cancelled.length+"件</span><span class="+(f.changed.length?"n3":"n0")+">変更 "+f.changed.length+"件</span></div>";' +
+  'h+=lst("キャンセルになった予約",f.cancelled)+lst("新しい予約",f.added)+lst("変更があった予約",f.changed)+lst("キャンセルを取り消した予約（CSVに再び載った）",f.restored)+lst("要確認（CSVに載っていない）",f.held)+"</div>"});' +
+  'h+="<button onclick=google.script.host.close()>閉じる</button>";d.innerHTML=h}' +
+  'function go(){var fs=[].slice.call(document.getElementById("f").files);var m=document.getElementById("msg");document.getElementById("done").style.display="none";if(!fs.length){m.textContent="ファイルを選んでください";return}' +
+  'document.getElementById("b").disabled=true;m.textContent="取り込み中…（数十秒かかることがあります）";Promise.all(fs.map(function(f){return f.arrayBuffer().then(function(b){return{name:f.name,b64:b64(b)}})}))' +
+  '.then(function(x){google.script.run.withSuccessHandler(show).withFailureHandler(function(e){show({ok:false,message:"エラー："+e.message})}).importUploaded(x)})}</script></body></html>';
 
 function showUpload() {
-  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(UPLOAD_HTML).setWidth(460).setHeight(320), 'CSVを取り込む');
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(UPLOAD_HTML).setWidth(520).setHeight(560), 'CSVを取り込む');
 }
 
 // ===== 完了報告フォーム =====
@@ -1584,6 +1654,16 @@ function rebuildForm() {
   ensureReportLinks_(L, refreshAll_(L, cfg, now));
 }
 
+// シートをロックする。except の範囲だけはだれでも編集できる
+function lockSheet_(sh, except) {
+  sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(function (p) { if (/^NGT/.test(p.getDescription())) p.remove(); });
+  var p = sh.protect().setDescription('NGT ロック');
+  if (except && except.length) p.setUnprotectedRanges(except);
+  p.removeEditors(p.getEditors());
+  if (p.canDomainEdit()) p.setDomainEdit(false);
+  return p;
+}
+
 function setValueByKey_(sheet, key, value) {
   var v = sheet.getDataRange().getValues();
   for (var i = 1; i < v.length; i++) if (v[i][0] === key) { sheet.getRange(i + 1, 2).setValue(value); return; }
@@ -1656,16 +1736,9 @@ function setup() {
   notes[H.CXOK] = 'リール：キャンセルを確認し、手配していたガイドに連絡したら✓';
   notes[H.CXKIRA] = 'キラナ：未手配などでキャンセル対応をしたら✓（お客様・予約システム側の手続きはキラナで）';
   Object.keys(notes).forEach(function (h) { led.getRange(1, col(h)).setNote(notes[h]); });
-  // スクリプトが書く列は、うっかり書き換えないよう警告を出す
-  led.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) { if (p.getDescription() === 'NGT自動') p.remove(); });
-  // 隣り合う列はまとめて1つの範囲にする（範囲の数が多いと初期設定が遅くなる）
-  var autoIdx = AUTO_COLS.map(col).sort(function (a, b) { return a - b; });
-  for (var ai = 0; ai < autoIdx.length;) {
-    var aj = ai;
-    while (aj + 1 < autoIdx.length && autoIdx[aj + 1] === autoIdx[aj] + 1) aj++;
-    led.getRange(2, autoIdx[ai], rows, autoIdx[aj] - autoIdx[ai] + 1).protect().setDescription('NGT自動').setWarningOnly(true);
-    ai = aj + 1;
-  }
+  // 触ってよいのはチェック欄・ガイド名・メモだけ。ほかはロック（共有アカウント＝持ち主だけが編集できる）
+  led.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) { if (/^NGT/.test(p.getDescription())) p.remove(); });
+  lockSheet_(led, [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA, H.GUIDE, H.MEMO].map(function (h) { return led.getRange(2, col(h), rows, 1); }));
 
   var tours = ss.getSheetByName(SHEETS.TOURS) || ss.insertSheet(SHEETS.TOURS);
   if (tours.getLastRow() === 0) {
@@ -1721,6 +1794,8 @@ function setup() {
   if (sortLedger_(L, settings_(), now)) { L = ledger_(); list = refreshAll_(L, settings_(), now); }
   renderTodo_(L, settings_(), now, list);
   ss.setActiveSheet(ss.getSheetByName(SHEETS.TODO));
+
+  [SHEETS.TODO, SHEETS.TOURS, SHEETS.SETTINGS, SHEETS.LOG, SHEETS.REPORT].forEach(function (n) { var x = ss.getSheetByName(n); if (x) lockSheet_(x, []); });
 
   // 完了報告フォーム（いちばん時間がかかるので最後。時間切れなら、もう一度 setup で続きから）
   var r = ensureForm_(ss, props, startedAt + 270000);

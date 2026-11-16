@@ -472,7 +472,7 @@ test('今やること：本日の取り込み件数と、段階ごとの「や�
   const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
   assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件\|変更 0件/.test(r)), rows.join('\n'));
   assert.ok(rows.some((r) => /受注してください　1件/.test(r)));
-  assert.ok(rows.some((r) => /キラナ様がやること　0件/.test(r)));
+  assert.ok(rows.some((r) => /キラナがやること　0件/.test(r)));
 });
 
 
@@ -513,6 +513,26 @@ test('手入力の画面から登録すると、案件IDが付いてリールの
   assert.strictEqual(env.derive(c).st, '新規（受注待ち）');
   assert.throws(() => env.ctx.addManual({ route: 'メール', date: '', time: '18:00', tour: '浅草ナイト', adult: '2', name: 'x' }));
   assert.ok(/<option>浅草ナイト<\/option>/.test(env.ctx.manualFormHtml_(env.tours())));
+});
+
+
+test('CSVを取り込む画面：同じ種類は1つずつ。結果にはキャンセルになった予約が名前つきで出て、対応一覧のお知らせにも出る', () => {
+  const env = makeEnv();
+  const b64 = (t) => Buffer.from(t, 'utf8').toString('base64');
+  const a = HEAD + '\n' + ngtRow('TEST-NGT-0001', '2026-11-18', '17:00', 1) + '\n' + ngtRow('TEST-NGT-0002', '2026-11-19', '17:00', 1) + '\n';
+  const b = HEAD + '\n' + ngtRow('TEST-NGT-0001', '2026-11-18', '17:00', 1) + '\n';
+  const dup = env.ctx.importUploaded([{ name: 'kiranah-resort-test.csv', b64: b64(a) }, { name: 'kiranah-resort-test-cancel.csv', b64: b64(b) }]);
+  assert.strictEqual(dup.ok, false);
+  assert.ok(/NGT のCSVが2つ以上/.test(dup.message));
+  const r1 = env.ctx.importUploaded([{ name: 'kiranah-resort-test.csv', b64: b64(a) }]);
+  assert.strictEqual(r1.ok, true);
+  assert.strictEqual(r1.files[0].added.length, 2);
+  const r2 = env.ctx.importUploaded([{ name: 'kiranah-resort-test-cancel.csv', b64: b64(b) }]);
+  assert.strictEqual(r2.files[0].cancelled.length, 1);
+  assert.ok(/NGT-0002/.test(r2.files[0].cancelled[0]));
+  const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
+  assert.ok(rows.some((r) => /^キャンセル\|/.test(r) && /受注前なので対応不要/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /^新規\|/.test(r)));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));
