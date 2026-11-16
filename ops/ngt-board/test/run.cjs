@@ -121,7 +121,7 @@ function makeEnv() {
   setVal('リールの通知先', 'reelu@example.com');
   setVal('CSVの置き場（フォルダID）', 'FOLDER');
   ss.insertSheet('ログ').appendRow(ctx.LOG_HEADERS);
-  ss.insertSheet('今やること');
+  ss.insertSheet('対応一覧');
   return {
     ctx, ss, mails, props, files, moved,
     at(s) { ctx.__clock = J(s); },
@@ -260,7 +260,7 @@ test('ボタン（✓）で進む：②に✓すると①も付く → ③ → �
   assert.strictEqual(c['①受注（リール）'], true);
   assert.ok(c['受注日時'] && c['手配日時']);
   assert.strictEqual(env.derive(c).st, '手配済み（ゲスト連絡待ち）');
-  env.edit(c._row, '③ゲスト連絡（リール）', true);
+  env.edit(c._row, '③ゲスト連絡（リール・ガイド）', true);
   c = env.caseBy('ARS_NINJAGORIDE-20261116-EEEE');
   assert.strictEqual(env.derive(c).who, 'ガイド');
   env.at('2026-11-20T18:30');
@@ -374,7 +374,7 @@ test('置き場フォルダの CSV を取り込み、取込済みへ移し、ま
   assert.strictEqual(movedTo, '取込済み');
   assert.ok(env.mails.some((m) => /CSVを取り込みました/.test(m.subject)));
   assert.ok(/最終取込：NGT/.test(env.props.LAST_IMPORT));
-  const todo = env.ss.getSheetByName('今やること');
+  const todo = env.ss.getSheetByName('対応一覧');
   assert.ok(todo.rows.some((r) => /リール様がやること.*1件/.test(r[0])));
 });
 
@@ -432,6 +432,7 @@ test('テスト：見本の予約を入れると各段階に並び、消すと�
   assert.strictEqual(st('TEST-05'), '完了報告済み（受領待ち）');
   assert.strictEqual(st('TEST-06'), '未手配（期限切れ）');
   assert.strictEqual(st('TEST-07'), 'キャンセル（リール確認待ち）');
+  assert.strictEqual(st('TEST-08'), 'キャンセル済み');
   assert.ok(env.ss.getSheetByName('テストの手順'));
   env.ctx.poll();
   assert.strictEqual(env.mails.length, 0, '触る前の見本では通知しない');
@@ -468,10 +469,50 @@ test('今やること：本日の取り込み件数と、段階ごとの「や�
   const text = HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-T001', '2026-11-20', '17:00', 2) + '\n';
   env.files.push({ getName: () => 'kiranah-resort-x.csv', getDateCreated: () => J('2026-11-16T12:01'), getBlob: () => ({ getDataAsString: () => text }), moveTo: () => {} });
   env.ctx.poll();
-  const rows = env.ss.getSheetByName('今やること').rows.map((r) => r.join('|'));
+  const rows = env.ss.getSheetByName('対応一覧').rows.map((r) => r.join('|'));
   assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件\|変更 0件/.test(r)), rows.join('\n'));
-  assert.ok(rows.some((r) => /① 新しい予約を受けてください　1件/.test(r)));
+  assert.ok(rows.some((r) => /受注してください　1件/.test(r)));
   assert.ok(rows.some((r) => /キラナ様がやること　0件/.test(r)));
+});
+
+
+test('テスト用CSV（TEST-だけ）を入れても、本物の予約はキャンセル扱いにならない。本物のCSVも見本に触らない', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-RL01', '2026-11-22', '17:00', 2) + '\n');
+  const r1 = env.importText('kiranah-resort-test.csv', HEAD + '\n' + ngtRow('TEST-NGT-0001', '2026-11-18', '17:00', 1) + '\n' + ngtRow('TEST-NGT-0002', '2026-11-19', '17:00', 1) + '\n');
+  assert.strictEqual(r1.cancelled.length, 0);
+  assert.ok(!env.caseBy('ARS_NINJAGORIDE-20261116-RL01')['キャンセル日時']);
+  // テスト用のキャンセル：TEST-NGT-0002 が消えたCSV
+  const r2 = env.importText('kiranah-resort-test-cancel.csv', HEAD + '\n' + ngtRow('TEST-NGT-0001', '2026-11-18', '17:00', 1) + '\n');
+  assert.strictEqual(r2.cancelled.length, 1);
+  assert.ok(env.caseBy('TEST-NGT-0002')['キャンセル日時']);
+  assert.ok(!env.caseBy('ARS_NINJAGORIDE-20261116-RL01')['キャンセル日時']);
+  // 本物のCSVでは、見本は照らし合わせない
+  const r3 = env.importText('kiranah-resort-2.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-RL01', '2026-11-22', '17:00', 2) + '\n');
+  assert.strictEqual(r3.cancelled.length, 0);
+});
+
+test('余裕のある予約は「手配の目安」（3日前）を過ぎると19時に知らせる（キャンセルにはしない）', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-SF01', '2026-11-26', '17:00', 2) + '\n');
+  env.at('2026-11-23T19:00');
+  env.mails.length = 0;
+  env.ctx.eveningCheck();
+  assert.strictEqual(env.mails.length, 1);
+  assert.ok(/手配の目安を過ぎた予約が 1件/.test(env.mails[0].subject));
+  assert.strictEqual(env.derive(env.caseBy('ARS_NINJAGORIDE-20261116-SF01')).st, '新規（受注待ち）');
+});
+
+
+test('手入力の画面から登録すると、案件IDが付いてリールの受注待ちになる', () => {
+  const env = makeEnv();
+  const msg = env.ctx.addManual({ route: 'インフルエンサー', date: '2026-11-21', time: '18:00', tour: '浅草ナイト', adult: '2', child: '0', name: '@sample_creator', contact: 'DM', memo: '招待' });
+  assert.ok(/登録しました：NGT-0001/.test(msg));
+  const c = env.caseId('NGT-0001');
+  assert.strictEqual(c['経路'], 'インフルエンサー');
+  assert.strictEqual(env.derive(c).st, '新規（受注待ち）');
+  assert.throws(() => env.ctx.addManual({ route: 'メール', date: '', time: '18:00', tour: '浅草ナイト', adult: '2', name: 'x' }));
+  assert.ok(/<option>浅草ナイト<\/option>/.test(env.ctx.manualFormHtml_(env.tours())));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

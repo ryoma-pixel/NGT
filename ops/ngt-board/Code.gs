@@ -9,7 +9,7 @@
  *        ・kiranah-resort-…csv（NGT）… すべて取り込む
  *        ・tryhard-…csv（NKT）… セット商品（ローカルツアーセット）だけ取り込む
  *        → 新しい予約は「新規（リールの受注待ち）」、CSV から消えた予約は「キャンセル」として台帳に出る
- *  13:00 リールが「今やること」を見て、新規に ①受注 ✓ → ガイドを手配して ②手配完了 ✓
+ *  13:00 リールが「対応一覧」を見て、新規に ①受注 ✓ → ガイドを手配して ②手配完了 ✓
  *        → ガイドがゲストと連絡できたら ③ゲスト連絡 ✓
  *  前日20:00 までに翌日分の手配を終える。過ぎたら、キラナとリールに通知（原則キラナでキャンセル対応）
  *  ツアー後 ガイドが ④完了報告フォーム（チェック項目・アンケート）を送る → キラナが ⑤受領 ✓ で完了
@@ -20,14 +20,14 @@
 
 // ===== 定数 =====
 
-var SHEETS = { TODO: '今やること', LEDGER: '台帳', TOURS: 'ツアー', SETTINGS: '設定', LOG: 'ログ', REPORT: '完了報告' };
+var SHEETS = { TODO: '対応一覧', OLD_TODO: '今やること', LEDGER: '台帳', TOURS: 'ツアー', SETTINGS: '設定', LOG: 'ログ', REPORT: '完了報告' };
 
 // 台帳の列（見出しの文字がそのままキーになる）
 var H = {
   ID: '案件ID', WHO: '次にやる人', TODO: '次にやること', DUE: '期限', ST: '状態',
   DATE: '催行日', TIME: '開始', TOUR: 'ツアー', ADULT: '大人', CHILD: '子ども', NAME: '代表者名', CONTACT: '連絡先',
   ROUTE: '経路', MEMO: 'メモ', GUIDE: 'ガイド名',
-  ACCEPT: '①受注（リール）', ARRANGE: '②手配完了（リール）', GUEST: '③ゲスト連絡（リール）',
+  ACCEPT: '①受注（リール）', ARRANGE: '②手配完了（リール）', GUEST: '③ゲスト連絡（リール・ガイド）',
   REPORT: '④完了報告（ガイド）', RECEIVE: '⑤受領（キラナ）',
   CXOK: 'キャンセル確認（リール）', CXKIRA: 'キャンセル対応（キラナ）',
   NOTE: '変更・注意',
@@ -102,6 +102,7 @@ var SETTING_DEFAULTS = [
   ['リールの確認時刻', '13:00', 'リールが毎日台帳を見る時刻'],
   ['受注の猶予（分）', '60', '確認時刻からこの時間までに ①受注 がなければ通知'],
   ['手配の期限（前日の時刻）', '20:00', 'この時刻までに翌日分の ②手配完了 がなければ通知（原則キラナでキャンセル対応）'],
+  ['手配の目安（何日前）', '3', 'これより前に入った予約は、催行のこの日数前の手配の期限の時刻を「目安」にする（過ぎると黄色・19時のお知らせに入る）。0で使わない'],
   ['手配の事前確認（時刻）', '19:00', '翌日分に未手配があれば、この時刻にキラナとリールへ知らせる'],
   ['ゲスト連絡の期限（開始の何時間前）', '3', '仮置き。打ち合わせで決まったら直す'],
   ['完了報告の期限（翌日の時刻）', '12:00', '催行日の翌日のこの時刻までに ④完了報告 がなければ通知'],
@@ -253,6 +254,7 @@ function normalizeSettings_(raw) {
     acceptGraceMin: num_(raw['受注の猶予（分）'], 60),
     arrangeDeadline: toHm_(raw['手配の期限（前日の時刻）']) || '20:00',
     precheckTime: toHm_(raw['手配の事前確認（時刻）']) || '19:00',
+    softDays: num_(raw['手配の目安（何日前）'], 3),
     guestHours: num_(raw['ゲスト連絡の期限（開始の何時間前）'], 3),
     reportTime: toHm_(raw['完了報告の期限（翌日の時刻）']) || '12:00',
     receiveDays: num_(raw['受領の期限（日）'], 3),
@@ -322,43 +324,46 @@ function derive_(c, cfg, now) {
     if ((accepted || arranged) && !truthy_(c[H.CXOK])) {
       var cx = toDate_(c[H.T_CX]) || now;
       return { st: 'キャンセル（リール確認待ち）', who: WHO.REELU, step: 'cxok',
-        todo: 'キャンセルになりました。手配していたらガイドに連絡し「キャンセル確認」に✓',
+        todo: 'キャンセルをガイドに伝えてください',
         due: new Date(cx.getTime() + cfg.cxHours * H_MS) };
     }
     return { st: 'キャンセル済み', who: '', todo: '', due: null, step: 'cxdone' };
   }
   if (!ymd || !start || !String(c[H.TOUR] || '').trim()) {
-    return { st: '入力待ち', who: WHO.KIRA, step: 'input', todo: '催行日・開始・ツアー・大人の人数を入れる', due: new Date(created.getTime() + H_MS) };
+    return { st: '入力待ち', who: WHO.KIRA, step: 'input', todo: '催行日・開始・ツアー・人数を入れてください', due: new Date(created.getTime() + H_MS) };
   }
   if (truthy_(c[H.RECEIVE])) return { st: '完了', who: '', todo: '', due: null, step: 'done' };
   var reported = toDate_(c[H.T_REPORT]);
   if (reported) {
-    return { st: '完了報告済み（受領待ち）', who: WHO.KIRA, step: 'receive', todo: '完了報告を読んで ⑤受領 に✓',
+    return { st: '完了報告済み（受領待ち）', who: WHO.KIRA, step: 'receive', todo: '完了報告を読んで、受領してください',
       due: new Date(reported.getTime() + cfg.receiveDays * DAY_MS) };
   }
   if (guested) {
     var before = now.getTime() < start.getTime();
     return { st: 'ゲスト連絡済み', who: WHO.GUIDE, step: 'report',
-      todo: before ? '当日ツアーを実施。終わったら ④完了報告フォームを送る' : 'ツアー後の ④完了報告フォームを送る',
+      todo: before ? 'ツアーを実施し、終わったら完了報告を送ってください' : '完了報告を送ってください',
       due: dayAt_(ymd, 1, cfg.reportTime) };
   }
   if (arranged) {
     var noGuide = !String(c[H.GUIDE] || '').trim();
     return { st: '手配済み（ゲスト連絡待ち）', who: WHO.REELU, step: 'guest',
-      todo: (noGuide ? 'ガイド名を入れる。' : '') + 'ガイドがゲストと連絡できたら ③ゲスト連絡 に✓',
+      todo: noGuide ? 'ガイド名を入れて、ゲストに連絡してください' : 'ゲストに連絡してください',
       due: new Date(start.getTime() - cfg.guestHours * H_MS) };
   }
   var arrangeDue = dayAt_(ymd, -1, cfg.arrangeDeadline);
   if (now.getTime() >= arrangeDue.getTime()) {
     return { st: '未手配（期限切れ）', who: WHO.KIRA, step: 'unarranged', due: arrangeDue,
-      todo: '前日' + cfg.arrangeDeadline + 'までに手配できていません。原則キャンセル対応（対応したら「キャンセル対応（キラナ）」に✓）。手配できたらリールが ②手配完了 に✓' };
+      todo: '未手配です。キャンセル対応してください' };
   }
+  // 手配の目安：余裕のある予約は「催行の◯日前」を目安にする（期限ではないので、キャンセルにはしない）
+  var soft = cfg.softDays > 0 ? dayAt_(ymd, -cfg.softDays, cfg.arrangeDeadline) : null;
+  if (soft && soft.getTime() <= created.getTime()) soft = null;
   if (accepted) {
-    return { st: '受注済み（手配中）', who: WHO.REELU, step: 'arrange', due: arrangeDue,
-      todo: 'ガイドを手配し、ガイド名を入れて ②手配完了 に✓' };
+    return { st: '受注済み（手配中）', who: WHO.REELU, step: 'arrange', due: arrangeDue, soft: soft,
+      todo: 'ガイドを手配してください' };
   }
-  return { st: '新規（受注待ち）', who: WHO.REELU, step: 'accept', due: acceptDue_(created, arrangeDue, cfg),
-    todo: '内容を見て ①受注 に✓' };
+  return { st: '新規（受注待ち）', who: WHO.REELU, step: 'accept', due: acceptDue_(created, arrangeDue, cfg), soft: soft,
+    todo: '受注してください' };
 }
 
 function isOverdue_(d, now) { return !!(d.due && now.getTime() > d.due.getTime()); }
@@ -457,13 +462,14 @@ function importCsv_(fileName, text, L, cfg, tours, now) {
   var stamp = fmtDT_(now);
   var today = ymd_(now);
   var seen = {};
-  var valid = 0;
+  var valid = 0, nTest = 0;
 
   csvObjects_(rows).forEach(function (o) {
     var b = rowToBooking_(o, src, tours, cfg);
     if (b.skip) { res.skipped++; return; }
     if (b.ymd && b.ymd < today) { res.skipped++; return; } // 過去の催行日（古いCSVを入れたとき）は取り込まない
     valid++;
+    if (/^TEST-/.test(b.bookingNo)) nTest++;
     var c = findByBooking_(L, b.bookingNo);
     if (b.cancelled) {
       if (c && !c[H.T_CX]) { cancelCase_(c, now, 'CSVでキャンセル'); saveCase_(L, c); res.cancelled.push(c); }
@@ -511,8 +517,10 @@ function importCsv_(fileName, text, L, cfg, tours, now) {
   });
 
   // 今日以降の予約で、このCSVに載っていないもの＝キャンセルされた予約
+  // テスト用のCSV（予約番号がすべて TEST-）は見本だけを、本物のCSVは本物だけを照らし合わせる
+  var testCsv = nTest > 0 && nTest === valid;
   var gone = L.rows.filter(function (c) {
-    return c[H.SRC] === srcTag && c[H.BOOKING] && !seen[c[H.BOOKING]] && !c[H.T_CX] &&
+    return (testCsv ? isTest_(c) : !isTest_(c)) && c[H.SRC] === srcTag && c[H.BOOKING] && !seen[c[H.BOOKING]] && !c[H.T_CX] &&
       toYmd_(c[H.DATE]) >= today && !truthy_(c[H.RECEIVE]) && !c[H.T_REPORT];
   });
   if (gone.length && (valid === 0 || gone.length > cfg.maxAutoCancel)) {
@@ -658,11 +666,12 @@ function applyCheck_(c, colName, now, user) {
   return true;
 }
 
-// ===== 画面（台帳の色・今やること）=====
+// ===== 画面（台帳の色・対応一覧）=====
 
 var COLORS = {
   REELU: '#fde7d4', KIRA: '#dbe8fb', GUIDE: '#e2f2e0', LATE: '#f8c9c4', SOON: '#fff2cc', DONE: '#f1f1f1', HEAD: '#1f2d52',
-  REELU_HI: '#f6b26b', KIRA_HI: '#9fc0f5', GUIDE_HI: '#93c47d', LATE_HI: '#e06666', MUTED: '#8a8a8a', WHITE: '#ffffff'
+  REELU_HI: '#f6b26b', KIRA_HI: '#9fc0f5', GUIDE_HI: '#93c47d', LATE_HI: '#e06666', MUTED: '#8a8a8a', WHITE: '#ffffff',
+  BOTH: '#d0e8ea', BOTH_HI: '#76b5bd'   // ③ゲスト連絡（リールでもガイドでもよい）
 };
 
 function whoColor_(d, now) {
@@ -724,7 +733,7 @@ function refreshAll_(L, cfg, now) {
         if (idx < 0 || idx >= span) return;
         if (name === H.GUIDE && String(c[H.GUIDE] || '').trim()) return;
         var who = d.step === 'unarranged' && i > 0 ? WHO.REELU : d.who;
-        bg[idx] = i === 0 ? whoHi_(who, late) : (who === WHO.REELU ? COLORS.REELU : COLORS.KIRA);
+        bg[idx] = i === 0 ? (d.step === 'guest' && !late ? COLORS.BOTH_HI : whoHi_(who, late)) : (who === WHO.REELU ? COLORS.REELU : COLORS.KIRA);
       });
     }
     bgs.push(bg); fcs.push(fc);
@@ -744,27 +753,33 @@ function paxText_(c) {
   return (a ? '大人' + a : '') + (k ? (a ? '・' : '') + '子' + k : '');
 }
 
-// 「今やること」の見出し：段階ごとに「何をしてほしいか」と「どこを押すか」
+// 「対応一覧」の見出し：段階ごとに「何をしてほしいか」と「どこを押すか」
 var TASKS = {
   REELU: [
-    { step: 'accept', title: '① 新しい予約を受けてください', how: '台帳の「①受注」に✓（今日14:00まで）' },
-    { step: 'arrange', title: '② ガイドを手配してください', how: '台帳にガイド名を入れて「②手配完了」に✓（ツアー前日20:00まで）' },
-    { step: 'guest', title: '③ ゲストに連絡してください', how: 'ガイドがゲストと連絡できたら、台帳の「③ゲスト連絡」に✓' },
-    { step: 'report', title: '④ ガイドから完了報告をもらってください', how: '台帳④の「報告フォーム」のリンクをガイドに送る（ツアー翌日12:00まで）' },
-    { step: 'cxok', title: '× キャンセルになりました。ガイドに伝えてください', how: '伝えたら、台帳の「キャンセル確認（リール）」に✓' }
+    { step: 'accept', title: '受注してください' },
+    { step: 'arrange', title: 'ガイドを手配してください' },
+    { step: 'guest', title: 'ゲストに連絡してください（ガイドが連絡しても可）' },
+    { step: 'report', title: 'ガイドに完了報告を送ってもらってください' },
+    { step: 'cxok', title: 'キャンセルをガイドに伝えてください' }
   ],
   KIRA: [
-    { step: 'import', title: '今日のCSVを取り込んでください', how: 'メニュー「NGT 手配ボード」→「CSVを取り込む」で kiranah-resort- と tryhard- の2つを選ぶ' },
-    { step: 'unarranged', title: '前日20時を過ぎても手配できていません', how: '原則キャンセル対応。お客様・予約サイトの手続きが済んだら、台帳の「キャンセル対応（キラナ）」に✓' },
-    { step: 'input', title: '手入力の予約に足りない項目があります', how: '台帳で催行日・開始・ツアー・大人の人数を入れる' },
-    { step: 'receive', title: 'ガイドの完了報告を読んで受領してください', how: '台帳の「報告の要約」を読み、「⑤受領（キラナ）」に✓' },
-    { step: 'held', title: 'CSVに載っていない予約があります（要確認）', how: '書き出しの条件が正しいか確かめ、キャンセルなら「キャンセル対応（キラナ）」に✓' }
+    { step: 'import', title: '今日のCSVを取り込んでください' },
+    { step: 'unarranged', title: '未手配です。キャンセル対応してください' },
+    { step: 'input', title: '手入力の予約に、足りない項目を入れてください' },
+    { step: 'receive', title: '完了報告を読んで、受領してください' },
+    { step: 'held', title: 'CSVに載っていない予約を確認してください' }
   ]
 };
 
-// 「今やること」のシートを作り直す（値は1回で書き、書式もまとめて付ける）
+// 「対応一覧」のシートを作り直す（値は1回で書き、書式もまとめて付ける）
+function todoSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName(SHEETS.TODO);
+  if (!sh) { var old = ss.getSheetByName(SHEETS.OLD_TODO); if (old) { old.setName(SHEETS.TODO); sh = old; } }
+  return sh;
+}
+
 function renderTodo_(L, cfg, now, list) {
-  var sh = ss_().getSheetByName(SHEETS.TODO);
+  var sh = todoSheet_();
   if (!sh) return;
   list = list || L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; });
   var gid = L.sh.getSheetId();
@@ -799,7 +814,7 @@ function renderTodo_(L, cfg, now, list) {
     return TASKS[side].reduce(function (n, g) { return n + (groups[g.step] || []).filter(function (c) { return isOverdue_(c._d, now); }).length; }, 0);
   };
 
-  push(['NGT 手配ボード　今やること', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
+  push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
   // 本日の取り込み
   if (t) {
     push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
@@ -818,19 +833,19 @@ function renderTodo_(L, cfg, now, list) {
     if (!n) { push(['いまはありません'], { fc: COLORS.MUTED }); push([''], {}); return; }
     TASKS[key].forEach(function (g) {
       if (g.step === 'import') {
-        if (!t && noonPassed) { push([g.title], { bold: true, size: 12, bg: color }); push(['→ ' + g.how], { fc: '#444444' }); push([''], {}); }
+        if (!t && noonPassed) { push([g.title], { bold: true, size: 12, bg: color }); push([''], {}); }
         return;
       }
       var items = (groups[g.step] || []).sort(byDue);
       if (!items.length) return;
       push([g.title + '　' + items.length + '件'], { bold: true, size: 12, bg: color });
-      push(['→ ' + g.how], { fc: '#444444' });
       var start = out.length + 1;
       push(['期限', '残り', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
       items.forEach(function (c) {
         var d = c._d, isLate = isOverdue_(d, now);
-        var soonDue = !isLate && d.due && d.due.getTime() - now.getTime() < 2 * H_MS;
-        push([fmtDT_(d.due), rel_(d.due, now), String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c),
+        var softOver = !isLate && d.soft && now.getTime() > d.soft.getTime();
+        var soonDue = !isLate && (softOver || (d.due && d.due.getTime() - now.getTime() < 2 * H_MS));
+        push([fmtDT_(d.due), rel_(d.due, now) + (softOver ? '（目安超え）' : ''), String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c),
           String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
           { bg: isLate ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE, cells: { 1: { bold: true, fc: isLate ? '#b42318' : '#1b2440' } } });
       });
@@ -841,23 +856,26 @@ function renderTodo_(L, cfg, now, list) {
   side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
   side('KIRA', '■ キラナ様がやること', COLORS.KIRA, COLORS.KIRA_HI);
 
-  // 明日のツアー：前日20時の締切に向けて、全件「手配済み」になっているかを見る
-  var tomorrow = ymd_(new Date(now.getTime() + DAY_MS));
-  var tm = list.filter(function (c) { return toYmd_(c[H.DATE]) === tomorrow && c._d.step !== 'cxdone'; })
-    .sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
-  var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
-  push(['■ 明日（' + fmtMD_(tomorrow) + '）のツアー　' + tm.length + '件　手配済み ' + ready + '／' + tm.length], { bold: true, size: 14, bg: '#d9d9d9' });
-  push(['→ 今日' + cfg.arrangeDeadline + 'までに、全件が「手配済み」になっていればOK'], { fc: '#444444' });
-  if (tm.length) {
+  // 直近3日のツアー（今日・明日・明後日）：手配の進み具合を日ごとに見る
+  var days = [0, 1, 2].map(function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); });
+  var near = list.filter(function (c) { return days.indexOf(toYmd_(c[H.DATE])) >= 0 && c._d.step !== 'cxdone'; });
+  push(['■ 直近3日のツアー　' + near.length + '件'], { bold: true, size: 14, bg: '#d9d9d9' });
+  days.forEach(function (day, n) {
+    var tm = near.filter(function (c) { return toYmd_(c[H.DATE]) === day; }).sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+    var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
+    var label = ['今日', '明日', '明後日'][n] + ' ' + fmtMD_(day) + '　' + tm.length + '件　手配済み ' + ready + '／' + tm.length +
+      (n === 1 && tm.length > ready ? '　← 今日' + cfg.arrangeDeadline + 'が手配の期限' : '');
+    push([label], { bold: true, size: 12, bg: '#efefef', fc: n === 1 && tm.length > ready ? '#b42318' : '#1b2440' });
+    if (!tm.length) return;
     var s2 = out.length + 1;
-    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f7f7f7', size: 10 });
     tm.forEach(function (c) {
       var d = c._d, col = whoColor_(d, now);
       push([toHm_(c[H.TIME]), d.st, String(c[H.TOUR] || ''), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), d.who || '—', link(c)],
         { cells: { 1: { bg: col }, 6: { bg: col } } });
     });
     tables.push([s2, out.length]);
-  } else push(['ありません'], { fc: COLORS.MUTED });
+  });
 
   sh.clear();
   var rg = sh.getRange(1, 1, out.length, W);
@@ -865,7 +883,9 @@ function renderTodo_(L, cfg, now, list) {
   tables.forEach(function (x) {
     sh.getRange(x[0], 1, x[1] - x[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
   });
-  [130, 120, 180, 120, 90, 150, 110, 130].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
+  [150, 180, 210, 140, 100, 180, 130, 150].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
+  sh.setRowHeights(1, out.length, 28);
+  sh.setRowHeight(1, 40);
   sh.setFrozenRows(1);
 }
 
@@ -919,7 +939,7 @@ function sheetLink_() { return todoUrl_(); }
 function mail_(to, subject, lines) {
   to = (to || []).filter(function (x) { return x; });
   if (!to.length) { log_('通知先なし', null, subject); return; }
-  MailApp.sendEmail({ to: to.join(','), subject: '【NGT 手配】' + subject, body: lines.concat(['', '今やること：' + sheetLink_()]).join('\n'), name: 'NGT 手配ボード' });
+  MailApp.sendEmail({ to: to.join(','), subject: '【NGT 手配】' + subject, body: lines.concat(['', '対応一覧：' + sheetLink_()]).join('\n'), name: 'NGT 手配ボード' });
 }
 function both_(cfg) { return cfg.kiraTo.concat(cfg.reeluTo); }
 
@@ -937,7 +957,7 @@ function alertOverdue_(L, cfg, now, list) {
   });
   if (!hits.length) return 0;
   var unarranged = hits.filter(function (c) { return c._d.step === 'unarranged'; });
-  var lines = ['期限を過ぎた案件があります。台帳の「今やること」で確認してください。', ''];
+  var lines = ['期限を過ぎた案件があります。台帳の「対応一覧」で確認してください。', ''];
   if (unarranged.length) {
     lines.push('▼ 前日' + cfg.arrangeDeadline + 'までに手配できていない（原則キラナでキャンセル対応）');
     unarranged.forEach(function (c) { lines.push(caseLine_(c)); });
@@ -970,7 +990,7 @@ function importSummaryMail_(cfg, results) {
     if (r.added.length || r.cancelled.length || r.changed.length || r.held.length || r.restored.length) any = true;
   });
   if (!any) return;
-  lines.push('', 'リールは' + cfg.checkTime + 'に「今やること」を確認してください。');
+  lines.push('', 'リールは' + cfg.checkTime + 'に「対応一覧」を確認してください。');
   mail_(both_(cfg), 'CSVを取り込みました', lines);
 }
 
@@ -1017,7 +1037,7 @@ function rememberImport_(results, now) {
   ok.forEach(function (r) { prev[r.src] = fmtDT_(now) + '（新規' + r.added.length + '・キャンセル' + r.cancelled.length + '・変更' + r.changed.length + '）'; });
   props.setProperty('LAST_IMPORT_BY_SRC', JSON.stringify(prev));
   props.setProperty('LAST_IMPORT', '最終取込：' + Object.keys(prev).sort().map(function (k) { return k + ' ' + prev[k]; }).join('　／　'));
-  // 今日の合計（「今やること」のいちばん上に出す）
+  // 今日の合計（「対応一覧」のいちばん上に出す）
   var today = ymd_(now), t = {};
   try { t = JSON.parse(props.getProperty('TODAY_IMPORT') || '{}'); } catch (e) { t = {}; }
   if (t.day !== today) t = { day: today, added: 0, cancelled: 0, changed: 0, held: 0, files: [] };
@@ -1337,15 +1357,82 @@ function poll() {
 function eveningCheck() {
   var cfg = settings_(), now = now_(), L = ledger_();
   var tomorrow = ymd_(new Date(now.getTime() + DAY_MS));
-  var list = L.rows.filter(function (c) {
-    if (!c[H.ID] || toYmd_(c[H.DATE]) !== tomorrow) return false;
-    var d = derive_(c, cfg, now);
-    return d.step === 'accept' || d.step === 'arrange';
-  });
-  if (!list.length) return;
-  mail_(both_(cfg), '明日のツアーで未手配が ' + list.length + '件（期限 今日' + cfg.arrangeDeadline + '）',
-    ['明日（' + fmtMD_(tomorrow) + '）のツアーで、まだ ②手配完了 になっていない案件です。', ''].concat(list.map(caseLine_))
-      .concat(['', '今日' + cfg.arrangeDeadline + 'を過ぎても未手配のときは、原則キラナでキャンセル対応になります。']));
+  var open = L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; })
+    .filter(function (c) { return c._d.step === 'accept' || c._d.step === 'arrange'; });
+  var hard = open.filter(function (c) { return toYmd_(c[H.DATE]) === tomorrow; });
+  // 目安が今日の期限の時刻までに来るもの（今夜目安を迎える分も含めて、19時に先に知らせる）
+  var tonight = dayAt_(ymd_(now), 0, cfg.arrangeDeadline).getTime();
+  var soft = open.filter(function (c) { return toYmd_(c[H.DATE]) > tomorrow && c._d.soft && c._d.soft.getTime() <= tonight; });
+  if (!hard.length && !soft.length) return;
+  var lines = [];
+  if (hard.length) {
+    lines.push('▼ 明日（' + fmtMD_(tomorrow) + '）のツアーで未手配 ' + hard.length + '件。今日' + cfg.arrangeDeadline + 'が期限です（過ぎたら原則キラナでキャンセル対応）');
+    hard.forEach(function (c) { lines.push(caseLine_(c)); });
+    lines.push('');
+  }
+  if (soft.length) {
+    lines.push('▼ 手配の目安（催行の' + cfg.softDays + '日前）を過ぎた未手配 ' + soft.length + '件');
+    soft.forEach(function (c) { lines.push(caseLine_(c) + '（期限 ' + fmtDT_(c._d.due) + '）'); });
+  }
+  mail_(both_(cfg), (hard.length ? '明日のツアーで未手配が ' + hard.length + '件' : '手配の目安を過ぎた予約が ' + soft.length + '件'), lines);
+}
+
+// ===== 手入力（メール・インフルエンサーの予約）=====
+
+function esc_(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+function manualFormHtml_(tours) {
+  var opts = tours.map(function (t) { return '<option>' + esc_(t.name) + '</option>'; }).join('');
+  return '<!doctype html><html><head><base target="_top"><style>' +
+    'body{font-family:sans-serif;font-size:14px;margin:0;padding:6px}label{display:block;margin:10px 0 4px;font-weight:bold}' +
+    'input,select,textarea{width:100%;box-sizing:border-box;font-size:14px;padding:7px;border:1px solid #bbb;border-radius:6px}' +
+    '.row{display:flex;gap:10px}.row>div{flex:1}.req{color:#c0392b}' +
+    'button{margin-top:14px;background:#1f2d52;color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:14px}' +
+    '#o{margin-top:10px;white-space:pre-wrap}</style></head><body>' +
+    '<label>経路 <span class="req">*</span></label><select id="route"><option>メール</option><option>インフルエンサー</option><option>その他</option></select>' +
+    '<div class="row"><div><label>催行日 <span class="req">*</span></label><input type="date" id="date"></div>' +
+    '<div><label>開始 <span class="req">*</span></label><input type="time" id="time" step="300"></div></div>' +
+    '<label>ツアー <span class="req">*</span></label><select id="tour">' + opts + '</select>' +
+    '<div class="row"><div><label>大人 <span class="req">*</span></label><input type="number" id="adult" min="1" value="2"></div>' +
+    '<div><label>子ども（12歳以下）</label><input type="number" id="child" min="0" value="0"></div></div>' +
+    '<label>代表者名（インフルエンサーはアカウント名でも可） <span class="req">*</span></label><input id="name">' +
+    '<label>連絡先（メール・電話・DMなど）</label><input id="contact">' +
+    '<label>メモ（招待・投稿予定日など）</label><textarea id="memo" rows="2"></textarea>' +
+    '<button id="b" onclick="go()">台帳に登録する</button><div id="o"></div>' +
+    '<script>function v(i){return document.getElementById(i).value.trim()}' +
+    'function go(){var o=document.getElementById("o");var d={route:v("route"),date:v("date"),time:v("time"),tour:v("tour"),adult:v("adult"),child:v("child"),name:v("name"),contact:v("contact"),memo:v("memo")};' +
+    'if(!d.date||!d.time||!d.tour||!(+d.adult>0)||!d.name){o.textContent="＊の項目を入れてください";return}' +
+    'document.getElementById("b").disabled=true;o.textContent="登録しています…";' +
+    'google.script.run.withSuccessHandler(function(r){o.textContent=r;document.getElementById("b").disabled=false;["name","contact","memo"].forEach(function(i){document.getElementById(i).value=""})})' +
+    '.withFailureHandler(function(e){o.textContent="エラー："+e.message;document.getElementById("b").disabled=false}).addManual(d)}</script></body></html>';
+}
+
+function showManual() {
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(manualFormHtml_(tours_())).setWidth(440).setHeight(600), '予約を手入力する（メール・インフルエンサー）');
+}
+
+// 手入力の画面から呼ばれる
+function addManual(o) {
+  var ymd = toYmd_(o && o.date), hm = toHm_(o && o.time), adult = num_(o && o.adult, 0);
+  if (!ymd || !hm || !o.tour || adult < 1 || !String(o.name || '').trim()) throw new Error('＊の項目を入れてください');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var cfg = settings_(), now = now_(), L = ledger_();
+    var c = {};
+    c[H.ID] = nextCaseId_(L.rows);
+    c[H.DATE] = ymd; c[H.TIME] = hm; c[H.TOUR] = String(o.tour); c[H.ADULT] = adult; c[H.CHILD] = num_(o.child, 0) || '';
+    c[H.NAME] = String(o.name).trim(); c[H.CONTACT] = String(o.contact || '').trim(); c[H.ROUTE] = String(o.route || 'メール');
+    c[H.MEMO] = String(o.memo || '').trim(); c[H.SRC] = '手入力'; c[H.T_CREATED] = now;
+    appendCase_(L, c);
+    log_('手入力', c, '画面から登録（経路：' + c[H.ROUTE] + '）');
+    L = ledger_();
+    var list = refreshAll_(L, cfg, now);
+    if (sortLedger_(L, cfg, now)) { L = ledger_(); list = refreshAll_(L, cfg, now); }
+    ensureReportLinks_(L, list);
+    renderTodo_(L, cfg, now, list);
+    return '登録しました：' + c[H.ID] + '（' + fmtMD_(ymd) + ' ' + hm + ' ' + c[H.TOUR] + '）\n続けて登録できます。終わったら閉じてください。';
+  } finally { lock.releaseLock(); }
 }
 
 // ===== テスト（見本の予約で流れを体験する）=====
@@ -1371,7 +1458,8 @@ function seedTest() {
       { id: 'TEST-04', d: -1, t: '17:00', tour: 'ゴールデン街ナイト', a: 3, route: '公式直販', name: '見本 D', accept: 50, arrange: 40, guest: 30, guide: 'ガイドB（見本）' },
       { id: 'TEST-05', d: -2, t: '11:00', tour: 'ハンコ作り', a: 1, route: 'Klook', name: '見本 E', accept: 80, arrange: 70, guest: 60, guide: 'ガイドC（見本）', report: 40 },
       { id: 'TEST-06', d: 0, t: '21:00', tour: '秘境神社 Ninja Walk', a: 2, route: 'GetYourGuide', name: '見本 F' },
-      { id: 'TEST-07', d: 4, t: '17:30', tour: '新宿二丁目 LGBTQ+', a: 2, route: '公式直販', name: '見本 G', accept: 3, cancel: 1 }
+      { id: 'TEST-07', d: 4, t: '17:30', tour: '新宿二丁目 LGBTQ+', a: 2, route: '公式直販', name: '見本 G', accept: 3, cancel: 1 },
+      { id: 'TEST-08', d: 5, t: '11:00', tour: '合羽橋', a: 2, route: 'Klook', name: '見本 H', cancel: 2 }
     ];
     samples.forEach(function (x) {
       var c = {};
@@ -1399,8 +1487,8 @@ function seedTest() {
     });
     renderTodo_(L, cfg, now, list);
     writeTestGuide_();
-    log_('テスト', null, '見本の予約を7件入れました');
-    try { SpreadsheetApp.getUi().alert('見本の予約を7件入れました。\n「テストの手順」のシートの順に試してください。終わったら、メニュー「テスト：見本の予約を消す」で消せます。'); } catch (e) { /* エディタから実行 */ }
+    log_('テスト', null, '見本の予約を8件入れました');
+    try { SpreadsheetApp.getUi().alert('見本の予約を8件入れました。\n「テストの手順」のシートの順に試してください。終わったら、メニュー「テスト：見本の予約を消す」で消せます。'); } catch (e) { /* エディタから実行 */ }
   } finally { lock.releaseLock(); }
 }
 
@@ -1429,29 +1517,32 @@ function writeTestGuide_() {
   var ss = ss_();
   var sh = ss.getSheetByName(TEST_SHEET) || ss.insertSheet(TEST_SHEET, 0);
   var rows = [
-    ['テストの手順（見本の予約で、1件の予約が完了するまでを体験します）', '', '', ''],
+    ['テストの手順（見本の予約で、受付からキャンセル・完了までを体験します）', '', '', ''],
     ['順', 'だれ', 'やること', 'こうなればOK'],
-    ['1', 'みんな', '「今やること」を開く。いちばん上の件数と、リール・キラナそれぞれの「やること」を見る', 'TEST-01〜07 が期限の順に並んでいる。赤は期限切れ'],
-    ['2', 'リール', 'TEST-01（新規）の「TEST-01 ↗」を押して台帳へ。色の付いた ①受注 に✓', '今やることで TEST-01 が「ガイドを手配し…②手配完了」に変わる'],
-    ['3', 'リール', 'TEST-02（受注済み）の ガイド名 に「ガイドX」と入れ、②手配完了 に✓', '「ゲストと連絡できたら ③」に変わる'],
-    ['4', 'リール', 'TEST-03（手配済み）の ③ゲスト連絡 に✓', '次にやる人が「ガイド」になり、④に報告フォームのリンクが出る'],
-    ['5', 'ガイド', 'TEST-04（ツアー済み）の ④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', '台帳が「完了報告済み（受領待ち）」になり、報告の要約に1行入る。「合流できなかった」を選ぶと【至急】メールが届く'],
-    ['6', 'キラナ', 'TEST-05（報告済み）の「報告の要約」を読んで ⑤受領 に✓', '行が灰色になり「完了」'],
-    ['7', 'キラナ', 'TEST-06（今日のツアーで未手配＝期限切れ）の キャンセル対応（キラナ）に✓', 'キャンセル済みになる（リールが受注していた場合は、リールの確認待ちになる）'],
-    ['8', 'リール', 'TEST-07（キャンセル）の キャンセル確認（リール）に✓', '「キャンセル済み」になり灰色に'],
-    ['9', 'キラナ', '台帳のいちばん下の空いた行に、催行日・開始・ツアー・大人・代表者名を書き、経路で「インフルエンサー」を選ぶ', '案件ID（NGT-…）が自動で付き、リールの受注待ちになる。※この行は見本ではないので、試した後は行ごと削除'],
-    ['10', 'キラナ', 'メニュー「CSVを取り込む」で、テスト用のCSV（kiranah-resort-test.csv と tryhard-test.csv）を選ぶ', '新規が今やることに並び、お知らせメールが届く。NKTはセット商品の1件だけ、時刻は19:30で入る'],
-    ['11', 'みんな', '終わったら、メニュー「テスト：見本の予約を消す」', '見本（TEST-…）と、このシートが消える'],
-    ['', '', '※ 見本は、✓を付けるなどして触るまでは期限切れの通知を送りません。触ったあとは本番と同じように、通知先（いまはご本人だけ）にメールが届きます。', '']
+    ['1', 'みんな', '「対応一覧」を開く。いちばん上の取り込み件数と、リール様・キラナ様それぞれのやることを見る', '見本（TEST-01〜08）が「受注してください」「ガイドを手配してください」などに分かれて並ぶ'],
+    ['2', 'リール', 'TEST-01（受注してください）の「TEST-01 を開く」を押して台帳へ。色の付いた欄（①受注）に✓', 'TEST-01 が「ガイドを手配してください」に移る'],
+    ['3', 'リール', 'TEST-02（ガイドを手配してください）のガイド名に「ガイドX」と入れ、色の付いた欄（②手配完了）に✓', '「ゲストに連絡してください」に移る'],
+    ['4', 'リール・ガイド', 'TEST-03（ゲストに連絡してください）の色の付いた欄（③ゲスト連絡）に✓。ガイドが付けてもよい', '「ガイドに完了報告を送ってもらってください」に移る（ツアーの後に出る）'],
+    ['5', 'ガイド', 'TEST-04（ツアー済み）の台帳④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', 'キラナ様の「完了報告を読んで、受領してください」に移る。「合流できなかった」を選ぶと【至急】メールが届く'],
+    ['6', 'キラナ', 'TEST-05 の「報告の要約」を読み、色の付いた欄（⑤受領）に✓', '行が灰色になり「完了」'],
+    ['7', 'キラナ', 'TEST-06（未手配です。キャンセル対応してください）の色の付いた欄（キャンセル対応）に✓', '「キャンセル済み」になる'],
+    ['8', 'リール', 'TEST-07（受注した後にキャンセル）の色の付いた欄（キャンセル確認）に✓', '「キャンセル済み」になる。TEST-08 は受注前のキャンセルなので、はじめから「キャンセル済み」（だれも何もしなくてよい）'],
+    ['9', 'キラナ', 'メニュー「予約を手入力する」で、経路「インフルエンサー」・催行日・開始・ツアー・人数・代表者名を入れて登録', '案件ID（NGT-…）が付き、リール様の「受注してください」に出る。※見本ではないので、試した後は台帳の行ごと削除'],
+    ['10', 'キラナ', 'メニュー「CSVを取り込む」で、テスト用のCSV（kiranah-resort-test.csv と tryhard-test.csv）を選ぶ', '本日の取り込みに「新規 3件」。NKTはセット商品の1件だけ、時刻は19:30で入る'],
+    ['11', 'リール', '取り込まれた「見本 I（テスト）」（11/18 秘境神社）を受注する', '「ガイドを手配してください」に移る'],
+    ['12', 'キラナ', 'メニュー「CSVを取り込む」で、kiranah-resort-test-cancel.csv を選ぶ（見本 I が載っていないCSV＝キャンセルされた想定）', '見本 I が「キャンセルをガイドに伝えてください」に出て、本日の取り込みに「キャンセル 1件」。お知らせメールも届く'],
+    ['13', 'リール', '見本 I の色の付いた欄（キャンセル確認）に✓', '「キャンセル済み」になる'],
+    ['14', 'みんな', '終わったら、メニュー「テスト：見本の予約を消す」', '見本（TEST-…）と、このシートが消える'],
+    ['', '', '※ 見本は、✓を付けるなどして触るまでは期限切れの通知を送りません。触ったあとは本番と同じように、通知先（いまはご本人だけ）にメールが届きます。テスト用CSVは見本どうしだけで照らし合わせるので、本物の予約がキャンセル扱いになることはありません。', '']
   ];
   sh.clear();
   sh.getRange(1, 1, rows.length, 4).setValues(rows).setWrap(true).setVerticalAlignment('middle');
   sh.getRange(1, 1, 1, 4).setFontSize(14).setFontWeight('bold').setFontColor(COLORS.HEAD);
   sh.getRange(2, 1, 1, 4).setFontWeight('bold').setBackground('#eeeeee');
-  var whoCol = rows.map(function (r) { return r[1] === 'リール' ? COLORS.REELU : r[1] === 'キラナ' ? COLORS.KIRA : r[1] === 'ガイド' ? COLORS.GUIDE : COLORS.WHITE; });
+  var whoCol = rows.map(function (r) { return r[1] === 'リール' ? COLORS.REELU : r[1] === 'キラナ' ? COLORS.KIRA : r[1] === 'ガイド' ? COLORS.GUIDE : r[1] === 'リール・ガイド' ? COLORS.BOTH : COLORS.WHITE; });
   for (var i = 2; i < rows.length; i++) sh.getRange(i + 1, 2).setBackground(whoCol[i]);
   sh.getRange(2, 1, rows.length - 2, 4).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
-  sh.setColumnWidth(1, 40).setColumnWidth(2, 70).setColumnWidth(3, 520).setColumnWidth(4, 420);
+  sh.setColumnWidth(1, 40).setColumnWidth(2, 100).setColumnWidth(3, 520).setColumnWidth(4, 440);
   sh.setFrozenRows(2);
   ss.setActiveSheet(sh);
 }
@@ -1461,6 +1552,7 @@ function writeTestGuide_() {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('NGT 手配ボード')
     .addItem('CSVを取り込む（ファイルを選ぶ）', 'showUpload')
+    .addItem('予約を手入力する（メール・インフルエンサー）', 'showManual')
     .addItem('今すぐ更新（置き場のCSVも取り込む）', 'poll')
     .addItem('台帳を並べ替える（作業が必要な順）', 'sortLedger')
     .addItem('完了報告フォームのリンクを表示', 'showFormLink')
@@ -1513,7 +1605,7 @@ function setup() {
     });
   }
 
-  var todo = ss.getSheetByName(SHEETS.TODO) || ss.insertSheet(SHEETS.TODO, 0);
+  var todo = todoSheet_() || ss.insertSheet(SHEETS.TODO, 0);
   todo.setColumnWidths(1, 1, 150).setColumnWidth(2, 380).setColumnWidths(3, 7, 110);
 
   var led = ss.getSheetByName(SHEETS.LEDGER) || ss.insertSheet(SHEETS.LEDGER, 1);
@@ -1523,7 +1615,8 @@ function setup() {
   led.setFrozenRows(1);
   led.setFrozenColumns(1);
   led.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#ffffff').setBackground('#6b7280').setWrap(true).setVerticalAlignment('middle');
-  [H.ACCEPT, H.ARRANGE, H.GUEST, H.CXOK, H.GUIDE].forEach(function (h) { led.getRange(1, col(h)).setBackground('#c2560c'); });
+  [H.ACCEPT, H.ARRANGE, H.CXOK, H.GUIDE].forEach(function (h) { led.getRange(1, col(h)).setBackground('#c2560c'); });
+  led.getRange(1, col(H.GUEST)).setBackground('#3d8a94');
   [H.RECEIVE, H.CXKIRA].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1d4ed8'); });
   led.getRange(1, col(H.REPORT)).setBackground('#15803d');
   [H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1f2d52'); });
@@ -1544,9 +1637,9 @@ function setup() {
   var cb = SpreadsheetApp.newDataValidation().requireCheckbox().build();
   [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setDataValidation(cb); });
   led.getRange(2, col(H.ROUTE), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ROUTE_CHOICES, true).setAllowInvalid(true).build());
-  var widths = {}; widths[H.ID] = 90; widths[H.WHO] = 80; widths[H.TODO] = 300; widths[H.DUE] = 110; widths[H.ST] = 150;
-  widths[H.DATE] = 95; widths[H.TIME] = 55; widths[H.TOUR] = 160; widths[H.ADULT] = 45; widths[H.CHILD] = 50; widths[H.NAME] = 140;
-  widths[H.CONTACT] = 170; widths[H.ROUTE] = 120; widths[H.MEMO] = 180; widths[H.GUIDE] = 100; widths[H.NOTE] = 260; widths[H.REPORT_SUM] = 320;
+  var widths = {}; widths[H.ID] = 95; widths[H.WHO] = 95; widths[H.TODO] = 260; widths[H.DUE] = 125; widths[H.ST] = 175;
+  widths[H.DATE] = 100; widths[H.TIME] = 60; widths[H.TOUR] = 180; widths[H.ADULT] = 55; widths[H.CHILD] = 60; widths[H.NAME] = 160;
+  widths[H.CONTACT] = 200; widths[H.ROUTE] = 160; widths[H.MEMO] = 200; widths[H.GUIDE] = 120; widths[H.NOTE] = 280; widths[H.REPORT_SUM] = 360;
   [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { widths[h] = 92; });
   [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setHorizontalAlignment('center'); });
   Object.keys(widths).forEach(function (h) { led.setColumnWidth(col(h), widths[h]); });
@@ -1554,10 +1647,10 @@ function setup() {
   led.getRange(2, col(H.NOTE), rows, 1).setWrap(true);
   var notes = {};
   notes[H.WHO] = 'スクリプトが書く。オレンジ＝リール、青＝キラナ、緑＝ガイド、赤＝期限切れ';
-  notes[H.ROUTE] = 'メール・インフルエンサーの予約は、空いている行に催行日・開始・ツアー・大人・代表者名などを書き、ここで経路を選ぶ（案件IDは自動で付く）';
+  notes[H.ROUTE] = 'メール・インフルエンサーの予約は、メニュー「予約を手入力する」から登録する（空いている行に直接書いてもよい。案件IDは自動で付く）';
   notes[H.ACCEPT] = 'リール：内容を見て受けたら✓';
   notes[H.ARRANGE] = 'リール：ガイドを決めて、ガイド名を入れたら✓（前日20時まで）';
-  notes[H.GUEST] = 'リール：ガイドがゲストと連絡できたら✓';
+  notes[H.GUEST] = 'リールかガイド：ゲストと連絡できたら✓（どちらが付けてもよい）';
   notes[H.REPORT] = 'ガイド：ツアー後、このリンクの完了報告フォームを送る（リールからガイドに渡す）';
   notes[H.RECEIVE] = 'キラナ：完了報告を読んだら✓。これで完了';
   notes[H.CXOK] = 'リール：キャンセルを確認し、手配していたガイドに連絡したら✓';
@@ -1596,6 +1689,9 @@ function setup() {
     set.setColumnWidth(1, 240).setColumnWidth(2, 260).setColumnWidth(3, 480);
   }
   set.setFrozenRows(1);
+  // 新しく増えた設定の項目を足す（値は初期値）
+  var haveKeys = set.getDataRange().getValues().map(function (r) { return String(r[0]); });
+  SETTING_DEFAULTS.forEach(function (r) { if (haveKeys.indexOf(r[0]) < 0) set.appendRow([r[0], r[1], r[2]]); });
 
   var log = ss.getSheetByName(SHEETS.LOG) || ss.insertSheet(SHEETS.LOG);
   if (log.getLastRow() === 0) log.appendRow(LOG_HEADERS);
