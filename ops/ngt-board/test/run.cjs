@@ -364,4 +364,44 @@ test('置き場フォルダの CSV を取り込み、取込済みへ移し、ま
   assert.ok(todo.rows.some((r) => /リールがやること.*（1件）/.test(r[0])));
 });
 
+
+test('完了報告フォームは時間切れでも、次の実行で続きから作り、重複しない', () => {
+  const env = makeEnv();
+  const ctx = env.ctx;
+  let clock = 0;
+  const items = [];
+  const mkItem = (type, title) => {
+    const it = permissive({ type, title, choices: [], goTo: null,
+      getTitle: () => it.title, getType: () => type, setTitle: (t) => { it.title = t; return it; },
+      asListItem: () => it, asPageBreakItem: () => it,
+      createChoice: (v, p) => ({ v, p }), setChoices: (c) => { it.choices = c; return it; },
+      setGoToPage: (p) => { it.goTo = p; return it; } });
+    items.push(it); clock += 10; return it;
+  };
+  const form = permissive({
+    getItems: () => items.slice(), deleteItem: (it) => { items.splice(items.indexOf(it), 1); },
+    addTextItem: () => mkItem('TEXT'), addMultipleChoiceItem: () => mkItem('MC'), addScaleItem: () => mkItem('SCALE'),
+    addParagraphTextItem: () => mkItem('PARA'), addListItem: () => mkItem('LIST'), addPageBreakItem: () => mkItem('PAGE_BREAK')
+  });
+  ctx.FormApp = { ItemType: { PAGE_BREAK: 'PAGE_BREAK' } };
+  ctx.__fc = () => clock;
+  env.run('Date.now = function () { return __fc(); };');
+  try {
+    const tours = ctx.tours_();
+    // 1回目：途中（ツアー3本目まで）で時間切れ
+    assert.strictEqual(ctx.buildFormSteps_(form, tours, ctx.PropertiesService.getScriptProperties(), 200), false);
+    // 作りかけ（手順の途中まで）を足しておく
+    form.addPageBreakItem().setTitle('作りかけ');
+    // 2回目：続きから最後まで
+    assert.strictEqual(ctx.buildFormSteps_(form, tours, ctx.PropertiesService.getScriptProperties(), 1e9), true);
+    const titles = items.map((i) => i.title);
+    assert.strictEqual(new Set(titles).size, titles.length, '同じ質問が2つできていない');
+    assert.ok(!titles.includes('作りかけ'));
+    assert.strictEqual(titles.filter((t) => /の行程について$/.test(t)).length, tours.length);
+    const list = items.find((i) => i.title === ctx.Q.TOUR);
+    assert.strictEqual(list.choices.length, tours.length);
+    assert.ok(items.filter((i) => /の行程について$/.test(i.title)).every((p) => p.goTo && p.goTo.title === '【任意】そのほか'));
+  } finally { env.run('delete Date.now'); }
+});
+
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

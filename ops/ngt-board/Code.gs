@@ -457,6 +457,7 @@ function importCsv_(fileName, text, L, cfg, tours, now) {
   csvObjects_(rows).forEach(function (o) {
     var b = rowToBooking_(o, src, tours, cfg);
     if (b.skip) { res.skipped++; return; }
+    if (b.ymd && b.ymd < today) { res.skipped++; return; } // 過去の催行日（古いCSVを入れたとき）は取り込まない
     valid++;
     var c = findByBooking_(L, b.bookingNo);
     if (b.cancelled) {
@@ -900,42 +901,119 @@ function form_() {
   try { return FormApp.openById(id); } catch (e) { return null; }
 }
 
-function buildForm_(form, tours) {
-  form.getItems().forEach(function (it) { form.deleteItem(it); });
+// フォームは手順ごとに作る。1回の実行（6分まで）で終わらなくても、次の実行で続きから作る
+function formHeader_(form) {
   form.setTitle('NINJA GO TOURS 完了報告（ガイド用）')
     .setDescription('ツアーが終わったら、その日のうちに送ってください（2〜3分）。【必須】は必ず答えてください。【任意】は分かる範囲で。')
     .setConfirmationMessage('ありがとうございました。完了報告を受け付けました。')
     .setCollectEmail(false)
     .setAllowResponseEdits(false);
   try { form.setRequireLogin(false); } catch (e) { /* Workspace の設定で変えられない場合がある */ }
+}
+function formBase_(form) {
   form.addTextItem().setTitle(Q.ID).setHelpText('リンクから開くと自動で入ります').setRequired(true);
   form.addTextItem().setTitle(Q.GUIDE).setRequired(true);
-  var mc = function (title, choices, required) { form.addMultipleChoiceItem().setTitle(title).setChoiceValues(choices).setRequired(required); };
-  mc(Q.MEET, A.MEET, true);
-  mc(Q.ROUTE, A.ROUTE, true);
-  mc(Q.END, A.END, true);
-  mc(Q.NOTICE, A.NOTICE, true);
-  mc(Q.TROUBLE, A.TROUBLE, true);
+  var mc = function (title, choices) { form.addMultipleChoiceItem().setTitle(title).setChoiceValues(choices).setRequired(true); };
+  mc(Q.MEET, A.MEET);
+  mc(Q.ROUTE, A.ROUTE);
+  mc(Q.END, A.END);
+  mc(Q.NOTICE, A.NOTICE);
+  mc(Q.TROUBLE, A.TROUBLE);
   form.addScaleItem().setTitle(Q.REACTION).setBounds(1, 5).setLabels('盛り上がらなかった', 'とても盛り上がった').setRequired(true);
-  mc(Q.REVIEW, A.REVIEW, true);
+  mc(Q.REVIEW, A.REVIEW);
   form.addParagraphTextItem().setTitle(Q.DETAIL).setHelpText('「合流できなかった」「一部を省いた」「あった」を選んだときは必ず書いてください');
-  var tourItem = form.addListItem().setTitle(Q.TOUR).setHelpText('リンクから開くと自動で入ります').setRequired(true);
-  var finalPage = null;
-  var pages = tours.map(function (t) {
-    var p = form.addPageBreakItem().setTitle('【任意】' + t.name + ' の行程について');
-    if (t.stops.length) {
-      form.addMultipleChoiceItem().setTitle(Q.BEST + '（' + t.name + '）').setChoiceValues(t.stops).setRequired(false);
-      form.addMultipleChoiceItem().setTitle(Q.LATE + '（' + t.name + '）').setChoiceValues(['なし'].concat(t.stops)).setRequired(false);
-    }
-    return p;
-  });
-  finalPage = form.addPageBreakItem().setTitle('【任意】そのほか');
-  form.addMultipleChoiceItem().setTitle(Q.PHOTO).setChoiceValues(A.PHOTO).setRequired(false);
+  form.addListItem().setTitle(Q.TOUR).setHelpText('リンクから開くと自動で入ります').setRequired(true).setChoiceValues(['（ツアー）']);
+}
+function tourPageTitle_(t) { return '【任意】' + t.name + ' の行程について'; }
+function formTourPage_(form, t) {
+  form.addPageBreakItem().setTitle(tourPageTitle_(t));
+  if (t.stops.length) {
+    form.addMultipleChoiceItem().setTitle(Q.BEST + '（' + t.name + '）').setChoiceValues(t.stops);
+    form.addMultipleChoiceItem().setTitle(Q.LATE + '（' + t.name + '）').setChoiceValues(['なし'].concat(t.stops));
+  }
+}
+function formFinal_(form) {
+  form.addPageBreakItem().setTitle('【任意】そのほか');
+  form.addMultipleChoiceItem().setTitle(Q.PHOTO).setChoiceValues(A.PHOTO);
   form.addParagraphTextItem().setTitle(Q.IMPROVE);
   form.addParagraphTextItem().setTitle(Q.OTHER);
-  tourItem.setChoices(tours.map(function (t, i) { return tourItem.createChoice(t.name, pages[i]); }));
-  pages.forEach(function (p) { p.setGoToPage(finalPage); });
+}
+// ツアーを選ぶと、そのツアーのページへ進み、最後に「そのほか」へ進むようにつなぐ
+function formLink_(form, tours) {
+  var byTitle = {}, list = null;
+  form.getItems().forEach(function (it) {
+    var t = it.getTitle();
+    if (t === Q.TOUR) list = it.asListItem();
+    else if (it.getType() === FormApp.ItemType.PAGE_BREAK) byTitle[t] = it.asPageBreakItem();
+  });
+  var finalPage = byTitle['【任意】そのほか'];
+  var choices = [];
+  tours.forEach(function (t) {
+    var p = byTitle[tourPageTitle_(t)];
+    if (!p) return;
+    choices.push(list.createChoice(t.name, p));
+    p.setGoToPage(finalPage);
+  });
+  list.setChoices(choices);
+}
+
+// 返り値：最後まで作れたら true、時間切れで途中なら false
+function buildFormSteps_(form, tours, props, deadline) {
+  var step = num_(props.getProperty('FORM_STEP'), 0);
+  var count = num_(props.getProperty('FORM_COUNT'), 0);
+  // 前回、途中で止まった手順の作りかけを消す
+  var items = form.getItems();
+  for (var i = items.length - 1; i >= count; i--) form.deleteItem(items[i]);
+  var total = tours.length + 3;
+  while (step < total) {
+    if (Date.now() > deadline) return false;
+    if (step === 0) { formHeader_(form); formBase_(form); }
+    else if (step <= tours.length) formTourPage_(form, tours[step - 1]);
+    else if (step === tours.length + 1) formFinal_(form);
+    else formLink_(form, tours);
+    step++;
+    props.setProperty('FORM_STEP', String(step));
+    props.setProperty('FORM_COUNT', String(form.getItems().length));
+  }
+  return true;
+}
+
+// 新しいフォームを作り直す準備（前のフォームはゴミ箱へ）
+function newForm_(props) {
+  var old = props.getProperty('FORM_ID');
+  if (old) { try { DriveApp.getFileById(old).setTrashed(true); } catch (e) { /* なければよい */ } }
+  var form = FormApp.create('NINJA GO TOURS 完了報告（ガイド用）');
+  props.setProperty('FORM_ID', form.getId());
+  props.setProperty('FORM_STEP', '0');
+  props.setProperty('FORM_COUNT', '0');
+  props.deleteProperty('FORM_READY');
   return form;
+}
+
+// フォームを用意する。終わったら true
+function ensureForm_(ss, props, deadline) {
+  var form = form_();
+  if (props.getProperty('FORM_READY') === '1' && form) return { form: form, done: true };
+  if (!form || props.getProperty('FORM_STEP') === null) form = newForm_(props);
+  if (!buildFormSteps_(form, tours_(), props, deadline)) return { form: form, done: false };
+  if (Date.now() > deadline) return { form: form, done: false };
+  var dest = '';
+  try { dest = form.getDestinationId() || ''; } catch (e) { dest = ''; }
+  if (dest !== ss.getId()) form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  SpreadsheetApp.flush();
+  var report = ss.getSheetByName(SHEETS.REPORT);
+  ss.getSheets().forEach(function (s) {
+    var u = '';
+    try { u = s.getFormUrl() || ''; } catch (e) { u = ''; }
+    if (!u || s.getName() === SHEETS.REPORT) return;
+    if (u.indexOf(form.getId()) >= 0) {
+      if (report) report.setName(SHEETS.REPORT + '（旧）');
+      s.setName(SHEETS.REPORT);
+      report = s;
+    }
+  });
+  props.setProperty('FORM_READY', '1');
+  return { form: form, done: true };
 }
 
 function reportLink_(form, items, id, tourName) {
@@ -1104,9 +1182,12 @@ function showFormLink() {
 }
 
 function rebuildForm() {
-  var f = form_();
-  if (!f) return;
-  buildForm_(f, tours_());
+  var props = PropertiesService.getScriptProperties(), ss = ss_();
+  props.deleteProperty('FORM_STEP');
+  props.deleteProperty('FORM_READY');
+  var r = ensureForm_(ss, props, Date.now() + 270000);
+  setValueByKey_(ss.getSheetByName(SHEETS.SETTINGS), '完了報告フォーム', r.form.getPublishedUrl());
+  if (!r.done) { SpreadsheetApp.getUi().alert('フォームの作成が途中です。もう一度「完了報告フォームを作り直す」を実行すると、続きから作ります。'); return; }
   // 質問を作り直すとリンクが変わるので、未報告の案件のリンクを付け直す
   var L = ledger_(), col = colOf_(L, H.REPORT);
   L.rows.forEach(function (c) { if (!c[H.T_REPORT] && String(c[H.REPORT]).indexOf('報告済み') < 0) { L.sh.getRange(c._row, col).setValue(''); c[H.REPORT] = ''; } });
@@ -1121,6 +1202,7 @@ function setValueByKey_(sheet, key, value) {
 }
 
 function setup() {
+  var startedAt = Date.now();
   var ss = ss_();
   ss.setSpreadsheetTimeZone('Asia/Tokyo');
   var props = PropertiesService.getScriptProperties();
@@ -1224,31 +1306,6 @@ function setup() {
   subFolder_(folder, '取込済み');
   subFolder_(folder, 'エラー');
 
-  // 完了報告フォーム
-  // 途中で止まっても、もう一度 setup を実行すれば続きから作る
-  var form = form_();
-  if (!form) {
-    form = FormApp.create('NINJA GO TOURS 完了報告（ガイド用）');
-    props.setProperty('FORM_ID', form.getId());
-    props.deleteProperty('FORM_READY');
-  }
-  if (props.getProperty('FORM_READY') !== '1') {
-    buildForm_(form, tours_());
-    var dest = '';
-    try { dest = form.getDestinationId() || ''; } catch (e) { dest = ''; }
-    if (dest !== ss.getId()) form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
-    SpreadsheetApp.flush();
-    props.setProperty('FORM_READY', '1');
-  }
-  if (!ss.getSheetByName(SHEETS.REPORT)) {
-    ss.getSheets().forEach(function (s) {
-      var u = '';
-      try { u = s.getFormUrl() || ''; } catch (e) { u = ''; }
-      if (u && !ss.getSheetByName(SHEETS.REPORT) && (u.indexOf(form.getId()) >= 0 || /フォームの回答|Form Responses/.test(s.getName()))) s.setName(SHEETS.REPORT);
-    });
-  }
-  setValueByKey_(set, '完了報告フォーム', form.getPublishedUrl());
-
   // トリガー（このプロジェクトのものは作り直す）
   ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('poll').timeBased().everyMinutes(10).create();
@@ -1261,9 +1318,19 @@ function setup() {
   var list = refreshAll_(L, settings_(), now);
   renderTodo_(L, settings_(), now, list);
   ss.setActiveSheet(ss.getSheetByName(SHEETS.TODO));
+
+  // 完了報告フォーム（いちばん時間がかかるので最後。時間切れなら、もう一度 setup で続きから）
+  var r = ensureForm_(ss, props, startedAt + 270000);
+  setValueByKey_(set, '完了報告フォーム', r.form.getPublishedUrl());
+  if (!r.done) {
+    log_('初期設定', null, 'シート・置き場フォルダ・トリガーは用意済み。完了報告フォームの作成が途中のため、もう一度 setup を実行してください（続きから作ります）');
+    Logger.log('完了報告フォームの作成が途中です。もう一度 setup を実行してください（続きから作ります）。');
+    return;
+  }
   log_('初期設定', null, '第2版のシート・フォーム・置き場フォルダ・トリガーを用意しました');
+  Logger.log('初期設定が終わりました。CSVの置き場：' + folder.getUrl() + '　完了報告フォーム：' + r.form.getPublishedUrl());
   try {
-    SpreadsheetApp.getUi().alert('初期設定が終わりました。\n\nCSVの置き場：\n' + folder.getUrl() + '\n\n完了報告フォーム：\n' + form.getPublishedUrl() +
+    SpreadsheetApp.getUi().alert('初期設定が終わりました。\n\nCSVの置き場：\n' + folder.getUrl() + '\n\n完了報告フォーム：\n' + r.form.getPublishedUrl() +
       '\n\n設定シートの「キラナの通知先」「リールの通知先」を確かめてください。');
   } catch (e) { /* 画面がないとき（エディタから実行）は表示しない */ }
 }
