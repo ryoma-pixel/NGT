@@ -1,97 +1,153 @@
 /**
- * NGT 手配ボード（台帳）
+ * NGT 手配ボード（台帳）第2版
  *
  * 共有アカウント（info_ninja-go-ride@ninja-kabukitokyo.com）の Google スプレッドシートに入れて使う
- * Google Apps Script。手順は同じフォルダの README.md を参照。
+ * Google Apps Script。手順は同じフォルダの README.md を参照。追加の費用はかからない。
  *
- * やること
- *  1. LINKTIVITY の予約・キャンセルの通知メールを5分おきに取り込み、台帳に1件1行で載せる
- *     （通知メールには日時・人数がないため、新しい予約は「詳細待ち」で入る）
- *  2. 詳細の入力が遅れたら、担当者にメール（と LINE）で催促する
- *  3. 入力されたら、リールへの発注メールを用意する（下書き／自動送信）
- *  4. 発注メールが送られたか、リールから返信があったかを確認し、なければ催促する
- *  5. キャンセルは予約番号で台帳と照合し、発注済みならリールへのキャンセル連絡まで追いかける
+ * 1日の流れ（2026-11-16 Kiranah Resort 加藤様と合意した仕様）
+ *  12:00 キラナが LINKTIVITY から「本日以降の確定予約」の CSV を2つ書き出し、置き場フォルダに入れる
+ *        ・kiranah-resort-…csv（NGT）… すべて取り込む
+ *        ・tryhard-…csv（NKT）… セット商品（ローカルツアーセット）だけ取り込む
+ *        → 新しい予約は「新規（リールの受注待ち）」、CSV から消えた予約は「キャンセル」として台帳に出る
+ *  13:00 リールが「今やること」を見て、新規に ①受注 ✓ → ガイドを手配して ②手配完了 ✓
+ *        → ガイドがゲストと連絡できたら ③ゲスト連絡 ✓
+ *  前日20:00 までに翌日分の手配を終える。過ぎたら、キラナとリールに通知（原則キラナでキャンセル対応）
+ *  ツアー後 ガイドが ④完了報告フォーム（チェック項目・アンケート）を送る → キラナが ⑤受領 ✓ で完了
+ *  メール・インフルエンサーの予約は、台帳の空いている行にキラナが手で書く（経路を選ぶ）
  *
  * お客様の情報はこのスプレッドシートの中だけに置く（コードやリポジトリには入れない）。
  */
 
 // ===== 定数 =====
 
-var SHEETS = { LEDGER: '台帳', TOURS: 'ツアー', SETTINGS: '設定', LOG: 'ログ' };
+var SHEETS = { TODO: '今やること', LEDGER: '台帳', TOURS: 'ツアー', SETTINGS: '設定', LOG: 'ログ', REPORT: '完了報告' };
 
-var ST = {
-  WAIT_DETAIL: '詳細待ち',
-  WAIT_ORDER: '発注待ち',
-  WAIT_REPLY: '返信待ち（発注済み）',
-  ARRANGED: '手配済み',
-  DONE: '催行済み',
-  TEST: 'テスト予約',
-  CX_NO_ORDER: 'キャンセル（未発注）',
-  CX_WAIT_SEND: 'キャンセル（リールへ連絡待ち）',
-  CX_WAIT_REPLY: 'キャンセル（リールの返信待ち）',
-  CX_DONE: 'キャンセル（完了）',
-  CX_UNKNOWN: 'キャンセル（台帳になし・要確認）'
+// 台帳の列（見出しの文字がそのままキーになる）
+var H = {
+  ID: '案件ID', WHO: '次にやる人', TODO: '次にやること', DUE: '期限', ST: '状態',
+  DATE: '催行日', TIME: '開始', TOUR: 'ツアー', ADULT: '大人', CHILD: '子ども', NAME: '代表者名', CONTACT: '連絡先',
+  ROUTE: '経路', MEMO: 'メモ', GUIDE: 'ガイド名',
+  ACCEPT: '①受注（リール）', ARRANGE: '②手配完了（リール）', GUEST: '③ゲスト連絡（リール）',
+  REPORT: '④完了報告（ガイド）', RECEIVE: '⑤受領（キラナ）',
+  CXOK: 'キャンセル確認（リール）', CXKIRA: 'キャンセル対応（キラナ）',
+  NOTE: '変更・注意',
+  BOOKING: '予約番号', AGENT: '代理店予約番号', PLAN: 'PLAN名', SRC: '取込元',
+  T_CREATED: '登録日時', T_ACCEPT: '受注日時', T_ARRANGE: '手配日時', T_GUEST: '連絡日時', T_REPORT: '報告日時',
+  T_RECEIVE: '受領日時', T_CX: 'キャンセル日時', CX_REASON: 'キャンセルの理由', T_CXOK: 'キャンセル確認日時',
+  ALERTED: '通知済み', REPORT_SUM: '報告の要約'
 };
 
 var LEDGER_HEADERS = [
-  '案件ID', '状態', '予約番号', '代理店予約番号', '経路', 'アカウント', 'PLAN名', 'ツアー',
-  '催行日', '開始時刻', '大人', '子ども', '代表者名', '連絡先', 'メモ',
-  '受信日時', '入力の期限', '入力日時', '発注日時', 'リール返信日時',
-  'キャンセル受信日時', 'キャンセル連絡日時', '最終催促', '催促回数',
-  '元メールID', '発注スレッドID', '下書きID', 'トークン'
+  H.ID, H.WHO, H.TODO, H.DUE, H.ST,
+  H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO, H.GUIDE,
+  H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA, H.NOTE,
+  H.BOOKING, H.AGENT, H.PLAN, H.SRC,
+  H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST, H.T_REPORT, H.T_RECEIVE, H.T_CX, H.CX_REASON, H.T_CXOK,
+  H.ALERTED, H.REPORT_SUM
 ];
 
-var TOUR_HEADERS = ['キーワード', 'ツアー名', '集合場所', '開始時刻の候補', '注意'];
+// チェック欄と、✓ を付けたときに時刻を入れる列
+var CHECKS = [
+  { col: H.ACCEPT, stamp: H.T_ACCEPT, implies: [] },
+  { col: H.ARRANGE, stamp: H.T_ARRANGE, implies: [H.ACCEPT] },
+  { col: H.GUEST, stamp: H.T_GUEST, implies: [H.ACCEPT, H.ARRANGE] },
+  { col: H.RECEIVE, stamp: H.T_RECEIVE, implies: [] },
+  { col: H.CXOK, stamp: H.T_CXOK, implies: [] },
+  { col: H.CXKIRA, stamp: null, implies: [] }
+];
+// スクリプトが書く列（人は触らない）
+var AUTO_COLS = [H.ID, H.WHO, H.TODO, H.DUE, H.ST, H.NOTE, H.SRC, H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST,
+  H.T_REPORT, H.T_RECEIVE, H.T_CX, H.CX_REASON, H.T_CXOK, H.ALERTED, H.REPORT_SUM];
+// 数式（リンク）を入れる列。行をまとめて書き戻すときは飛ばす
+var FORMULA_COLS = [H.REPORT];
 
-// キーワードは「PLAN名・商品名に含まれる文字」。| で区切ると、どれか1つ。上の行から順に照合する。
+var WHO = { REELU: 'リール', KIRA: 'キラナ', GUIDE: 'ガイド' };
+var ROUTES_MANUAL = ['メール', 'インフルエンサー'];
+var ROUTE_CHOICES = ['メール', 'インフルエンサー', '公式直販', 'Klook', 'Viator', 'GetYourGuide', 'NKTセット', 'その他'];
+
+var TOUR_HEADERS = ['キーワード', 'ツアー名', '集合場所', '時刻の読み替え', '行程（完了報告の選択肢）', '注意'];
+
+// キーワードは PLAN名 に含まれる文字。| で区切ると、どれか1つ。上の行から順に照合する。
 var TOUR_DEFAULTS = [
-  ['秘密の神社', '秘境神社 Ninja Walk', '新宿東宝ビル1F（マルハン入口の横）', '17:00-21:30/30', ''],
-  ['ローカルツアーセット', 'NKTセット（秘境神社 Ninja Walk）', '新宿東宝ビル1F（NKT会場を出てすぐ）', '16:30,19:30', 'NKT 15:00の部→16:30開始、18:00の部→19:30開始'],
-  ['ゴールデン街', 'ゴールデン街ナイト', '新宿駅 東口交番前', '17:00-22:00/30', ''],
-  ['二丁目|LGBTQ', '新宿二丁目 LGBTQ+', '京王新宿3丁目ビル スターバックス前', '17:00-22:00/30', 'ガイドは忍者の衣装を着ない'],
-  ['ハンコ|印鑑', 'ハンコ作り', 'バスタ新宿（大看板の下）', '11:00-18:00/30', '平日のみ'],
-  ['合羽橋|包丁', '合羽橋', '田原町駅3番出口', '10:00-16:00/30', 'ガイドは忍者の衣装を着ない'],
-  ['アメ横|上野', '上野アメ横', 'JR上野駅 上野の森さくらテラス1F（タリーズ前）', '11:00-17:00/30', 'ガイドは忍者の衣装を着ない'],
-  ['御苑', '新宿御苑', '京王新宿3丁目ビル スターバックス前', '10:30-16:00/30', '春のみ'],
-  ['浅草', '浅草ナイト', '浅草文化観光センター1F', '17:00-21:00/30', 'ガイドは忍者の衣装を着ない'],
-  ['スクーター|RIDE', 'Eスクーター（NINJA GO RIDE）', '新宿東宝ビル1F', '15:05,18:05', '']
+  ['ローカルツアーセット', 'NKTセット（秘境神社）', '新宿東宝ビル1F（NKT会場を出てすぐ）', '15:00=16:30, 18:00=19:30',
+    '集合・あいさつ／歌舞伎町一番街・さくら通り／秘境の神社／ゴールデン街・花園神社／解散', 'CSVの時刻はNKT公演の開始。ウォークは公演の1時間30分後'],
+  ['秘密の神社', '秘境神社 Ninja Walk', '新宿東宝ビル1F（マルハン入口の横）', '',
+    '集合・あいさつ／歌舞伎町一番街・さくら通り／秘境の神社／ゴールデン街・花園神社／解散', ''],
+  ['ゴールデン街', 'ゴールデン街ナイト', '新宿駅 東口交番前', '',
+    '集合・アイスブレイク／花園神社／ゴールデン街／歌舞伎町／まとめ', ''],
+  ['二丁目|LGBTQ', '新宿二丁目 LGBTQ+', '京王新宿3丁目ビル スターバックス前', '',
+    '集合・二丁目の大通り／ゴールデン街／歌舞伎町タワー／まとめ', 'ガイドは忍者の衣装を着ない'],
+  ['ハンコ|印鑑', 'ハンコ作り', 'バスタ新宿（新宿3-38-1）', '',
+    '集合・漢字ワークショップ／印章店で注文／お土産さんぽ／まとめ', '平日のみ'],
+  ['合羽橋|包丁', '合羽橋', '田原町駅3番出口', '',
+    '集合・あいさつ／器の宝探し／切子ガラス／商店の紹介／包丁と名入れ／解散', 'ガイドは忍者の衣装を着ない'],
+  ['アメ横|上野', '上野アメ横', 'JR上野駅 上野の森さくらテラス1F', '',
+    '集合・あいさつ／アメ横・赤ちょうちん横丁／上野公園・神社の作法／まとめ', 'ガイドは忍者の衣装を着ない'],
+  ['御苑', '新宿御苑', '京王新宿3丁目ビル スターバックス前', '',
+    '集合・スイーツ／入園・侍の話／桜の写真・フードクイズ／庭園のしかけ／まとめ', '春のみ'],
+  ['浅草', '浅草ナイト', '浅草文化観光センター1F', '',
+    '集合・屋上から浅草寺とスカイツリー／雷門・仲見世のシャッターアート／浅草寺・五重塔・おみくじ／浅草神社／伝法院通り・最後の1枚／解散', 'ガイドは忍者の衣装を着ない。浅草神社の本殿は撮影しない'],
+  ['スクーター|RIDE', 'Eスクーター（NINJA GO RIDE）', '新宿東宝ビル1F', '',
+    '集合・安全説明／都庁へ走行／展望室・プロジェクションマッピング／歌舞伎町へ走行／徒歩ツアー', '16歳以上']
 ];
 
 var SETTING_DEFAULTS = [
-  ['通知先メール', '', '催促・お知らせを受け取るアドレス。複数はカンマ区切り'],
-  ['LINE通知', 'OFF', 'ON にすると至急の通知を LINE にも送る（README の「LINE の設定」が必要）'],
-  ['取り込み開始', '', 'この日時より前に届いた通知メールは取り込まない（初期設定のときに自動で入る）'],
-  ['入力の期限（分）', '120', '予約の通知を受けてから、詳細を入力するまでの期限'],
-  ['発注の期限（分）', '30', '詳細を入力してから、リールへ発注メールを送るまでの期限'],
-  ['催促の間隔（分）', '60', '期限を過ぎたあと、催促を繰り返す間隔'],
-  ['夜間の開始', '22:00', 'この時刻から「夜間の終了」までは催促を送らない'],
+  ['キラナの通知先', '', 'キラナの担当者のアドレス。複数はカンマ区切り'],
+  ['リールの通知先', '', 'リールの担当者・共有アドレス。複数はカンマ区切り'],
+  ['リールの確認時刻', '13:00', 'リールが毎日台帳を見る時刻'],
+  ['受注の猶予（分）', '60', '確認時刻からこの時間までに ①受注 がなければ通知'],
+  ['手配の期限（前日の時刻）', '20:00', 'この時刻までに翌日分の ②手配完了 がなければ通知（原則キラナでキャンセル対応）'],
+  ['手配の事前確認（時刻）', '19:00', '翌日分に未手配があれば、この時刻にキラナとリールへ知らせる'],
+  ['ゲスト連絡の期限（開始の何時間前）', '3', '仮置き。打ち合わせで決まったら直す'],
+  ['完了報告の期限（翌日の時刻）', '12:00', '催行日の翌日のこの時刻までに ④完了報告 がなければ通知'],
+  ['受領の期限（日）', '3', '完了報告からこの日数のうちに ⑤受領'],
+  ['キャンセル確認の期限（時間）', '3', 'キャンセルが台帳に出てから、リールが確認するまで'],
+  ['夜間の開始', '22:00', 'この時刻から「夜間の終了」までは通知を送らない（朝にまとめて送る）'],
   ['夜間の終了', '08:00', ''],
-  ['発注のしかた', '下書き', '下書き＝この Gmail に発注メールの下書きを作る／自動送信＝入力と同時に送る／しない＝催促だけ'],
-  ['リールの宛先', '', '発注メールの宛先。複数はカンマ区切り'],
-  ['リールのCC', '', ''],
-  ['リールのドメイン', 'reelu.jp', 'このドメインからの返信を「手配済み」とみなす'],
-  ['発注メールの宛名', '株式会社Reelu\nご担当者様', ''],
-  ['発注メールの件名の先頭', '', '試運用中は【試運用】など'],
-  ['発注メールのCC', '', 'キラナ担当など'],
-  ['発注メールの署名', 'NINJA GO TOURS（株式会社Kiranah Resort）', ''],
-  ['返信の期限（時間）', '24', '発注してからリールの返信を待つ時間'],
-  ['直前の返信の期限（時間）', '2', '催行まで「直前とみなす時間」を切っているときの返信の期限'],
-  ['直前とみなす時間', '48', '']
+  ['NKTセットのキーワード', 'ローカルツアーセット', 'tryhard- の CSV から、PLAN名にこの文字を含む行だけを取り込む'],
+  ['自動キャンセルの上限（件）', '5', '1つのCSVで「消えた予約」がこれより多いときは、キャンセルにせず確認を求める（書き出しの誤りに備える）'],
+  ['CSVの置き場（フォルダID）', '', '初期設定で自動で入る'],
+  ['完了報告フォーム', '', '初期設定で自動で入る（ガイドに渡すリンクは台帳の ④ 列に案件ごとに出る）']
 ];
 
-var LOG_HEADERS = ['日時', '種類', '案件ID', '予約番号', '内容', 'メールID'];
+var LOG_HEADERS = ['日時', '種類', '案件ID', '予約番号', '内容'];
 
-// 1ファイル版（build.cjs で作る）では、画面の HTML と設定の初期値がこのファイルの最後で入る
-var INDEX_HTML = '';
-var SETTING_OVERRIDES = {};
-
-var LABEL_DONE = 'NGT台帳/取込済';
-var LABEL_ERROR = 'NGT台帳/取込不可';
-var MAIL_QUERY = '(from:no-reply@linktivity.co.jp OR subject:"予約が入りました" OR subject:"予約がキャンセル")';
+// 完了報告フォームの質問（見出しの文字で回答を読む）
+var Q = {
+  ID: '案件ID',
+  GUIDE: 'ガイド名',
+  TOUR: 'ツアー',
+  MEET: '【必須】ゲストと合流できましたか',
+  ROUTE: '【必須】予定の行程をすべて回りましたか',
+  END: '【必須】終了時刻',
+  NOTICE: '【必須】注意事項（撮影できない場所・マナーなど）を説明しましたか',
+  TROUBLE: '【必須】ケガ・トラブル・苦情はありましたか',
+  REACTION: '【必須】ゲストの反応（5段階）',
+  REVIEW: '【必須】レビュー（口コミ）のお願い',
+  DETAIL: '【必須（あった場合）】合流できなかった・省いた行程・トラブルの内容',
+  BEST: '【任意】いちばん盛り上がった場所',
+  LATE: '【任意】時間が押した・困った場所',
+  PHOTO: '【任意】写真をお渡ししましたか',
+  IMPROVE: '【任意】マニュアルと違った点・改善の提案',
+  OTHER: '【任意】ゲストからの質問・その他'
+};
+var A = {
+  MEET: ['予定どおり合流した', '遅れて合流した（10分以上）', '合流できなかった'],
+  ROUTE: ['すべて回った', '一部を省いた'],
+  END: ['予定どおり', '押した（10分以上）', '早く終わった'],
+  NOTICE: ['説明した', '説明できなかった'],
+  TROUBLE: ['なかった', 'あった'],
+  REVIEW: ['その場で書いてもらった', 'お願いした（後で書くと）', 'お願いできなかった'],
+  PHOTO: ['お渡しした', 'お渡ししていない', '希望されなかった']
+};
 
 var H_MS = 3600000;
 var MIN_MS = 60000;
+var DAY_MS = 24 * H_MS;
 var WD = '日月火水木金土';
+
+// 1ファイル版（build.cjs で作る）では、設定の初期値がこのファイルの最後で入る
+var SETTING_OVERRIDES = {};
 
 // テストで差し替えられるように、現在時刻は必ずここから取る
 function now_() { return new Date(); }
@@ -99,50 +155,40 @@ function now_() { return new Date(); }
 // ===== 日時（日本時間）=====
 
 function isDate_(v) { return Object.prototype.toString.call(v) === '[object Date]'; }
-
 function pad2_(n) { return (n < 10 ? '0' : '') + n; }
-
 function jst_(d) {
   var t = new Date(d.getTime() + 9 * H_MS);
   return { y: t.getUTCFullYear(), mo: t.getUTCMonth() + 1, d: t.getUTCDate(), h: t.getUTCHours(), mi: t.getUTCMinutes(), wd: t.getUTCDay() };
 }
-
 function jstDate_(y, mo, d, h, mi) { return new Date(Date.UTC(y, mo - 1, d, (h || 0) - 9, mi || 0)); }
-
 function fmtDT_(d) {
   if (!isDate_(d) || isNaN(d)) return '';
   var p = jst_(d);
   return p.mo + '/' + p.d + '(' + WD[p.wd] + ') ' + pad2_(p.h) + ':' + pad2_(p.mi);
 }
-
-function fmtDayJa_(d) {
-  var p = jst_(d);
-  return p.mo + '月' + p.d + '日(' + WD[p.wd] + ')';
+function fmtMD_(ymd) {
+  if (!ymd) return '';
+  var a = ymd.split('-');
+  var d = jstDate_(+a[0], +a[1], +a[2], 12, 0);
+  return (+a[1]) + '/' + (+a[2]) + '(' + WD[jst_(d).wd] + ')';
 }
-
-function ymd_(d) {
-  var p = jst_(d);
-  return p.y + '-' + pad2_(p.mo) + '-' + pad2_(p.d);
-}
-
+function ymd_(d) { var p = jst_(d); return p.y + '-' + pad2_(p.mo) + '-' + pad2_(p.d); }
 function hmToMin_(s) {
   var m = String(s == null ? '' : s).match(/^\s*(\d{1,2}):(\d{2})/);
   return m ? (+m[1]) * 60 + (+m[2]) : null;
 }
-
 function minOfDay_(d) { var p = jst_(d); return p.h * 60 + p.mi; }
 
 function toDate_(v) {
   if (isDate_(v)) return isNaN(v) ? null : v;
   if (v === '' || v == null) return null;
-  // 「2026-11-12 10:00」のような文字は日本時間として読む（スクリプトのタイムゾーンに左右されないように）
   var m = String(v).match(/^\s*(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?\s*$/);
   if (m) return jstDate_(+m[1], +m[2], +m[3], m[4] ? +m[4] : 0, m[5] ? +m[5] : 0);
   var d = new Date(v);
   return isNaN(d) ? null : d;
 }
 
-// 台帳に人が直接書いた形（2026-11-12／2026/11/12／20261112／2026年11月12日）も読む
+// 2026-11-12／2026/11/12／20261112／2026年11月12日 を読む
 function toYmd_(v) {
   if (!v) return '';
   if (isDate_(v)) return isNaN(v) ? '' : ymd_(v);
@@ -154,7 +200,7 @@ function toYmd_(v) {
   return m[1] + '-' + pad2_(mo) + '-' + pad2_(d);
 }
 
-// 17:00／1700／17時／17時30分／17 も読む（数字だけの 1700 は 17:00、17 は 17:00）
+// 17:00／1700／17時／17時30分／17 を読む
 function toHm_(v) {
   if (v === '' || v == null) return '';
   if (isDate_(v)) { var p = jst_(v); return pad2_(p.h) + ':' + pad2_(p.mi); }
@@ -167,11 +213,17 @@ function toHm_(v) {
   return pad2_(h) + ':' + pad2_(mi);
 }
 
-function tourStart_(c) {
-  var day = toYmd_(c['催行日']), hm = toHm_(c['開始時刻']);
+function startOf_(c) {
+  var day = toYmd_(c[H.DATE]), hm = toHm_(c[H.TIME]);
   if (!day || !hm) return null;
   var a = day.split('-'), b = hm.split(':');
   return jstDate_(+a[0], +a[1], +a[2], +b[0], +b[1]);
+}
+
+// 催行日の off 日後の hh:mm（日本時間）
+function dayAt_(ymd, off, hm) {
+  var a = ymd.split('-'), m = hmToMin_(hm) || 0;
+  return jstDate_(+a[0], +a[1], +a[2] + off, Math.floor(m / 60), m % 60);
 }
 
 function inQuiet_(d, qs, qe) {
@@ -180,100 +232,50 @@ function inQuiet_(d, qs, qe) {
   return a < b ? (m >= a && m < b) : (m >= a || m < b);
 }
 
-// d 以降で最初に来る「夜間の終了」時刻
-function quietEndAfter_(d, qe) {
-  var p = jst_(d), e = hmToMin_(qe);
-  var t = jstDate_(p.y, p.mo, p.d, Math.floor(e / 60), e % 60);
-  if (t.getTime() <= d.getTime()) t = new Date(t.getTime() + 24 * H_MS);
-  return t;
+function truthy_(v) { return v === true || String(v).toUpperCase() === 'TRUE'; }
+function splitList_(v) {
+  return String(v || '').split(/[,、\s]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s; });
 }
+function num_(v, d) { var n = Number(v); return isFinite(n) && String(v).trim() !== '' ? n : d; }
 
-// 予約の通知を受けてから、詳細を入力するまでの期限（夜間は朝に回す）
-function detailDue_(received, cfg) {
-  var base = inQuiet_(received, cfg.quietStart, cfg.quietEnd) ? quietEndAfter_(received, cfg.quietEnd) : received;
-  var due = new Date(base.getTime() + cfg.inputMin * MIN_MS);
-  if (inQuiet_(due, cfg.quietStart, cfg.quietEnd)) due = new Date(quietEndAfter_(due, cfg.quietEnd).getTime() + cfg.inputMin * MIN_MS);
-  return due;
-}
+// ===== 設定・ツアー =====
 
-// リールの返信の期限（催行が近いときは短くする）
-function replyDue_(from, tourStart, cfg) {
-  if (!from) return null;
-  var near = tourStart && (tourStart.getTime() - from.getTime()) < cfg.shortWindowHours * H_MS;
-  return new Date(from.getTime() + (near ? cfg.shortReplyHours : cfg.replyHours) * H_MS);
-}
-
-function needsReminder_(now, due, last, cfg) {
-  if (!due || now.getTime() < due.getTime()) return false;
-  if (inQuiet_(now, cfg.quietStart, cfg.quietEnd)) return false;
-  return !last || (now.getTime() - last.getTime()) >= cfg.remindMin * MIN_MS;
-}
-
-// ===== 通知メールの読み取り =====
-
-var BOOKING_NO_RE = /[A-Z][A-Z0-9_]*-\d{8}-[A-Z0-9]{3,}/;
-
-function parseLinktivityMail(subject, body) {
-  var text = String(body || '').replace(/\r/g, '');
-  var subj = String(subject || '');
-  var event = null;
-  if (/この予約はキャンセルされました|予約がキャンセルされ/.test(text) || /予約がキャンセル/.test(subj)) event = 'cancel';
-  else if (/新規予約が入りました|予約が入りました/.test(text) || /予約が入りました/.test(subj)) event = 'new';
-
-  var bookingNo = '';
-  var m = text.match(new RegExp('(?:^|\\n)\\s*予約番号[\\s:：]*(' + BOOKING_NO_RE.source + ')'));
-  if (m) bookingNo = m[1];
-  if (!bookingNo) { m = subj.match(BOOKING_NO_RE); if (m) bookingNo = m[0]; }
-
-  m = text.match(/代理店予約番号[\s:：]*([^\s]+)/);
-  var agentNo = m ? m[1] : '';
-  m = text.match(/PLAN名[ \t:：]*\n?[ \t]*([^\n]+)/);
-  var plan = m ? m[1].trim() : '';
-  m = text.match(/(?:^|\n)\s*(株式会社[^\n]+)/);
-  var account = m ? m[1].trim() : '';
-  m = text.match(/site=([A-Za-z_]+)/);
-  var site = m ? m[1] : '';
-
-  // 「予約番号」の直前の行が商品名
-  var product = '';
-  var lines = text.split('\n');
-  for (var i = 0; i < lines.length; i++) {
-    if (/^\s*予約番号/.test(lines[i])) {
-      for (var j = i - 1; j >= 0; j--) {
-        var s = lines[j].trim();
-        if (s) { product = s; break; }
-      }
-      break;
-    }
-  }
-  return { event: event, bookingNo: bookingNo, agentNo: agentNo, plan: plan, product: product, account: account, site: site };
-}
-
-function channelOf_(bookingNo) {
-  var prefix = String(bookingNo || '').split('-')[0];
-  var map = {
-    ARS_NINJAGORIDE: '公式直販', ARS_TRYHARD: 'NKT直販', ARS_TRIPLABO_WEB: 'TRIPLABO_WEB',
-    VIATOR: 'Viator', KLOOK: 'Klook', GETYOURGUIDE: 'GetYourGuide', GYG: 'GetYourGuide'
+function normalizeSettings_(raw) {
+  return {
+    kiraTo: splitList_(raw['キラナの通知先']),
+    reeluTo: splitList_(raw['リールの通知先']),
+    checkTime: toHm_(raw['リールの確認時刻']) || '13:00',
+    acceptGraceMin: num_(raw['受注の猶予（分）'], 60),
+    arrangeDeadline: toHm_(raw['手配の期限（前日の時刻）']) || '20:00',
+    precheckTime: toHm_(raw['手配の事前確認（時刻）']) || '19:00',
+    guestHours: num_(raw['ゲスト連絡の期限（開始の何時間前）'], 3),
+    reportTime: toHm_(raw['完了報告の期限（翌日の時刻）']) || '12:00',
+    receiveDays: num_(raw['受領の期限（日）'], 3),
+    cxHours: num_(raw['キャンセル確認の期限（時間）'], 3),
+    quietStart: toHm_(raw['夜間の開始']) || '22:00',
+    quietEnd: toHm_(raw['夜間の終了']) || '08:00',
+    nktKeyword: String(raw['NKTセットのキーワード'] || 'ローカルツアーセット').trim(),
+    maxAutoCancel: num_(raw['自動キャンセルの上限（件）'], 5),
+    folderId: String(raw['CSVの置き場（フォルダID）'] || '').trim()
   };
-  return map[prefix] || prefix || '不明';
 }
 
-function timeOptions_(spec) {
-  spec = String(spec || '').trim();
-  var m = spec.match(/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*\/\s*(\d+)$/);
-  if (m) {
-    var out = [], a = hmToMin_(m[1]), b = hmToMin_(m[2]), step = +m[3];
-    for (var t = a; t <= b && step > 0; t += step) out.push(pad2_(Math.floor(t / 60)) + ':' + pad2_(t % 60));
-    return out;
-  }
-  return spec ? spec.split(/[,、\s]+/).map(toHm_).filter(function (x) { return x; }) : [];
+function parseTimeMap_(s) {
+  var map = {};
+  String(s || '').split(/[,、]/).forEach(function (pair) {
+    var p = pair.split(/[=＝→>]/);
+    if (p.length === 2 && toHm_(p[0]) && toHm_(p[1])) map[toHm_(p[0])] = toHm_(p[1]);
+  });
+  return map;
 }
 
 function toursFromRows_(rows) {
   return rows.filter(function (r) { return r[1]; }).map(function (r) {
     return {
       keywords: String(r[0] || '').split('|').map(function (s) { return s.trim(); }).filter(function (s) { return s; }),
-      name: String(r[1]), meet: String(r[2] || ''), times: timeOptions_(r[3]), note: String(r[4] || '')
+      name: String(r[1]).trim(), meet: String(r[2] || ''), timeMap: parseTimeMap_(r[3]),
+      stops: String(r[4] || '').split(/[／\/]/).map(function (s) { return s.trim(); }).filter(function (s) { return s; }),
+      note: String(r[5] || '')
     };
   });
 }
@@ -281,105 +283,265 @@ function toursFromRows_(rows) {
 function matchTour_(text, tours) {
   text = String(text || '');
   for (var i = 0; i < tours.length; i++) {
-    for (var k = 0; k < tours[i].keywords.length; k++) {
-      if (text.indexOf(tours[i].keywords[k]) >= 0) return tours[i];
-    }
+    for (var k = 0; k < tours[i].keywords.length; k++) if (text.indexOf(tours[i].keywords[k]) >= 0) return tours[i];
   }
   return null;
 }
-
 function tourByName_(name, tours) {
-  for (var i = 0; i < tours.length; i++) if (tours[i].name === name) return tours[i];
+  for (var i = 0; i < tours.length; i++) if (tours[i].name === String(name || '').trim()) return tours[i];
   return null;
+}
+
+// ===== 状態と期限（この関数が「次に誰が何をするか」を決める）=====
+
+// 受注の期限：登録後の最初の「確認時刻」＋猶予。ただし手配の期限（前日20時）より後にはしない
+function acceptDue_(created, arrangeDue, cfg) {
+  var p = jst_(created), m = hmToMin_(cfg.checkTime);
+  var t = jstDate_(p.y, p.mo, p.d, Math.floor(m / 60), m % 60);
+  if (created.getTime() > t.getTime()) t = new Date(t.getTime() + DAY_MS);
+  var due = new Date(t.getTime() + cfg.acceptGraceMin * MIN_MS);
+  if (arrangeDue && due.getTime() > arrangeDue.getTime()) {
+    due = arrangeDue.getTime() > created.getTime() ? arrangeDue : new Date(created.getTime() + H_MS);
+  }
+  return due;
+}
+
+function derive_(c, cfg, now) {
+  var ymd = toYmd_(c[H.DATE]);
+  var start = startOf_(c);
+  var created = toDate_(c[H.T_CREATED]) || now;
+  var accepted = truthy_(c[H.ACCEPT]), arranged = truthy_(c[H.ARRANGE]), guested = truthy_(c[H.GUEST]);
+  var r = { st: '', who: '', todo: '', due: null, step: '' };
+
+  if (c[H.T_CX] || truthy_(c[H.CXKIRA])) {
+    if ((accepted || arranged) && !truthy_(c[H.CXOK])) {
+      var cx = toDate_(c[H.T_CX]) || now;
+      return { st: 'キャンセル（リール確認待ち）', who: WHO.REELU, step: 'cxok',
+        todo: 'キャンセルになりました。手配していたらガイドに連絡し「キャンセル確認」に✓',
+        due: new Date(cx.getTime() + cfg.cxHours * H_MS) };
+    }
+    return { st: 'キャンセル済み', who: '', todo: '', due: null, step: 'cxdone' };
+  }
+  if (!ymd || !start || !String(c[H.TOUR] || '').trim()) {
+    return { st: '入力待ち', who: WHO.KIRA, step: 'input', todo: '催行日・開始・ツアー・大人の人数を入れる', due: new Date(created.getTime() + H_MS) };
+  }
+  if (truthy_(c[H.RECEIVE])) return { st: '完了', who: '', todo: '', due: null, step: 'done' };
+  var reported = toDate_(c[H.T_REPORT]);
+  if (reported) {
+    return { st: '完了報告済み（受領待ち）', who: WHO.KIRA, step: 'receive', todo: '完了報告を読んで ⑤受領 に✓',
+      due: new Date(reported.getTime() + cfg.receiveDays * DAY_MS) };
+  }
+  if (guested) {
+    var before = now.getTime() < start.getTime();
+    return { st: 'ゲスト連絡済み', who: WHO.GUIDE, step: 'report',
+      todo: before ? '当日ツアーを実施。終わったら ④完了報告フォームを送る' : 'ツアー後の ④完了報告フォームを送る',
+      due: dayAt_(ymd, 1, cfg.reportTime) };
+  }
+  if (arranged) {
+    var noGuide = !String(c[H.GUIDE] || '').trim();
+    return { st: '手配済み（ゲスト連絡待ち）', who: WHO.REELU, step: 'guest',
+      todo: (noGuide ? 'ガイド名を入れる。' : '') + 'ガイドがゲストと連絡できたら ③ゲスト連絡 に✓',
+      due: new Date(start.getTime() - cfg.guestHours * H_MS) };
+  }
+  var arrangeDue = dayAt_(ymd, -1, cfg.arrangeDeadline);
+  if (now.getTime() >= arrangeDue.getTime()) {
+    return { st: '未手配（期限切れ）', who: WHO.KIRA, step: 'unarranged', due: arrangeDue,
+      todo: '前日' + cfg.arrangeDeadline + 'までに手配できていません。原則キャンセル対応（対応したら「キャンセル対応（キラナ）」に✓）。手配できたらリールが ②手配完了 に✓' };
+  }
+  if (accepted) {
+    return { st: '受注済み（手配中）', who: WHO.REELU, step: 'arrange', due: arrangeDue,
+      todo: 'ガイドを手配し、ガイド名を入れて ②手配完了 に✓' };
+  }
+  return { st: '新規（受注待ち）', who: WHO.REELU, step: 'accept', due: acceptDue_(created, arrangeDue, cfg),
+    todo: '内容を見て ①受注 に✓' };
+}
+
+function isOverdue_(d, now) { return !!(d.due && now.getTime() > d.due.getTime()); }
+
+// ===== CSV =====
+
+function parseCsv_(text) {
+  text = String(text || '').replace(/^﻿/, '');
+  var rows = [], row = [], f = '', q = false;
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+      else f += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(f); f = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(f); f = '';
+      rows.push(row); row = [];
+    } else f += ch;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+}
+
+// ファイル名で NGT／NKT を見分ける。分からなければ中身で見分ける
+function sourceOf_(fileName, rows) {
+  var n = String(fileName || '').toLowerCase().replace(/^.*[\\\/]/, '');
+  if (/(^|[^a-z])tryhard[-_]/.test(n)) return 'NKT';
+  if (/kiranah[-_]?resort/.test(n)) return 'NGT';
+  var text = rows && rows.length > 1 ? rows.slice(1, 6).map(function (r) { return r.join(','); }).join('\n') : '';
+  if (/ARS_TRYHARD|Ninja\+Kabuki/i.test(text)) return 'NKT';
+  if (/ARS_NINJAGORIDE|NINJA GO TOURS/i.test(text)) return 'NGT';
+  return null;
+}
+
+var OTA_NAMES = {
+  ARS_NINJAGORIDE: '公式直販', ARS_TRYHARD: 'NKT直販', KLOOK: 'Klook', GYG: 'GetYourGuide', GETYOURGUIDE: 'GetYourGuide',
+  VIATOR: 'Viator', VIATOR_TRYHARD: 'Viator', CTRIP: 'Trip.com', PELAGO: 'Pelago', HEADOUT: 'Headout', YAPAN_TOURS: 'Yapan Tours',
+  ARS_TRIPLABO_WEB: 'TRIPLABO'
+};
+function otaName_(ota, bookingNo) {
+  var k = String(ota || '').trim().toUpperCase() || String(bookingNo || '').split('-')[0].toUpperCase();
+  return OTA_NAMES[k] || (k ? k : '不明');
+}
+
+// CSV の1行を予約にする。取り込まない行は { skip: 理由 }
+function rowToBooking_(o, src, tours, cfg) {
+  var bookingNo = String(o.booking_id || '').trim();
+  if (!bookingNo) return { skip: '予約番号なし' };
+  var status = String(o.status || '').trim().toUpperCase();
+  var cancelled = /CANCEL/.test(status) || !!String(o.cancelled_date || '').trim();
+  if (status && !cancelled && status !== 'CONFIRMED') return { skip: '確定していない（' + status + '）' };
+  var plan = String(o.plan_name || '').trim();
+  if (src === 'NKT' && plan.indexOf(cfg.nktKeyword) < 0) return { skip: 'NKTのセット商品ではない' };
+  var tour = matchTour_(plan + ' ' + String(o.activity_name || ''), tours);
+  var hm = toHm_(o.activity_time);
+  if (tour && tour.timeMap[hm]) hm = tour.timeMap[hm];
+  var adult = 0, child = 0;
+  for (var i = 1; i <= 10; i++) {
+    var t = String(o['unit_type' + i] || ''), q = num_(o['unit_quantity' + i], 0);
+    if (!t || !q) continue;
+    if (/子供|子ども|こども|小人|child/i.test(t) && !/大人|共通|adult/i.test(t)) child += q; else adult += q;
+  }
+  var ota = otaName_(o.ota, bookingNo);
+  return {
+    bookingNo: bookingNo, agentNo: String(o.agent_booking_id || '').trim(), plan: plan,
+    tour: tour ? tour.name : '', ymd: toYmd_(o.activity_date), hm: hm, adult: adult, child: child,
+    name: String(o.participant_name || '').trim(), contact: String(o.contact_info || '').trim(),
+    route: src === 'NKT' ? 'NKTセット（' + ota + '）' : ota, cancelled: cancelled
+  };
+}
+
+function csvObjects_(rows) {
+  var head = rows[0].map(function (h) { return String(h).replace(/^﻿/, '').trim(); });
+  return rows.slice(1).map(function (r) {
+    var o = {};
+    head.forEach(function (h, i) { o[h] = r[i] === undefined ? '' : r[i]; });
+    return o;
+  });
+}
+
+// CSV を台帳に反映する。L は台帳（ledger_ の戻り値）。返り値は結果の要約
+function importCsv_(fileName, text, L, cfg, tours, now) {
+  var rows = parseCsv_(text);
+  var res = { file: fileName, src: '', added: [], cancelled: [], changed: [], restored: [], skipped: 0, held: [], error: '' };
+  if (!rows.length) { res.error = '中身が空です'; return res; }
+  if (rows[0].map(function (h) { return String(h).replace(/^﻿/, '').trim(); }).indexOf('booking_id') < 0) {
+    res.error = 'LINKTIVITY の予約CSVの形ではありません（booking_id の列がない）'; return res;
+  }
+  var src = sourceOf_(fileName, rows);
+  if (!src) { res.error = 'NGT（kiranah-resort-）か NKT（tryhard-）か、ファイル名から分かりません'; return res; }
+  res.src = src;
+  var srcTag = src + ' CSV';
+  var stamp = fmtDT_(now);
+  var today = ymd_(now);
+  var seen = {};
+  var valid = 0;
+
+  csvObjects_(rows).forEach(function (o) {
+    var b = rowToBooking_(o, src, tours, cfg);
+    if (b.skip) { res.skipped++; return; }
+    valid++;
+    var c = findByBooking_(L, b.bookingNo);
+    if (b.cancelled) {
+      if (c && !c[H.T_CX]) { cancelCase_(c, now, 'CSVでキャンセル'); saveCase_(L, c); res.cancelled.push(c); }
+      return;
+    }
+    seen[b.bookingNo] = true;
+    if (!c) {
+      c = {};
+      c[H.ID] = nextCaseId_(L.rows);
+      c[H.DATE] = b.ymd; c[H.TIME] = b.hm; c[H.TOUR] = b.tour; c[H.ADULT] = b.adult; c[H.CHILD] = b.child || '';
+      c[H.NAME] = b.name; c[H.CONTACT] = b.contact; c[H.ROUTE] = b.route;
+      c[H.BOOKING] = b.bookingNo; c[H.AGENT] = b.agentNo; c[H.PLAN] = b.plan; c[H.SRC] = srcTag;
+      c[H.T_CREATED] = now;
+      if (!b.tour) c[H.NOTE] = 'ツアーを判定できません。ツアー列を選んでください';
+      appendCase_(L, c);
+      res.added.push(c);
+      return;
+    }
+    // CSV から一度消えてキャンセル扱いにした予約が、また載っていたら戻す
+    if (c[H.T_CX] && /^CSVに載っていない/.test(String(c[H.CX_REASON]))) {
+      c[H.T_CX] = ''; c[H.CX_REASON] = ''; c[H.CXKIRA] = false;
+      addNote_(c, stamp + ' CSVに再び載ったため、キャンセルを取り消しました');
+      saveCase_(L, c); res.restored.push(c);
+    }
+    if (c[H.T_CX]) return;
+    var diffs = [];
+    var timeChanged = false;
+    if (b.ymd && b.ymd !== toYmd_(c[H.DATE])) { diffs.push('催行日 ' + fmtMD_(toYmd_(c[H.DATE])) + '→' + fmtMD_(b.ymd)); c[H.DATE] = b.ymd; timeChanged = true; }
+    if (b.hm && b.hm !== toHm_(c[H.TIME])) { diffs.push('開始 ' + toHm_(c[H.TIME]) + '→' + b.hm); c[H.TIME] = b.hm; timeChanged = true; }
+    if (b.adult !== num_(c[H.ADULT], 0)) { diffs.push('大人 ' + num_(c[H.ADULT], 0) + '→' + b.adult); c[H.ADULT] = b.adult; }
+    if ((b.child || 0) !== num_(c[H.CHILD], 0)) { diffs.push('子ども ' + num_(c[H.CHILD], 0) + '→' + b.child); c[H.CHILD] = b.child || ''; }
+    if (b.name && b.name !== String(c[H.NAME])) { c[H.NAME] = b.name; }
+    if (b.contact && b.contact !== String(c[H.CONTACT])) { c[H.CONTACT] = b.contact; }
+    if (diffs.length) {
+      var note = stamp + ' 変更：' + diffs.join('、');
+      if (timeChanged && truthy_(c[H.ARRANGE])) {
+        c[H.ARRANGE] = false; c[H.T_ARRANGE] = ''; c[H.GUEST] = false; c[H.T_GUEST] = '';
+        note += '（日時が変わったため、手配からやり直し）';
+      }
+      addNote_(c, note);
+      c[H.ALERTED] = '';
+      saveCase_(L, c);
+      res.changed.push(c);
+    }
+  });
+
+  // 今日以降の予約で、このCSVに載っていないもの＝キャンセルされた予約
+  var gone = L.rows.filter(function (c) {
+    return c[H.SRC] === srcTag && c[H.BOOKING] && !seen[c[H.BOOKING]] && !c[H.T_CX] &&
+      toYmd_(c[H.DATE]) >= today && !truthy_(c[H.RECEIVE]) && !c[H.T_REPORT];
+  });
+  if (gone.length && (valid === 0 || gone.length > cfg.maxAutoCancel)) {
+    gone.forEach(function (c) {
+      if (String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') < 0) {
+        addNote_(c, stamp + ' 要確認：最新のCSVに載っていません（件数が多いため、自動ではキャンセルにしていません）');
+        saveCase_(L, c);
+      }
+    });
+    res.held = gone;
+  } else {
+    gone.forEach(function (c) { cancelCase_(c, now, 'CSVに載っていない（キャンセルとみなす）'); saveCase_(L, c); res.cancelled.push(c); });
+  }
+  return res;
+}
+
+function cancelCase_(c, now, reason) {
+  c[H.T_CX] = now; c[H.CX_REASON] = reason; c[H.ALERTED] = '';
+  addNote_(c, fmtDT_(now) + ' ' + reason);
+}
+
+function addNote_(c, text) {
+  var cur = String(c[H.NOTE] || '').trim();
+  c[H.NOTE] = cur ? cur + '\n' + text : text;
 }
 
 function nextCaseId_(rows) {
   var max = 0;
-  rows.forEach(function (c) {
-    var m = String(c['案件ID']).match(/(\d+)$/);
-    if (m) max = Math.max(max, +m[1]);
-  });
+  rows.forEach(function (c) { var m = String(c[H.ID] || '').match(/(\d+)$/); if (m) max = Math.max(max, +m[1]); });
   var n = String(max + 1);
   while (n.length < 4) n = '0' + n;
   return 'NGT-' + n;
 }
 
-// ===== リールへのメール =====
-
-function caseTag_(id) { return '［' + id + '］'; }
-
-function mailSubject_(kind, c, cfg) {
-  var label = kind === 'cancel' ? '【キャンセル】' : kind === 'change' ? '【変更】' : '【ご依頼】';
-  var t = tourStart_(c);
-  var when = t ? fmtDayJa_(t) + ' ' + toHm_(c['開始時刻']) : '日時未定';
-  var tail = kind === 'order' ? 'ガイドご手配のお願い' : kind === 'change' ? 'ご予約内容の変更' : 'ご予約のキャンセル';
-  return (cfg.subjectPrefix || '') + label + when + '「' + c['ツアー'] + '」' + tail + caseTag_(c['案件ID']);
-}
-
-function mailBody_(kind, c, tour, cfg) {
-  var t = tourStart_(c);
-  var lead = {
-    order: '下記のとおり、ガイドのご手配をお願いいたします。',
-    change: '下記のご予約の内容が変更になりました。最新の内容は下記のとおりです。ガイドのご手配の変更をお願いいたします。',
-    cancel: '下記のご予約がキャンセルになりました。ガイドのご手配の取り消しをお願いいたします。\n担当ガイドが決まっている場合は、ガイドへのご連絡もお願いいたします。'
-  }[kind];
-  var lines = [
-    cfg.salutation, '', 'いつも大変お世話になっております。NINJA GO TOURS です。', lead, '',
-    '【ご予約の内容】',
-    '・日時：' + (t ? fmtDayJa_(t) + ' ' + toHm_(c['開始時刻']) + ' 開始' : '未定'),
-    '・ツアー：' + c['ツアー'],
-    '・集合場所：' + (tour ? tour.meet : ''),
-    '・予約番号：' + (c['予約番号'] || '（なし）') + '（台帳 ' + c['案件ID'] + '）',
-    '・予約経路：' + (c['経路'] || ''),
-    '',
-    '＜お客様情報＞',
-    '・代表者名：' + (c['代表者名'] || '') + ' 様',
-    '・参加人数：大人' + (c['大人'] || 0) + '名（12歳以下 ' + (c['子ども'] || 0) + '名）',
-    '・連絡先：' + (c['連絡先'] || '')
-  ];
-  if (c['メモ']) lines.push('・備考：' + c['メモ']);
-  if (tour && tour.note) lines.push('・注意：' + tour.note);
-  lines.push('');
-  lines.push(kind === 'cancel'
-    ? 'ご確認いただけましたら、このメールにご返信ください。'
-    : 'ご手配いただけましたら、このメールにご返信ください（担当ガイドのお名前もお知らせいただけますと幸いです）。');
-  lines.push('');
-  lines.push(cfg.signature);
-  return lines.join('\n');
-}
-
-// ===== 設定 =====
-
-function splitList_(v) {
-  return String(v || '').split(/[,、\s]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s; });
-}
-
-function num_(v, d) { var n = Number(v); return isFinite(n) && String(v).trim() !== '' ? n : d; }
-
-function normalizeSettings_(raw) {
-  var mode = String(raw['発注のしかた'] || '').trim();
-  return {
-    notifyTo: splitList_(raw['通知先メール']),
-    line: /^on$/i.test(String(raw['LINE通知'] || '').trim()),
-    since: toDate_(raw['取り込み開始']),
-    inputMin: num_(raw['入力の期限（分）'], 120),
-    orderMin: num_(raw['発注の期限（分）'], 30),
-    remindMin: num_(raw['催促の間隔（分）'], 60),
-    quietStart: toHm_(raw['夜間の開始']) || '22:00',
-    quietEnd: toHm_(raw['夜間の終了']) || '08:00',
-    orderMode: mode === '自動送信' ? 'send' : mode === 'しない' ? 'none' : 'draft',
-    reeluTo: splitList_(raw['リールの宛先']),
-    reeluCc: splitList_(raw['リールのCC']),
-    reeluDomain: String(raw['リールのドメイン'] || 'reelu.jp').trim(),
-    salutation: String(raw['発注メールの宛名'] || '株式会社Reelu\nご担当者様'),
-    subjectPrefix: String(raw['発注メールの件名の先頭'] || ''),
-    orderCc: splitList_(raw['発注メールのCC']),
-    signature: String(raw['発注メールの署名'] || 'NINJA GO TOURS'),
-    replyHours: num_(raw['返信の期限（時間）'], 24),
-    shortReplyHours: num_(raw['直前の返信の期限（時間）'], 2),
-    shortWindowHours: num_(raw['直前とみなす時間'], 48)
-  };
-}
+// ===== スプレッドシートの読み書き =====
 
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
@@ -387,663 +549,645 @@ function settings_() {
   var raw = {};
   SETTING_DEFAULTS.forEach(function (r) { raw[r[0]] = r[1]; });
   var sh = ss_().getSheetByName(SHEETS.SETTINGS);
-  if (sh) {
-    sh.getDataRange().getValues().slice(1).forEach(function (r) {
-      if (r[0] !== '' && r[0] != null) raw[String(r[0])] = r[1];
-    });
-  }
+  if (sh) sh.getDataRange().getValues().slice(1).forEach(function (r) { if (r[0] !== '' && r[0] != null) raw[String(r[0])] = r[1]; });
   return normalizeSettings_(raw);
 }
 
 function tours_() {
   var sh = ss_().getSheetByName(SHEETS.TOURS);
-  return sh ? toursFromRows_(sh.getDataRange().getValues().slice(1)) : toursFromRows_(TOUR_DEFAULTS);
+  return toursFromRows_(sh ? sh.getDataRange().getValues().slice(1) : TOUR_DEFAULTS);
 }
 
-// ===== 台帳の読み書き =====
-
+// 台帳を読む。案件IDがなくても、人が書きかけた行（手入力の予約）は拾う
 function ledger_() {
   var sh = ss_().getSheetByName(SHEETS.LEDGER);
   var values = sh.getDataRange().getValues();
-  var head = values[0];
+  var head = values[0].map(String);
   var rows = [];
   for (var r = 1; r < values.length; r++) {
     var o = { _row: r + 1 };
     for (var i = 0; i < head.length; i++) o[head[i]] = values[r][i];
-    if (o['案件ID']) rows.push(o);
+    if (o[H.ID] || o[H.DATE] || o[H.TOUR] || o[H.NAME] || o[H.BOOKING]) rows.push(o);
   }
-  return { sh: sh, head: head, rows: rows };
+  return { sh: sh, head: head, rows: rows, last: values.length };
 }
 
 function saveCase_(L, c) {
   var arr = L.head.map(function (h) { var v = c[h]; return v === undefined || v === null ? '' : v; });
-  L.sh.getRange(c._row, 1, 1, arr.length).setValues([arr]);
+  // 数式の列（④のリンク）は飛ばして書く
+  var start = 0;
+  for (var i = 0; i <= arr.length; i++) {
+    if (i === arr.length || FORMULA_COLS.indexOf(L.head[i]) >= 0) {
+      if (i > start) L.sh.getRange(c._row, start + 1, 1, i - start).setValues([arr.slice(start, i)]);
+      start = i + 1;
+    }
+  }
 }
 
 function appendCase_(L, c) {
-  c._row = L.sh.getLastRow() + 1;
+  c._row = Math.max(L.last, L.rows.reduce(function (m, x) { return Math.max(m, x._row); }, 1)) + 1;
+  L.last = c._row;
   saveCase_(L, c);
   L.rows.push(c);
   return c;
 }
 
-function findByBooking_(L, bookingNo) {
-  var hit = null;
-  L.rows.forEach(function (c) { if (bookingNo && c['予約番号'] === bookingNo) hit = c; });
-  return hit;
-}
-
-function findCase_(L, id) {
-  for (var i = 0; i < L.rows.length; i++) if (L.rows[i]['案件ID'] === id) return L.rows[i];
+function findByBooking_(L, no) {
+  for (var i = 0; i < L.rows.length; i++) if (no && String(L.rows[i][H.BOOKING]).trim() === no) return L.rows[i];
   return null;
 }
+function findCase_(L, id) {
+  for (var i = 0; i < L.rows.length; i++) if (String(L.rows[i][H.ID]).trim() === id) return L.rows[i];
+  return null;
+}
+function colOf_(L, name) { return L.head.indexOf(name) + 1; }
 
-function setStatus_(c, st) {
-  if (c['状態'] !== st) { c['状態'] = st; c['最終催促'] = ''; c['催促回数'] = 0; }
+function log_(kind, c, text) {
+  var sh = ss_().getSheetByName(SHEETS.LOG);
+  if (sh) sh.appendRow([now_(), kind, c ? c[H.ID] : '', c ? c[H.BOOKING] : '', text]);
 }
 
-function log_(kind, c, text, msgId) {
-  var sh = ss_().getSheetByName(SHEETS.LOG);
+// 手で書いた行に案件IDを付ける
+function initManual_(L, now) {
+  var n = 0;
+  L.rows.forEach(function (c) {
+    if (c[H.ID]) return;
+    c[H.ID] = nextCaseId_(L.rows);
+    c[H.T_CREATED] = now;
+    c[H.SRC] = '手入力';
+    if (!c[H.ROUTE]) c[H.ROUTE] = 'メール';
+    saveCase_(L, c);
+    log_('手入力', c, '手で書いた予約に案件IDを付けました（経路：' + c[H.ROUTE] + '）');
+    n++;
+  });
+  return n;
+}
+
+// ✓ を付けた・外したときの記録（onEdit から呼ぶ）
+function applyCheck_(c, colName, now, user) {
+  var def = null;
+  CHECKS.forEach(function (d) { if (d.col === colName) def = d; });
+  if (!def) return false;
+  var on = truthy_(c[colName]);
+  if (colName === H.CXKIRA) {
+    if (on && !c[H.T_CX]) cancelCase_(c, now, 'キラナでキャンセル対応');
+    if (!on && c[H.CX_REASON] === 'キラナでキャンセル対応') { c[H.T_CX] = ''; c[H.CX_REASON] = ''; addNote_(c, fmtDT_(now) + ' キラナのキャンセル対応を取り消し'); }
+  } else if (on) {
+    if (!c[def.stamp]) c[def.stamp] = now;
+    def.implies.forEach(function (k) {
+      if (!truthy_(c[k])) {
+        c[k] = true;
+        CHECKS.forEach(function (d) { if (d.col === k && !c[d.stamp]) c[d.stamp] = now; });
+      }
+    });
+  } else {
+    c[def.stamp] = '';
+  }
+  c[H.ALERTED] = '';
+  log_(on ? '✓' : '✓を外す', c, colName + (user ? '（' + user + '）' : ''));
+  return true;
+}
+
+// ===== 画面（台帳の色・今やること）=====
+
+var COLORS = { REELU: '#fde7d4', KIRA: '#dbe8fb', GUIDE: '#e2f2e0', LATE: '#f8c9c4', DONE: '#eeeeee', HEAD: '#1f2d52' };
+
+function whoColor_(d, now) {
+  if (!d.who) return COLORS.DONE;
+  if (isOverdue_(d, now)) return COLORS.LATE;
+  return d.who === WHO.REELU ? COLORS.REELU : d.who === WHO.KIRA ? COLORS.KIRA : COLORS.GUIDE;
+}
+
+// 全行の「次にやる人・次にやること・期限・状態」を書き直す
+function refreshAll_(L, cfg, now) {
+  var last = Math.max(L.last, 1);
+  if (last < 2) return [];
+  var byRow = {};
+  L.rows.forEach(function (c) { byRow[c._row] = c; });
+  var vals = [], bgs = [], list = [];
+  for (var r = 2; r <= last; r++) {
+    var c = byRow[r];
+    if (!c || !c[H.ID]) { vals.push(['', '', '', '']); bgs.push(['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']); continue; }
+    var d = derive_(c, cfg, now);
+    c._d = d;
+    list.push(c);
+    var late = isOverdue_(d, now);
+    vals.push([d.who ? (late ? '⚠ ' : '') + d.who : '—', d.todo, d.due || '', d.st]);
+    var col = whoColor_(d, now);
+    bgs.push([col, col, col, col, col]);
+  }
+  L.sh.getRange(2, colOf_(L, H.WHO), vals.length, 4).setValues(vals);
+  L.sh.getRange(2, 1, bgs.length, 5).setBackgrounds(bgs);
+  return list;
+}
+
+function todoUrl_() {
+  var ss = ss_(), sh = ss.getSheetByName(SHEETS.TODO);
+  return ss.getUrl() + (sh ? '#gid=' + sh.getSheetId() : '');
+}
+
+function renderTodo_(L, cfg, now, list) {
+  var sh = ss_().getSheetByName(SHEETS.TODO);
   if (!sh) return;
-  sh.appendRow([now_(), kind, c ? c['案件ID'] : '', c ? c['予約番号'] : '', text, msgId || '']);
-}
-
-function processedIds_() {
-  var set = {};
-  var sh = ss_().getSheetByName(SHEETS.LOG);
-  if (!sh) return set;
-  var v = sh.getDataRange().getValues();
-  for (var i = 1; i < v.length; i++) if (v[i][5]) set[String(v[i][5])] = true;
-  return set;
-}
-
-// ===== 通知（メール・LINE）=====
-
-function appUrl_() {
-  try { var u = ScriptApp.getService().getUrl(); if (u) return u; } catch (e) { /* 未デプロイ */ }
-  return '';
-}
-
-function caseUrl_(c) {
-  var u = appUrl_();
-  return u ? u + '?id=' + encodeURIComponent(c['案件ID']) + '&k=' + encodeURIComponent(c['トークン']) : '';
-}
-
-function listUrl_() {
-  var u = appUrl_();
-  var k = PropertiesService.getScriptProperties().getProperty('LIST_TOKEN');
-  return u && k ? u + '?k=' + encodeURIComponent(k) : '';
-}
-
-function gmailUrl_(msgId) { return msgId ? 'https://mail.google.com/mail/u/0/#all/' + msgId : ''; }
-
-// opts: { line: true/false, urgent: true/false }
-function notify_(cfg, subject, lines, opts) {
-  opts = opts || {};
-  var title = (opts.urgent ? '【至急】' : '') + '【NGT 手配】' + subject;
-  var body = lines.filter(function (s) { return s !== null && s !== undefined; }).join('\n');
-  var list = listUrl_();
-  if (list) body += '\n\n台帳の一覧：' + list;
-  if (cfg.notifyTo.length) {
-    MailApp.sendEmail({ to: cfg.notifyTo.join(','), subject: title, body: body, name: 'NGT 手配ボード' });
-  }
-  if (opts.line && cfg.line) sendLine_(title + '\n' + (opts.lineText || ''));
-}
-
-function sendLine_(text) {
-  var p = PropertiesService.getScriptProperties();
-  var token = p.getProperty('LINE_TOKEN');
-  var to = p.getProperty('LINE_TO');
-  if (!token || !to) return false;
-  var broadcast = to === 'broadcast';
-  var url = 'https://api.line.me/v2/bot/message/' + (broadcast ? 'broadcast' : 'push');
-  var payload = { messages: [{ type: 'text', text: String(text).slice(0, 4900) }] };
-  if (!broadcast) payload.to = to;
-  var res = UrlFetchApp.fetch(url, {
-    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-    headers: { Authorization: 'Bearer ' + token }, payload: JSON.stringify(payload)
-  });
-  if (res.getResponseCode() !== 200) log_('LINE送信エラー', null, res.getResponseCode() + ' ' + res.getContentText().slice(0, 300));
-  return res.getResponseCode() === 200;
-}
-
-// LINE には、お客様の名前を載せない
-function lineText_(c, extra) {
-  var t = tourStart_(c);
-  return [c['案件ID'] + '（' + (c['ツアー'] || c['PLAN名'] || '') + '）', t ? '催行 ' + fmtDT_(t) : null, extra || null, caseUrl_(c) || null]
-    .filter(function (s) { return s; }).join('\n');
-}
-
-function caseLines_(c) {
-  var t = tourStart_(c);
-  return [
-    '案件：' + c['案件ID'] + '（' + c['状態'] + '）',
-    '予約番号：' + (c['予約番号'] || '') + '（' + (c['経路'] || '') + '）',
-    'ツアー：' + (c['ツアー'] || '未判定') + (c['PLAN名'] ? '\nPLAN名：' + c['PLAN名'] : ''),
-    '催行：' + (t ? fmtDT_(t) : '未入力') + (c['大人'] ? '　大人' + c['大人'] + '名' : ''),
-    caseUrl_(c) ? '入力・確認：' + caseUrl_(c) : '（ウェブアプリが未デプロイのため、台帳のシートで直接入力してください）'
-  ];
-}
-
-// ===== メールの送信・下書き・検出 =====
-
-function epochSec_(d) { return Math.floor(d.getTime() / 1000); }
-
-// リールへのメールを用意する。戻り値：'sent' | 'draft' | 'skip'
-function prepareMail_(kind, c, tours, cfg) {
-  if (cfg.orderMode === 'none') return 'skip';
-  if (!cfg.reeluTo.length) {
-    log_('設定不足', c, '設定シートの「リールの宛先」が空のため、発注メールを用意できません');
-    return 'skip';
-  }
-  var tour = tourByName_(c['ツアー'], tours);
-  var subject = mailSubject_(kind, c, cfg);
-  var body = mailBody_(kind, c, tour, cfg);
-  var cc = cfg.reeluCc.concat(cfg.orderCc).join(',');
-  var opts = { name: 'NINJA GO TOURS' };
-  if (cc) opts.cc = cc;
-  var draft = GmailApp.createDraft(cfg.reeluTo.join(','), subject, body, opts);
-  if (cfg.orderMode === 'send') {
-    var msg = draft.send();
-    c['発注スレッドID'] = msg.getThread().getId();
-    c['下書きID'] = '';
-    return 'sent';
-  }
-  c['下書きID'] = draft.getId();
-  return 'draft';
-}
-
-function deleteDraft_(c) {
-  if (!c['下書きID']) return;
-  try { GmailApp.getDraft(c['下書きID']).deleteDraft(); } catch (e) { /* 送信済み・削除済み */ }
-  c['下書きID'] = '';
-}
-
-// 自分が送った、この案件のメール（件名に案件IDと見出しを含む）を探す
-function findSent_(c, label, since) {
-  var q = 'in:sent "' + c['案件ID'] + '" after:' + epochSec_(since);
-  var threads = GmailApp.search(q, 0, 10);
-  var hit = null;
-  threads.forEach(function (th) {
-    th.getMessages().forEach(function (m) {
-      if (m.getDate().getTime() >= since.getTime() && m.getSubject().indexOf(c['案件ID']) >= 0 && m.getSubject().indexOf(label) >= 0) {
-        if (!hit || m.getDate() < hit.getDate()) hit = m;
-      }
+  list = list || L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; });
+  var gid = L.sh.getSheetId();
+  var W = 9;
+  var out = [], fmt = [];
+  var push = function (row, kind) { while (row.length < W) row.push(''); out.push(row); fmt.push(kind || ''); };
+  var byDue = function (a, b) { return (a._d.due ? a._d.due.getTime() : 9e15) - (b._d.due ? b._d.due.getTime() : 9e15); };
+  var line = function (c) {
+    var d = c._d, late = isOverdue_(d, now);
+    return [(late ? '⚠ 期限切れ ' : '') + fmtDT_(d.due), d.todo, c[H.ID], fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]),
+      String(c[H.TOUR] || ''), (num_(c[H.ADULT], 0) || '') + (num_(c[H.CHILD], 0) ? '＋子' + num_(c[H.CHILD], 0) : ''),
+      String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''),
+      '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","台帳で開く")'];
+  };
+  push(['NGT 手配ボード　今やること', '', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], 'title');
+  push([PropertiesService.getScriptProperties().getProperty('LAST_IMPORT') || '最終取込：まだありません'], 'sub');
+  push([''], '');
+  var sec = function (title, who, color) {
+    var items = list.filter(function (c) { return who.indexOf(c._d.who) >= 0; }).sort(byDue);
+    push([title + '（' + items.length + '件）'], 'sec:' + color);
+    if (!items.length) { push(['いまはありません'], 'none'); push([''], ''); return; }
+    push(['期限', 'やること', '案件ID', '催行日・開始', 'ツアー', '人数', '経路', 'ガイド', ''], 'head');
+    items.forEach(function (c) { push(line(c), isOverdue_(c._d, now) ? 'late' : 'row:' + color); });
+    push([''], '');
+  };
+  sec('■ リールがやること（ガイドの完了報告を含む）', [WHO.REELU, WHO.GUIDE], COLORS.REELU);
+  sec('■ キラナがやること', [WHO.KIRA], COLORS.KIRA);
+  // これから3日のツアー（全体の見通し）
+  var t0 = ymd_(now), t3 = ymd_(new Date(now.getTime() + 3 * DAY_MS));
+  var soon = list.filter(function (c) { var y = toYmd_(c[H.DATE]); return y >= t0 && y <= t3 && c._d.step !== 'cxdone'; })
+    .sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+  push(['■ これから3日のツアー（' + soon.length + '件）'], 'sec:#e8e8e8');
+  if (soon.length) {
+    push(['催行日・開始', '状態', '案件ID', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', ''], 'head');
+    soon.forEach(function (c) {
+      push([fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), c._d.st, c[H.ID], String(c[H.TOUR] || ''),
+        (num_(c[H.ADULT], 0) || '') + (num_(c[H.CHILD], 0) ? '＋子' + num_(c[H.CHILD], 0) : ''), String(c[H.ROUTE] || ''),
+        String(c[H.GUIDE] || ''), c._d.who || '—', '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","台帳で開く")'], 'row:#ffffff');
     });
-  });
-  return hit;
+  } else push(['ありません'], 'none');
+
+  sh.clear();
+  sh.getRange(1, 1, out.length, W).setValues(out);
+  for (var i = 0; i < fmt.length; i++) {
+    var k = fmt[i], rg = sh.getRange(i + 1, 1, 1, W);
+    if (k === 'title') rg.setFontSize(16).setFontWeight('bold').setFontColor(COLORS.HEAD);
+    else if (k === 'sub') rg.setFontColor('#555555');
+    else if (k.indexOf('sec:') === 0) rg.setBackground(k.slice(4)).setFontWeight('bold').setFontSize(12);
+    else if (k === 'head') rg.setFontWeight('bold').setBackground('#f3f3f3');
+    else if (k === 'late') rg.setBackground(COLORS.LATE).setFontWeight('bold');
+    else if (k.indexOf('row:') === 0) rg.setBackground('#ffffff');
+    else if (k === 'none') rg.setFontColor('#777777');
+  }
+  sh.setFrozenRows(1);
 }
 
-// リールのドメインから届いた、この案件についてのメールを探す
-function findReply_(c, since, cfg) {
-  var q = 'from:' + cfg.reeluDomain + ' "' + c['案件ID'] + '" after:' + epochSec_(since);
-  var threads = GmailApp.search(q, 0, 10);
-  var hit = null;
-  threads.forEach(function (th) {
-    th.getMessages().forEach(function (m) {
-      if (m.getDate().getTime() > since.getTime() && String(m.getFrom()).toLowerCase().indexOf(cfg.reeluDomain.toLowerCase()) >= 0) {
-        if (!hit || m.getDate() < hit.getDate()) hit = m;
-      }
+// ===== 通知 =====
+
+function sheetLink_() { return todoUrl_(); }
+
+function mail_(to, subject, lines) {
+  to = (to || []).filter(function (x) { return x; });
+  if (!to.length) { log_('通知先なし', null, subject); return; }
+  MailApp.sendEmail({ to: to.join(','), subject: '【NGT 手配】' + subject, body: lines.concat(['', '今やること：' + sheetLink_()]).join('\n'), name: 'NGT 手配ボード' });
+}
+function both_(cfg) { return cfg.kiraTo.concat(cfg.reeluTo); }
+
+function caseLine_(c) {
+  return '［' + c[H.ID] + '］' + fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]) + '　' + (c[H.TOUR] || '（ツアー未設定）') +
+    '　大人' + num_(c[H.ADULT], 0) + (num_(c[H.CHILD], 0) ? '・子ども' + num_(c[H.CHILD], 0) : '') + '　' + (c[H.ROUTE] || '');
+}
+
+// 期限を過ぎた案件を、段階ごとに1回だけ知らせる（夜間は朝に回す）
+function alertOverdue_(L, cfg, now, list) {
+  if (inQuiet_(now, cfg.quietStart, cfg.quietEnd)) return 0;
+  var hits = (list || []).filter(function (c) {
+    var d = c._d;
+    return d && d.who && isOverdue_(d, now) && String(c[H.ALERTED]) !== d.step;
+  });
+  if (!hits.length) return 0;
+  var unarranged = hits.filter(function (c) { return c._d.step === 'unarranged'; });
+  var lines = ['期限を過ぎた案件があります。台帳の「今やること」で確認してください。', ''];
+  if (unarranged.length) {
+    lines.push('▼ 前日' + cfg.arrangeDeadline + 'までに手配できていない（原則キラナでキャンセル対応）');
+    unarranged.forEach(function (c) { lines.push(caseLine_(c)); });
+    lines.push('');
+  }
+  var others = hits.filter(function (c) { return c._d.step !== 'unarranged'; });
+  if (others.length) {
+    lines.push('▼ そのほか');
+    others.forEach(function (c) { lines.push(caseLine_(c) + '\n　→ ' + c._d.who + '：' + c._d.todo + '（期限 ' + fmtDT_(c._d.due) + '）'); });
+  }
+  mail_(both_(cfg), (unarranged.length ? '【至急】未手配 ' + unarranged.length + '件／' : '') + '期限切れ ' + hits.length + '件', lines);
+  hits.forEach(function (c) {
+    c[H.ALERTED] = c._d.step;
+    L.sh.getRange(c._row, colOf_(L, H.ALERTED)).setValue(c._d.step);
+  });
+  return hits.length;
+}
+
+function importSummaryMail_(cfg, results) {
+  var lines = ['LINKTIVITY の CSV を台帳に取り込みました。', ''];
+  var any = false;
+  results.forEach(function (r) {
+    if (r.error) { lines.push('× ' + r.file + '：' + r.error); any = true; return; }
+    lines.push('■ ' + r.src + '（' + r.file + '）　新規 ' + r.added.length + '件・キャンセル ' + r.cancelled.length + '件・変更 ' + r.changed.length + '件');
+    if (r.added.length) { lines.push('　新規（リールは ①受注 に✓）'); r.added.forEach(function (c) { lines.push('　' + caseLine_(c)); }); }
+    if (r.cancelled.length) { lines.push('　キャンセル'); r.cancelled.forEach(function (c) { lines.push('　' + caseLine_(c)); }); }
+    if (r.changed.length) { lines.push('　変更'); r.changed.forEach(function (c) { lines.push('　' + caseLine_(c)); }); }
+    if (r.restored.length) { lines.push('　キャンセルの取り消し（CSVに再び載った）'); r.restored.forEach(function (c) { lines.push('　' + caseLine_(c)); }); }
+    if (r.held.length) { lines.push('　要確認：CSVに載っていない予約が ' + r.held.length + '件（多いため自動ではキャンセルにしていません。書き出しの条件を確かめてください）'); r.held.forEach(function (c) { lines.push('　' + caseLine_(c)); }); }
+    if (r.added.length || r.cancelled.length || r.changed.length || r.held.length || r.restored.length) any = true;
+  });
+  if (!any) return;
+  lines.push('', 'リールは' + cfg.checkTime + 'に「今やること」を確認してください。');
+  mail_(both_(cfg), 'CSVを取り込みました', lines);
+}
+
+// ===== CSV の取り込み（置き場フォルダ・ファイルを選ぶ画面）=====
+
+function decodeBlob_(blob) {
+  var s = blob.getDataAsString('UTF-8');
+  if (s.indexOf('�') >= 0) s = blob.getDataAsString('Shift_JIS');
+  return s.replace(/^﻿/, '');
+}
+
+function subFolder_(folder, name) {
+  var it = folder.getFoldersByName(name);
+  return it.hasNext() ? it.next() : folder.createFolder(name);
+}
+
+function importFromFolder_(cfg, L, tours, now) {
+  if (!cfg.folderId) return [];
+  var folder;
+  try { folder = DriveApp.getFolderById(cfg.folderId); } catch (err) { log_('エラー', null, 'CSVの置き場フォルダを開けません：' + err); return []; }
+  var files = [], it = folder.getFiles();
+  while (it.hasNext()) { var f = it.next(); if (/\.csv$/i.test(f.getName())) files.push(f); }
+  files.sort(function (a, b) { return a.getDateCreated() - b.getDateCreated(); });
+  return files.map(function (f) {
+    var r = importCsv_(f.getName(), decodeBlob_(f.getBlob()), L, cfg, tours, now);
+    f.moveTo(subFolder_(folder, r.error ? 'エラー' : '取込済み'));
+    log_(r.error ? '取込エラー' : '取込', null, describe_(r));
+    return r;
+  });
+}
+
+function describe_(r) {
+  if (r.error) return r.file + '：' + r.error;
+  return r.src + ' ' + r.file + '：新規' + r.added.length + '・キャンセル' + r.cancelled.length + '・変更' + r.changed.length +
+    (r.held.length ? '・要確認' + r.held.length : '') + '（対象外 ' + r.skipped + '行）';
+}
+
+function rememberImport_(results, now) {
+  var ok = results.filter(function (r) { return !r.error; });
+  if (!ok.length) return;
+  var props = PropertiesService.getScriptProperties();
+  var prev = {};
+  try { prev = JSON.parse(props.getProperty('LAST_IMPORT_BY_SRC') || '{}'); } catch (e) { prev = {}; }
+  ok.forEach(function (r) { prev[r.src] = fmtDT_(now) + '（新規' + r.added.length + '・キャンセル' + r.cancelled.length + '・変更' + r.changed.length + '）'; });
+  props.setProperty('LAST_IMPORT_BY_SRC', JSON.stringify(prev));
+  props.setProperty('LAST_IMPORT', '最終取込：' + Object.keys(prev).sort().map(function (k) { return k + ' ' + prev[k]; }).join('　／　'));
+}
+
+// 「CSVを取り込む」画面から呼ばれる。files = [{ name, b64 }]
+function importUploaded(files) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var cfg = settings_(), tours = tours_(), now = now_(), L = ledger_();
+    initManual_(L, now);
+    var folder = null;
+    try { folder = cfg.folderId ? DriveApp.getFolderById(cfg.folderId) : null; } catch (e) { folder = null; }
+    var results = (files || []).map(function (f) {
+      var blob = Utilities.newBlob(Utilities.base64Decode(f.b64), 'text/csv', f.name);
+      var r = importCsv_(f.name, decodeBlob_(blob), L, cfg, tours, now);
+      if (folder) subFolder_(folder, r.error ? 'エラー' : '取込済み').createFile(blob);
+      log_(r.error ? '取込エラー' : '取込', null, describe_(r));
+      return r;
     });
-  });
-  return hit;
+    rememberImport_(results, now);
+    var list = refreshAll_(L, cfg, now);
+    ensureReportLinks_(L, list);
+    renderTodo_(L, cfg, now, list);
+    importSummaryMail_(cfg, results);
+    return results.map(describe_).join('\n');
+  } finally { lock.releaseLock(); }
 }
 
-// ===== 取り込み（5分おきのトリガーで実行）=====
+var UPLOAD_HTML = '<!doctype html><html><head><base target="_top"><style>body{font-family:sans-serif;font-size:14px;padding:4px}' +
+  'button{background:#1f2d52;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:14px;margin-top:10px}' +
+  'pre{white-space:pre-wrap;background:#f5f5f5;padding:8px;border-radius:6px}</style></head><body>' +
+  '<p>LINKTIVITY から書き出した CSV（<b>kiranah-resort-…</b> と <b>tryhard-…</b>）を選んでください。2つ同時に選べます。</p>' +
+  '<input type="file" id="f" accept=".csv" multiple><br><button id="b" onclick="go()">取り込む</button><pre id="o"></pre>' +
+  '<script>function b64(buf){var s="",a=new Uint8Array(buf);for(var i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)}' +
+  'function go(){var fs=[].slice.call(document.getElementById("f").files);var o=document.getElementById("o");if(!fs.length){o.textContent="ファイルを選んでください";return}' +
+  'document.getElementById("b").disabled=true;o.textContent="取り込み中…";Promise.all(fs.map(function(f){return f.arrayBuffer().then(function(b){return{name:f.name,b64:b64(b)}})}))' +
+  '.then(function(x){google.script.run.withSuccessHandler(function(r){o.textContent=r+"\\n\\n完了しました。この画面を閉じてください。"}).withFailureHandler(function(e){o.textContent="エラー："+e.message;document.getElementById("b").disabled=false}).importUploaded(x)})}</script></body></html>';
 
-function poll() {
+function showUpload() {
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(UPLOAD_HTML).setWidth(460).setHeight(320), 'CSVを取り込む');
+}
+
+// ===== 完了報告フォーム =====
+
+function form_() {
+  var id = PropertiesService.getScriptProperties().getProperty('FORM_ID');
+  if (!id) return null;
+  try { return FormApp.openById(id); } catch (e) { return null; }
+}
+
+function buildForm_(form, tours) {
+  form.getItems().forEach(function (it) { form.deleteItem(it); });
+  form.setTitle('NINJA GO TOURS 完了報告（ガイド用）')
+    .setDescription('ツアーが終わったら、その日のうちに送ってください（2〜3分）。【必須】は必ず答えてください。【任意】は分かる範囲で。')
+    .setConfirmationMessage('ありがとうございました。完了報告を受け付けました。')
+    .setCollectEmail(false)
+    .setAllowResponseEdits(false);
+  try { form.setRequireLogin(false); } catch (e) { /* Workspace の設定で変えられない場合がある */ }
+  form.addTextItem().setTitle(Q.ID).setHelpText('リンクから開くと自動で入ります').setRequired(true);
+  form.addTextItem().setTitle(Q.GUIDE).setRequired(true);
+  var mc = function (title, choices, required) { form.addMultipleChoiceItem().setTitle(title).setChoiceValues(choices).setRequired(required); };
+  mc(Q.MEET, A.MEET, true);
+  mc(Q.ROUTE, A.ROUTE, true);
+  mc(Q.END, A.END, true);
+  mc(Q.NOTICE, A.NOTICE, true);
+  mc(Q.TROUBLE, A.TROUBLE, true);
+  form.addScaleItem().setTitle(Q.REACTION).setBounds(1, 5).setLabels('盛り上がらなかった', 'とても盛り上がった').setRequired(true);
+  mc(Q.REVIEW, A.REVIEW, true);
+  form.addParagraphTextItem().setTitle(Q.DETAIL).setHelpText('「合流できなかった」「一部を省いた」「あった」を選んだときは必ず書いてください');
+  var tourItem = form.addListItem().setTitle(Q.TOUR).setHelpText('リンクから開くと自動で入ります').setRequired(true);
+  var finalPage = null;
+  var pages = tours.map(function (t) {
+    var p = form.addPageBreakItem().setTitle('【任意】' + t.name + ' の行程について');
+    if (t.stops.length) {
+      form.addMultipleChoiceItem().setTitle(Q.BEST + '（' + t.name + '）').setChoiceValues(t.stops).setRequired(false);
+      form.addMultipleChoiceItem().setTitle(Q.LATE + '（' + t.name + '）').setChoiceValues(['なし'].concat(t.stops)).setRequired(false);
+    }
+    return p;
+  });
+  finalPage = form.addPageBreakItem().setTitle('【任意】そのほか');
+  form.addMultipleChoiceItem().setTitle(Q.PHOTO).setChoiceValues(A.PHOTO).setRequired(false);
+  form.addParagraphTextItem().setTitle(Q.IMPROVE);
+  form.addParagraphTextItem().setTitle(Q.OTHER);
+  tourItem.setChoices(tours.map(function (t, i) { return tourItem.createChoice(t.name, pages[i]); }));
+  pages.forEach(function (p) { p.setGoToPage(finalPage); });
+  return form;
+}
+
+function reportLink_(form, items, id, tourName) {
+  var resp = form.createResponse().withItemResponse(items.id.createResponse(id));
+  if (tourName && items.tourNames.indexOf(tourName) >= 0) resp = resp.withItemResponse(items.tour.createResponse(tourName));
+  return resp.toPrefilledUrl();
+}
+
+// まだリンクがない案件に、完了報告フォームのリンク（案件ID入り）を付ける
+function ensureReportLinks_(L, list) {
+  var need = (list || []).filter(function (c) {
+    var st = c._d ? c._d.step : '';
+    return !String(c[H.REPORT] || '').trim() && st && ['cxok', 'cxdone', 'done', 'input'].indexOf(st) < 0 && !c[H.T_REPORT];
+  });
+  if (!need.length) return 0;
+  var form = form_();
+  if (!form) return 0;
+  var items = { id: null, tour: null, tourNames: [] };
+  form.getItems().forEach(function (it) {
+    if (it.getTitle() === Q.ID) items.id = it.asTextItem();
+    if (it.getTitle() === Q.TOUR) { items.tour = it.asListItem(); items.tourNames = items.tour.getChoices().map(function (ch) { return ch.getValue(); }); }
+  });
+  if (!items.id) return 0;
+  var col = colOf_(L, H.REPORT);
+  need.forEach(function (c) {
+    var url = reportLink_(form, items, String(c[H.ID]), String(c[H.TOUR] || ''));
+    L.sh.getRange(c._row, col).setFormula('=HYPERLINK("' + url.replace(/"/g, '""') + '","報告フォーム")');
+    c[H.REPORT] = '報告フォーム';
+  });
+  return need.length;
+}
+
+function first_(nv, title) {
+  var v = nv[title];
+  return v && v.length ? String(v[0]).trim() : '';
+}
+function startsWithKey_(nv, prefix) {
+  var out = '';
+  Object.keys(nv).forEach(function (k) { if (k.indexOf(prefix) === 0 && first_(nv, k)) out = first_(nv, k); });
+  return out;
+}
+
+// フォームの回答（namedValues）を案件に書く。返り値は { case, urgent: [] }
+function applyReport_(L, nv, now) {
+  var id = first_(nv, Q.ID).toUpperCase().replace(/\s/g, '');
+  var c = findCase_(L, id);
+  if (!c) return { c: null, id: id, urgent: ['案件ID「' + id + '」が台帳にありません'] };
+  var meet = first_(nv, Q.MEET), trouble = first_(nv, Q.TROUBLE), reaction = first_(nv, Q.REACTION), review = first_(nv, Q.REVIEW);
+  var route = first_(nv, Q.ROUTE), detail = first_(nv, Q.DETAIL);
+  c[H.T_REPORT] = now;
+  if (!String(c[H.GUIDE] || '').trim()) c[H.GUIDE] = first_(nv, Q.GUIDE);
+  var sum = ['反応 ' + reaction + '/5', '合流：' + meet, '行程：' + route, '終了：' + first_(nv, Q.END), 'レビュー：' + review, 'トラブル：' + trouble];
+  var best = startsWithKey_(nv, Q.BEST), late = startsWithKey_(nv, Q.LATE);
+  if (best) sum.push('盛り上がった：' + best);
+  if (late && late !== 'なし') sum.push('押した：' + late);
+  if (detail) sum.push('内容：' + detail);
+  var imp = first_(nv, Q.IMPROVE);
+  if (imp) sum.push('改善：' + imp);
+  c[H.REPORT_SUM] = sum.join('／');
+  c[H.ALERTED] = '';
+  var urgent = [];
+  if (meet === A.MEET[2]) urgent.push('ゲストと合流できなかった');
+  if (trouble === A.TROUBLE[1]) urgent.push('ケガ・トラブル・苦情があった');
+  if (num_(reaction, 5) <= 2) urgent.push('ゲストの反応が ' + reaction + '/5');
+  return { c: c, id: id, urgent: urgent, detail: detail };
+}
+
+// フォームが送られたとき（インストール型トリガー）
+function onReport(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var cfg = settings_(), now = now_(), L = ledger_();
+    var r = applyReport_(L, (e && e.namedValues) || {}, now);
+    if (r.c) {
+      saveCase_(L, r.c);
+      L.sh.getRange(r.c._row, colOf_(L, H.REPORT)).setValue('報告済み ' + fmtDT_(now));
+      log_('完了報告', r.c, r.c[H.REPORT_SUM]);
+    } else log_('完了報告', null, r.urgent.join('、'));
+    if (r.urgent.length) {
+      mail_(both_(cfg), '【至急】完了報告：' + r.urgent.join('・'),
+        [r.c ? caseLine_(r.c) : '案件ID：' + r.id].concat(r.urgent.map(function (x) { return '・' + x; }))
+          .concat(r.detail ? ['', '内容：' + r.detail] : []));
+    }
+    var list = refreshAll_(L, cfg, now);
+    renderTodo_(L, cfg, now, list);
+  } finally { lock.releaseLock(); }
+}
+
+// ===== トリガー =====
+
+// 台帳を人が書き換えたとき（インストール型トリガー）
+function onBoardEdit(e) {
+  if (!e || !e.range) return;
+  var sh = e.range.getSheet();
+  if (sh.getName() !== SHEETS.LEDGER || e.range.getRow() < 2) return;
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return;
   try {
-    var cfg = settings_(), tours = tours_(), L = ledger_();
-    intake_(cfg, tours, L);
-    advance_(cfg, tours, L);
-    remind_(cfg, L);
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function label_(name) { return GmailApp.getUserLabelByName(name) || GmailApp.createLabel(name); }
-
-function intake_(cfg, tours, L) {
-  var done = processedIds_();
-  var threads = GmailApp.search(MAIL_QUERY + ' -label:' + LABEL_DONE.replace('/', '-') + ' -label:' + LABEL_ERROR.replace('/', '-') + ' newer_than:30d', 0, 50);
-  var lDone = label_(LABEL_DONE), lErr = label_(LABEL_ERROR);
-  threads.forEach(function (th) {
-    var bad = false;
-    th.getMessages().forEach(function (m) {
-      var id = m.getId();
-      if (done[id]) return;
-      if (cfg.since && m.getDate().getTime() < cfg.since.getTime()) { log_('対象外（取り込み開始より前）', null, m.getSubject(), id); return; }
-      var p = parseLinktivityMail(m.getSubject(), m.getPlainBody());
-      if (!p.event || !p.bookingNo) {
-        bad = true;
-        log_('読み取れない通知', null, m.getSubject(), id);
-        notify_(cfg, '読み取れない通知メールがあります', [
-          '件名：' + m.getSubject(), '受信：' + fmtDT_(m.getDate()),
-          'メール：' + gmailUrl_(id),
-          '予約か、キャンセルか、どの予約かを確認し、必要なら台帳に手で追加してください。'
-        ], { line: true, urgent: true, lineText: '件名：' + m.getSubject() });
-        return;
-      }
-      if (p.event === 'new') onNew_(p, m, cfg, tours, L);
-      else onCancel_(p, m, cfg, tours, L);
+    var cfg = settings_(), now = now_(), L = ledger_();
+    var r1 = e.range.getRow(), r2 = r1 + e.range.getNumRows() - 1;
+    var c1 = e.range.getColumn(), c2 = c1 + e.range.getNumColumns() - 1;
+    var user = '';
+    try { user = e.user && e.user.getEmail ? e.user.getEmail() : ''; } catch (x) { user = ''; }
+    initManual_(L, now);
+    L.rows.forEach(function (c) {
+      if (c._row < r1 || c._row > r2) return;
+      var touched = false;
+      for (var col = c1; col <= c2; col++) if (applyCheck_(c, L.head[col - 1], now, user)) touched = true;
+      if (touched) saveCase_(L, c);
     });
-    th.addLabel(bad ? lErr : lDone);
-  });
+    var list = refreshAll_(L, cfg, now);
+    ensureReportLinks_(L, list);
+    renderTodo_(L, cfg, now, list);
+  } finally { lock.releaseLock(); }
 }
 
-function onNew_(p, m, cfg, tours, L) {
-  var id = m.getId();
-  var exist = findByBooking_(L, p.bookingNo);
-  if (exist && exist['状態'] !== ST.CX_UNKNOWN) { log_('重複（取り込み済みの予約）', exist, m.getSubject(), id); return; }
-  var tour = matchTour_(p.plan + '\n' + p.product, tours);
-  if (!tour && /TryHard/i.test(p.account + p.bookingNo)) { log_('対象外（NGT以外の NKT 予約）', null, p.plan, id); return; }
-  var received = m.getDate();
-  var c = {
-    '案件ID': nextCaseId_(L.rows), '状態': ST.WAIT_DETAIL, '予約番号': p.bookingNo, '代理店予約番号': p.agentNo,
-    '経路': channelOf_(p.bookingNo), 'アカウント': p.account, 'PLAN名': p.plan || p.product, 'ツアー': tour ? tour.name : '',
-    '催行日': '', '開始時刻': '', '大人': '', '子ども': '', '代表者名': '', '連絡先': '', 'メモ': '',
-    '受信日時': received, '入力の期限': detailDue_(received, cfg), '入力日時': '', '発注日時': '', 'リール返信日時': '',
-    'キャンセル受信日時': '', 'キャンセル連絡日時': '', '最終催促': '', '催促回数': 0,
-    '元メールID': id, '発注スレッドID': '', '下書きID': '', 'トークン': Utilities.getUuid()
-  };
-  appendCase_(L, c);
-  log_('新しい予約', c, p.plan, id);
-  notify_(cfg, '新しい予約：詳細を入力してください（' + c['案件ID'] + '）', [
-    'LINKTIVITY の管理画面で予約番号 ' + c['予約番号'] + ' を検索し、日時・人数・代表者名・連絡先を入力してください。',
-    '入力の期限：' + fmtDT_(c['入力の期限']),
-    ''
-  ].concat(caseLines_(c)).concat(['通知メール：' + gmailUrl_(id)]), { line: true, lineText: lineText_(c, '詳細を入力してください（期限 ' + fmtDT_(c['入力の期限']) + '）') });
-}
-
-function onCancel_(p, m, cfg, tours, L) {
-  var id = m.getId();
-  var c = findByBooking_(L, p.bookingNo);
-  var at = m.getDate();
-  if (!c) {
-    var tour = matchTour_(p.plan + '\n' + p.product, tours);
-    if (!tour && /TryHard/i.test(p.account + p.bookingNo)) { log_('対象外（NGT以外の NKT キャンセル）', null, p.plan, id); return; }
-    c = {
-      '案件ID': nextCaseId_(L.rows), '状態': ST.CX_UNKNOWN, '予約番号': p.bookingNo, '代理店予約番号': p.agentNo,
-      '経路': channelOf_(p.bookingNo), 'アカウント': p.account, 'PLAN名': p.plan || p.product, 'ツアー': tour ? tour.name : '',
-      '受信日時': '', 'キャンセル受信日時': at, '最終催促': now_(), '催促回数': 1, '元メールID': id, 'トークン': Utilities.getUuid()
-    };
-    appendCase_(L, c);
-    log_('台帳にない予約のキャンセル', c, p.plan, id);
-    notify_(cfg, '台帳にない予約のキャンセルです（' + p.bookingNo + '）', [
-      'この仕組みを入れる前の予約か、取り込めなかった予約のキャンセルです。',
-      'リールにガイドを手配していないか、今までの発注メールを確認してください。手配していたら、リールにキャンセルを連絡してください。',
-      ''
-    ].concat(caseLines_(c)).concat(['通知メール：' + gmailUrl_(id)]), { line: true, urgent: true, lineText: lineText_(c, '台帳にない予約のキャンセル。リールへの手配の有無を確認してください') });
-    return;
-  }
-  if (c['キャンセル受信日時']) { log_('重複（取り込み済みのキャンセル）', c, '', id); return; }
-  c['キャンセル受信日時'] = at;
-  var st = c['状態'];
-  if (st === ST.WAIT_DETAIL || (st === ST.WAIT_ORDER && !c['発注日時'])) {
-    deleteDraft_(c);
-    setStatus_(c, ST.CX_NO_ORDER);
-    saveCase_(L, c);
-    log_('キャンセル（未発注）', c, '', id);
-    notify_(cfg, 'キャンセル（まだ発注していない予約）：' + c['案件ID'], ['リールへの連絡は不要です。'].concat(caseLines_(c)), { line: false });
-    return;
-  }
-  if (st === ST.WAIT_ORDER || st === ST.WAIT_REPLY || st === ST.ARRANGED) {
-    deleteDraft_(c);
-    setStatus_(c, ST.CX_WAIT_SEND);
-    var r = prepareMail_('cancel', c, tours, cfg);
-    if (r === 'sent') { c['キャンセル連絡日時'] = now_(); setStatus_(c, ST.CX_WAIT_REPLY); }
-    saveCase_(L, c);
-    log_('キャンセル（発注済み）', c, r, id);
-    notify_(cfg, 'キャンセル：リールへの連絡が必要です（' + c['案件ID'] + '）', [
-      r === 'sent' ? 'リールにキャンセルのメールを送りました。リールの返信を待ちます。'
-        : r === 'draft' ? 'この Gmail の下書きに、リールへのキャンセルのメールを作りました。内容を確認して送ってください。'
-          : 'リールにキャンセルを連絡してください。',
-      ''
-    ].concat(caseLines_(c)), { line: true, urgent: true, lineText: lineText_(c, 'キャンセル。リールへの連絡が必要です') });
-    return;
-  }
-  saveCase_(L, c);
-  log_('キャンセル（対応不要）', c, '状態：' + st, id);
-}
-
-// ===== 状態を進める =====
-
-function advance_(cfg, tours, L) {
-  var now = now_();
-  L.rows.forEach(function (c) {
-    var st = c['状態'];
-    var changed = false;
-
-    // 台帳のシートに直接入力された場合も、入力済みとして扱う
-    if (st === ST.WAIT_DETAIL && toYmd_(c['催行日']) && toHm_(c['開始時刻']) && Number(c['大人']) > 0) {
-      c['入力日時'] = c['入力日時'] || now;
-      setStatus_(c, ST.WAIT_ORDER);
-      st = c['状態'];
-      changed = true;
-    }
-
-    if (st === ST.WAIT_ORDER) {
-      if (!c['下書きID'] && cfg.orderMode !== 'none' && cfg.reeluTo.length) {
-        var r = prepareMail_(c['発注日時'] ? 'change' : 'order', c, tours, cfg);
-        if (r === 'sent') { c['発注日時'] = now; setStatus_(c, ST.WAIT_REPLY); }
-        changed = changed || r !== 'skip';
-      } else {
-        var since = toDate_(c['入力日時']) || toDate_(c['受信日時']) || now;
-        var sent = findSent_(c, c['発注日時'] ? '【変更】' : '【ご依頼】', since);
-        if (sent) {
-          c['発注日時'] = sent.getDate();
-          c['発注スレッドID'] = sent.getThread().getId();
-          c['下書きID'] = '';
-          setStatus_(c, ST.WAIT_REPLY);
-          log_('発注メールの送信を確認', c, sent.getSubject());
-          changed = true;
-        }
-      }
-    }
-
-    if (c['状態'] === ST.WAIT_REPLY) {
-      var reply = findReply_(c, toDate_(c['発注日時']) || now, cfg);
-      if (reply) {
-        c['リール返信日時'] = reply.getDate();
-        setStatus_(c, ST.ARRANGED);
-        log_('リールの返信を確認', c, reply.getSubject());
-        changed = true;
-      }
-    }
-
-    if (c['状態'] === ST.CX_WAIT_SEND) {
-      var since2 = toDate_(c['キャンセル受信日時']) || now;
-      var sentCx = findSent_(c, '【キャンセル】', since2);
-      if (sentCx) {
-        c['キャンセル連絡日時'] = sentCx.getDate();
-        c['下書きID'] = '';
-        setStatus_(c, ST.CX_WAIT_REPLY);
-        log_('キャンセルの連絡を確認', c, sentCx.getSubject());
-        changed = true;
-      }
-    }
-
-    if (c['状態'] === ST.CX_WAIT_REPLY) {
-      var replyCx = findReply_(c, toDate_(c['キャンセル連絡日時']) || now, cfg);
-      if (replyCx) {
-        c['リール返信日時'] = replyCx.getDate();
-        setStatus_(c, ST.CX_DONE);
-        log_('リールのキャンセル確認を確認', c, replyCx.getSubject());
-        changed = true;
-      }
-    }
-
-    if (c['状態'] === ST.ARRANGED) {
-      var t = tourStart_(c);
-      if (t && now.getTime() > t.getTime() + 3 * H_MS) { setStatus_(c, ST.DONE); changed = true; }
-    }
-
-    if (changed) saveCase_(L, c);
-  });
-}
-
-// ===== 催促 =====
-
-function dueOf_(c, cfg) {
-  var t = tourStart_(c);
-  switch (c['状態']) {
-    case ST.WAIT_DETAIL: return { due: toDate_(c['入力の期限']), msg: '詳細の入力が遅れています。LINKTIVITY の管理画面で予約番号を検索し、入力してください。' };
-    case ST.WAIT_ORDER: {
-      var base = toDate_(c['入力日時']);
-      return { due: base ? new Date(base.getTime() + cfg.orderMin * MIN_MS) : null, msg: 'リールへの発注メールがまだ送られていません。' + (cfg.orderMode === 'draft' ? 'この Gmail の下書きを確認して送ってください。' : '') };
-    }
-    case ST.WAIT_REPLY: return { due: replyDue_(toDate_(c['発注日時']), t, cfg), msg: 'リールから返信がありません。電話で手配の状況を確認してください。返信を確認したら「リールの返信を確認した」を押してください。' };
-    case ST.CX_WAIT_SEND: {
-      var b2 = toDate_(c['キャンセル受信日時']);
-      return { due: b2 ? new Date(b2.getTime() + cfg.orderMin * MIN_MS) : null, msg: 'リールへのキャンセルの連絡がまだです。' };
-    }
-    case ST.CX_WAIT_REPLY: return { due: replyDue_(toDate_(c['キャンセル連絡日時']), t, cfg), msg: 'リールからキャンセルの返信がありません。ガイドが集合場所に向かわないよう、電話で確認してください。' };
-    case ST.CX_UNKNOWN: return { due: toDate_(c['キャンセル受信日時']), msg: '台帳にない予約のキャンセルです。リールに手配していないか確認し、済んだら「確認した」を押してください。' };
-    default: return { due: null, msg: '' };
-  }
-}
-
-function remind_(cfg, L) {
-  var now = now_();
-  L.rows.forEach(function (c) {
-    var d = dueOf_(c, cfg);
-    if (!needsReminder_(now, d.due, toDate_(c['最終催促']), cfg)) return;
-    var count = Number(c['催促回数']) || 0;
-    var t = tourStart_(c);
-    var urgent = !!(t && t.getTime() - now.getTime() < 24 * H_MS);
-    var useLine = count === 0 || count % 3 === 0 || urgent;
-    notify_(cfg, (count ? '催促（' + (count + 1) + '回目）：' : '期限切れ：') + c['案件ID'] + ' ' + c['状態'],
-      [d.msg, '期限：' + fmtDT_(d.due), ''].concat(caseLines_(c)),
-      { line: useLine, urgent: urgent, lineText: lineText_(c, c['状態'] + '：' + d.msg) });
-    c['最終催促'] = now;
-    c['催促回数'] = count + 1;
-    saveCase_(L, c);
-  });
-}
-
-// ===== 毎朝のまとめ =====
-
-function dailyDigest() {
-  var cfg = settings_(), L = ledger_(), now = now_();
-  var open = [ST.WAIT_DETAIL, ST.WAIT_ORDER, ST.WAIT_REPLY, ST.CX_WAIT_SEND, ST.CX_WAIT_REPLY, ST.CX_UNKNOWN];
-  var lines = [];
-  open.forEach(function (st) {
-    var cs = L.rows.filter(function (c) { return c['状態'] === st; });
-    if (!cs.length) return;
-    lines.push('■ ' + st + '（' + cs.length + '件）');
-    cs.forEach(function (c) {
-      var t = tourStart_(c);
-      lines.push('・' + c['案件ID'] + '　' + (c['ツアー'] || c['PLAN名']) + '　' + (t ? fmtDT_(t) : '日時未入力') + '　' + (caseUrl_(c) || ''));
-    });
-    lines.push('');
-  });
-  var soon = L.rows.filter(function (c) {
-    var t = tourStart_(c);
-    return t && (c['状態'] === ST.ARRANGED || c['状態'] === ST.WAIT_REPLY) && t.getTime() > now.getTime() && t.getTime() - now.getTime() < 3 * 24 * H_MS;
-  }).sort(function (a, b) { return tourStart_(a) - tourStart_(b); });
-  if (soon.length) {
-    lines.push('■ 3日以内のツアー');
-    soon.forEach(function (c) { lines.push('・' + fmtDT_(tourStart_(c)) + '　' + c['ツアー'] + '　大人' + c['大人'] + '名　' + c['状態']); });
-  }
-  if (!lines.length) lines.push('対応が必要な案件はありません。');
-  notify_(cfg, '今日のまとめ（' + fmtDayJa_(now) + '）', lines, { line: false });
-}
-
-// ===== ウェブ画面 =====
-
-function doGet(e) {
-  var p = (e && e.parameter) || {};
-  var view = { page: 'error', msg: 'リンクが正しくありません。通知メールのリンクから開いてください。' };
-  var L = ledger_();
-  if (p.id) {
-    var c = findCase_(L, p.id);
-    if (c && p.k && p.k === c['トークン']) view = { page: 'case', data: caseView_(c, settings_(), tours_()) };
-  } else if (p.k && p.k === PropertiesService.getScriptProperties().getProperty('LIST_TOKEN')) {
-    view = { page: 'list', data: listView_(L, settings_()) };
-  }
-  var t = INDEX_HTML ? HtmlService.createTemplate(INDEX_HTML) : HtmlService.createTemplateFromFile('Index');
-  t.view = JSON.stringify(view).replace(/</g, '\\u003c');
-  return t.evaluate().setTitle('NGT 手配ボード').addMetaTag('viewport', 'width=device-width, initial-scale=1');
-}
-
-// LINE の Webhook（グループに招待したときにグループIDを覚える）
-function doPost(e) {
-  try {
-    var body = JSON.parse(e.postData.contents);
-    var props = PropertiesService.getScriptProperties();
-    (body.events || []).forEach(function (ev) {
-      var gid = ev.source && (ev.source.groupId || ev.source.roomId);
-      if (gid && !props.getProperty('LINE_TO')) {
-        props.setProperty('LINE_TO', gid);
-        log_('LINE', null, 'LINE のグループを通知先に登録しました');
-      }
-    });
-  } catch (err) { /* LINE 以外の POST は無視 */ }
-  return ContentService.createTextOutput('OK');
-}
-
-function caseView_(c, cfg, tours) {
-  var d = dueOf_(c, cfg);
-  return {
-    id: c['案件ID'], token: c['トークン'], status: c['状態'], bookingNo: c['予約番号'], channel: c['経路'],
-    plan: c['PLAN名'], tour: c['ツアー'], date: toYmd_(c['催行日']), time: toHm_(c['開始時刻']),
-    adults: c['大人'] === '' ? '' : Number(c['大人']), children: c['子ども'] === '' ? 0 : Number(c['子ども']),
-    guest: c['代表者名'], contact: c['連絡先'], memo: c['メモ'],
-    received: fmtDT_(toDate_(c['受信日時'])), due: d.due ? fmtDT_(d.due) : '', dueMsg: d.msg,
-    overdue: !!(d.due && now_().getTime() >= d.due.getTime()),
-    orderedAt: fmtDT_(toDate_(c['発注日時'])), repliedAt: fmtDT_(toDate_(c['リール返信日時'])),
-    cancelAt: fmtDT_(toDate_(c['キャンセル受信日時'])), mode: cfg.orderMode,
-    tours: tours.map(function (t) { return { name: t.name, times: t.times, meet: t.meet, note: t.note }; }),
-    listUrl: listUrl_(), ST: ST
-  };
-}
-
-function listView_(L, cfg) {
-  var now = now_();
-  var items = L.rows.map(function (c) {
-    var d = dueOf_(c, cfg), t = tourStart_(c);
-    return {
-      id: c['案件ID'], url: caseUrl_(c), status: c['状態'], tour: c['ツアー'] || c['PLAN名'], when: t ? fmtDT_(t) : '',
-      ts: t ? t.getTime() : 0, adults: c['大人'], due: d.due ? fmtDT_(d.due) : '',
-      overdue: !!(d.due && now.getTime() >= d.due.getTime()), channel: c['経路']
-    };
-  });
-  return { items: items, now: fmtDT_(now), ST: ST };
-}
-
-function checkCase_(L, id, token) {
-  var c = findCase_(L, id);
-  if (!c || !token || token !== c['トークン']) throw new Error('リンクが正しくありません。');
-  return c;
-}
-
-// 画面の「保存」
-function apiSave(id, token, data) {
+// 10分おき：置き場の CSV を取り込み、状態を更新し、期限切れを知らせる
+function poll() {
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  if (!lock.tryLock(30000)) return;
   try {
-    var cfg = settings_(), tours = tours_(), L = ledger_();
-    var c = checkCase_(L, id, token);
-    var day = toYmd_(data.date), hm = toHm_(data.time), adults = Number(data.adults), kids = Number(data.children || 0);
-    if (!tourByName_(data.tour, tours)) throw new Error('ツアーを選んでください。');
-    if (!day) throw new Error('催行日を入れてください。');
-    if (!hm) throw new Error('開始時刻を入れてください。');
-    if (!(adults >= 1)) throw new Error('大人の人数を1以上で入れてください。');
-    if (!(kids >= 0)) throw new Error('子どもの人数を0以上で入れてください。');
-    var key = function (o) { return [o['ツアー'], toYmd_(o['催行日']), toHm_(o['開始時刻']), Number(o['大人']), Number(o['子ども'] || 0)].join('|'); };
-    var before = key(c);
-    var hadDetails = !!(toYmd_(c['催行日']) && toHm_(c['開始時刻']));
-    var a = day.split('-');
-    c['ツアー'] = data.tour;
-    c['催行日'] = jstDate_(+a[0], +a[1], +a[2], 0, 0);
-    c['開始時刻'] = hm;
-    c['大人'] = adults;
-    c['子ども'] = kids;
-    c['代表者名'] = String(data.guest || '').trim();
-    c['連絡先'] = String(data.contact || '').trim();
-    c['メモ'] = String(data.memo || '').trim();
-    var st = c['状態'], msg = '保存しました。';
-    var ordered = st === ST.WAIT_REPLY || st === ST.ARRANGED;
-    // 日時を入れないまま手で「手配済み」にした案件に初めて入れるときは、【変更】のメールを作らない
-    if (st === ST.WAIT_DETAIL || (ordered && hadDetails && before !== key(c)) || st === ST.WAIT_ORDER) {
-      if (ordered || (st === ST.WAIT_ORDER && c['発注日時'])) msg = '変更を保存しました。';
-      if (st !== ST.WAIT_ORDER || !c['下書きID']) {
-        c['入力日時'] = now_();
-        deleteDraft_(c);
-        setStatus_(c, ST.WAIT_ORDER);
-        var r = prepareMail_(c['発注日時'] ? 'change' : 'order', c, tours, cfg);
-        if (r === 'sent') { c['発注日時'] = now_(); setStatus_(c, ST.WAIT_REPLY); msg += 'リールにメールを送りました。'; }
-        else if (r === 'draft') msg += 'この Gmail の下書きに、リールへのメールを作りました。内容を確認して送ってください。';
-        else msg += 'リールへの発注を、いつもの方法で行ってください。';
-      } else {
-        // 下書きがある状態で直したときは、下書きを作り直す
-        deleteDraft_(c);
-        var r2 = prepareMail_(c['発注日時'] ? 'change' : 'order', c, tours, cfg);
-        if (r2 === 'draft') msg += '下書きを作り直しました。';
-      }
-    }
-    saveCase_(L, c);
-    log_('画面で保存', c, msg);
-    return { msg: msg, view: caseView_(c, cfg, tours) };
-  } finally {
-    lock.releaseLock();
-  }
+    var cfg = settings_(), tours = tours_(), now = now_(), L = ledger_();
+    initManual_(L, now);
+    var results = importFromFolder_(cfg, L, tours, now);
+    rememberImport_(results, now);
+    var list = refreshAll_(L, cfg, now);
+    ensureReportLinks_(L, list);
+    alertOverdue_(L, cfg, now, list);
+    renderTodo_(L, cfg, now, list);
+    if (results.length) importSummaryMail_(cfg, results);
+  } finally { lock.releaseLock(); }
 }
 
-// 画面のボタン
-function apiAction(id, token, action) {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    var cfg = settings_(), tours = tours_(), L = ledger_();
-    var c = checkCase_(L, id, token);
-    var now = now_(), st = c['状態'], msg = '';
-    if (action === 'test' && (st === ST.WAIT_DETAIL || st === ST.WAIT_ORDER) && !c['発注日時']) {
-      deleteDraft_(c); setStatus_(c, ST.TEST); msg = 'テスト予約として閉じました。';
-    } else if (action === 'ordered' && st === ST.WAIT_ORDER) {
-      deleteDraft_(c); c['発注日時'] = now; setStatus_(c, ST.WAIT_REPLY); msg = '発注済みにしました。リールの返信を待ちます。';
-    } else if (action === 'acked' && st === ST.WAIT_REPLY) {
-      c['リール返信日時'] = now; setStatus_(c, ST.ARRANGED); msg = '手配済みにしました。';
-    } else if (action === 'cx_sent' && st === ST.CX_WAIT_SEND) {
-      deleteDraft_(c); c['キャンセル連絡日時'] = now; setStatus_(c, ST.CX_WAIT_REPLY); msg = 'キャンセルを連絡済みにしました。リールの返信を待ちます。';
-    } else if (action === 'cx_acked' && (st === ST.CX_WAIT_REPLY || st === ST.CX_UNKNOWN || st === ST.CX_WAIT_SEND)) {
-      deleteDraft_(c); c['リール返信日時'] = now; setStatus_(c, ST.CX_DONE); msg = 'キャンセルの対応を完了にしました。';
-    } else {
-      throw new Error('この状態ではその操作はできません（いまの状態：' + st + '）。');
-    }
-    saveCase_(L, c);
-    log_('画面の操作', c, msg);
-    return { msg: msg, view: caseView_(c, cfg, tours) };
-  } finally {
-    lock.releaseLock();
-  }
+// 毎日19時：翌日分に未手配があれば、20時の期限の前に知らせる
+function eveningCheck() {
+  var cfg = settings_(), now = now_(), L = ledger_();
+  var tomorrow = ymd_(new Date(now.getTime() + DAY_MS));
+  var list = L.rows.filter(function (c) {
+    if (!c[H.ID] || toYmd_(c[H.DATE]) !== tomorrow) return false;
+    var d = derive_(c, cfg, now);
+    return d.step === 'accept' || d.step === 'arrange';
+  });
+  if (!list.length) return;
+  mail_(both_(cfg), '明日のツアーで未手配が ' + list.length + '件（期限 今日' + cfg.arrangeDeadline + '）',
+    ['明日（' + fmtMD_(tomorrow) + '）のツアーで、まだ ②手配完了 になっていない案件です。', ''].concat(list.map(caseLine_))
+      .concat(['', '今日' + cfg.arrangeDeadline + 'を過ぎても未手配のときは、原則キラナでキャンセル対応になります。']));
 }
 
-// ===== 初期設定 =====
+// ===== メニュー・初期設定 =====
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('NGT 手配ボード')
-    .addItem('今すぐ通知メールを取り込む', 'poll')
-    .addItem('一覧ページのリンクを表示', 'showListLink')
-    .addItem('今日のまとめを送る', 'dailyDigest')
+    .addItem('CSVを取り込む（ファイルを選ぶ）', 'showUpload')
+    .addItem('今すぐ更新（置き場のCSVも取り込む）', 'poll')
+    .addItem('完了報告フォームのリンクを表示', 'showFormLink')
     .addSeparator()
+    .addItem('完了報告フォームを作り直す（ツアーを変えたとき）', 'rebuildForm')
     .addItem('初期設定（最初に1回）', 'setup')
     .addToUi();
 }
 
-function showListLink() {
-  var u = listUrl_();
-  SpreadsheetApp.getUi().alert(u ? '一覧ページ：\n' + u : 'ウェブアプリをデプロイすると、一覧ページのリンクが表示されます（README の手順4）。');
+function showFormLink() {
+  var f = form_();
+  SpreadsheetApp.getUi().alert(f ? '完了報告フォーム：\n' + f.getPublishedUrl() + '\n\n案件ごとのリンク（案件ID入り）は、台帳の ④ 列にあります。' : '完了報告フォームがまだありません。「初期設定」を実行してください。');
+}
+
+function rebuildForm() {
+  var f = form_();
+  if (!f) return;
+  buildForm_(f, tours_());
+  // 質問を作り直すとリンクが変わるので、未報告の案件のリンクを付け直す
+  var L = ledger_(), col = colOf_(L, H.REPORT);
+  L.rows.forEach(function (c) { if (!c[H.T_REPORT] && String(c[H.REPORT]).indexOf('報告済み') < 0) { L.sh.getRange(c._row, col).setValue(''); c[H.REPORT] = ''; } });
+  var cfg = settings_(), now = now_();
+  ensureReportLinks_(L, refreshAll_(L, cfg, now));
+}
+
+function setValueByKey_(sheet, key, value) {
+  var v = sheet.getDataRange().getValues();
+  for (var i = 1; i < v.length; i++) if (v[i][0] === key) { sheet.getRange(i + 1, 2).setValue(value); return; }
+  sheet.appendRow([key, value, '']);
 }
 
 function setup() {
   var ss = ss_();
   ss.setSpreadsheetTimeZone('Asia/Tokyo');
+  var props = PropertiesService.getScriptProperties();
 
-  var led = ss.getSheetByName(SHEETS.LEDGER) || ss.insertSheet(SHEETS.LEDGER);
+  // 第1版のシートは残して名前を変える（中身は消さない）
+  var oldLed = ss.getSheetByName(SHEETS.LEDGER);
+  if (oldLed && oldLed.getLastRow() > 0 && String(oldLed.getRange(1, 2).getValue()) !== H.WHO) {
+    [SHEETS.LEDGER, SHEETS.SETTINGS, SHEETS.TOURS].forEach(function (n) {
+      var s = ss.getSheetByName(n);
+      if (s && !ss.getSheetByName(n + '（第1版）')) s.setName(n + '（第1版）');
+    });
+  }
+
+  var todo = ss.getSheetByName(SHEETS.TODO) || ss.insertSheet(SHEETS.TODO, 0);
+  todo.setColumnWidths(1, 1, 150).setColumnWidth(2, 380).setColumnWidths(3, 7, 110);
+
+  var led = ss.getSheetByName(SHEETS.LEDGER) || ss.insertSheet(SHEETS.LEDGER, 1);
   if (led.getLastRow() === 0) led.appendRow(LEDGER_HEADERS);
-  led.setFrozenRows(1);
+  var n = LEDGER_HEADERS.length, rows = led.getMaxRows() - 1;
   var col = function (name) { return LEDGER_HEADERS.indexOf(name) + 1; };
-  var rows = led.getMaxRows();
-  led.getRange(2, col('催行日'), rows - 1, 1).setNumberFormat('yyyy-mm-dd');
-  ['開始時刻', '予約番号', '代理店予約番号', 'トークン', '元メールID', '発注スレッドID', '下書きID'].forEach(function (n) {
-    led.getRange(2, col(n), rows - 1, 1).setNumberFormat('@');
+  led.setFrozenRows(1);
+  led.setFrozenColumns(1);
+  led.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#ffffff').setBackground('#6b7280').setWrap(true).setVerticalAlignment('middle');
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.CXOK, H.GUIDE].forEach(function (h) { led.getRange(1, col(h)).setBackground('#c2560c'); });
+  [H.RECEIVE, H.CXKIRA].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1d4ed8'); });
+  led.getRange(1, col(H.REPORT)).setBackground('#15803d');
+  [H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1f2d52'); });
+  led.setRowHeight(1, 42);
+  led.getRange(2, col(H.DATE), rows, 1).setNumberFormat('yyyy-mm-dd');
+  [H.TIME, H.BOOKING, H.AGENT, H.ID].forEach(function (h) { led.getRange(2, col(h), rows, 1).setNumberFormat('@'); });
+  [H.DUE, H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST, H.T_REPORT, H.T_RECEIVE, H.T_CX, H.T_CXOK].forEach(function (h) {
+    led.getRange(2, col(h), rows, 1).setNumberFormat('m/d(ddd) hh:mm');
   });
-  ['受信日時', '入力の期限', '入力日時', '発注日時', 'リール返信日時', 'キャンセル受信日時', 'キャンセル連絡日時', '最終催促'].forEach(function (n) {
-    led.getRange(2, col(n), rows - 1, 1).setNumberFormat('yyyy-mm-dd hh:mm');
-  });
+  var cb = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setDataValidation(cb); });
+  led.getRange(2, col(H.ROUTE), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ROUTE_CHOICES, true).setAllowInvalid(true).build());
+  var widths = {}; widths[H.ID] = 90; widths[H.WHO] = 80; widths[H.TODO] = 300; widths[H.DUE] = 110; widths[H.ST] = 150;
+  widths[H.DATE] = 95; widths[H.TIME] = 55; widths[H.TOUR] = 160; widths[H.ADULT] = 45; widths[H.CHILD] = 50; widths[H.NAME] = 140;
+  widths[H.CONTACT] = 170; widths[H.ROUTE] = 120; widths[H.MEMO] = 180; widths[H.GUIDE] = 100; widths[H.NOTE] = 260; widths[H.REPORT_SUM] = 320;
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { widths[h] = 90; });
+  Object.keys(widths).forEach(function (h) { led.setColumnWidth(col(h), widths[h]); });
+  led.getRange(2, col(H.TODO), rows, 1).setWrap(true);
+  led.getRange(2, col(H.NOTE), rows, 1).setWrap(true);
+  var notes = {};
+  notes[H.WHO] = 'スクリプトが書く。オレンジ＝リール、青＝キラナ、緑＝ガイド、赤＝期限切れ';
+  notes[H.ROUTE] = 'メール・インフルエンサーの予約は、空いている行に催行日・開始・ツアー・大人・代表者名などを書き、ここで経路を選ぶ（案件IDは自動で付く）';
+  notes[H.ACCEPT] = 'リール：内容を見て受けたら✓';
+  notes[H.ARRANGE] = 'リール：ガイドを決めて、ガイド名を入れたら✓（前日20時まで）';
+  notes[H.GUEST] = 'リール：ガイドがゲストと連絡できたら✓';
+  notes[H.REPORT] = 'ガイド：ツアー後、このリンクの完了報告フォームを送る（リールからガイドに渡す）';
+  notes[H.RECEIVE] = 'キラナ：完了報告を読んだら✓。これで完了';
+  notes[H.CXOK] = 'リール：キャンセルを確認し、手配していたガイドに連絡したら✓';
+  notes[H.CXKIRA] = 'キラナ：未手配などでキャンセル対応をしたら✓（お客様・予約システム側の手続きはキラナで）';
+  Object.keys(notes).forEach(function (h) { led.getRange(1, col(h)).setNote(notes[h]); });
+  // スクリプトが書く列は、うっかり書き換えないよう警告を出す
+  led.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) { if (p.getDescription() === 'NGT自動') p.remove(); });
+  AUTO_COLS.forEach(function (h) { led.getRange(2, col(h), rows, 1).protect().setDescription('NGT自動').setWarningOnly(true); });
 
   var tours = ss.getSheetByName(SHEETS.TOURS) || ss.insertSheet(SHEETS.TOURS);
   if (tours.getLastRow() === 0) {
     tours.appendRow(TOUR_HEADERS);
     tours.getRange(2, 1, TOUR_DEFAULTS.length, TOUR_HEADERS.length).setNumberFormat('@').setValues(TOUR_DEFAULTS);
-    tours.getRange(1, 1).setNote('PLAN名・商品名に含まれる文字。| で区切ると、どれか1つ。上の行から順に照合します。');
-    tours.getRange(1, 4).setNote('「17:00-21:30/30」＝17:00から21:30まで30分おき。「16:30,19:30」のように並べても可。');
+    tours.getRange(1, 1).setNote('PLAN名に含まれる文字。| で区切ると、どれか1つ。上の行から順に照合します（NKTセットを先に置く）。');
+    tours.getRange(1, 4).setNote('CSVの時刻を読み替える。「15:00=16:30, 18:00=19:30」＝15:00の予約は16:30開始として台帳に入れる');
+    tours.getRange(1, 5).setNote('完了報告フォームの「盛り上がった場所」の選択肢。／で区切る。変えたらメニュー「完了報告フォームを作り直す」');
   }
   tours.setFrozenRows(1);
+  led.getRange(2, col(H.TOUR), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation()
+    .requireValueInRange(tours.getRange('B2:B'), true).setAllowInvalid(true).build());
 
   var set = ss.getSheetByName(SHEETS.SETTINGS) || ss.insertSheet(SHEETS.SETTINGS);
   if (set.getLastRow() === 0) {
@@ -1052,29 +1196,56 @@ function setup() {
       return [r[0], Object.prototype.hasOwnProperty.call(SETTING_OVERRIDES, r[0]) ? String(SETTING_OVERRIDES[r[0]]) : r[1], r[2]];
     });
     set.getRange(2, 1, seed.length, 3).setNumberFormat('@').setValues(seed);
+    set.setColumnWidth(1, 240).setColumnWidth(2, 260).setColumnWidth(3, 480);
   }
   set.setFrozenRows(1);
-  // 取り込み開始が空なら、いまを入れる（過去の通知メールをまとめて取り込まないため）
-  var sv = set.getDataRange().getValues();
-  for (var i = 1; i < sv.length; i++) {
-    if (sv[i][0] === '取り込み開始' && !sv[i][1]) set.getRange(i + 1, 2).setValue(Utilities.formatDate(now_(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm'));
-  }
 
   var log = ss.getSheetByName(SHEETS.LOG) || ss.insertSheet(SHEETS.LOG);
   if (log.getLastRow() === 0) log.appendRow(LOG_HEADERS);
   log.setFrozenRows(1);
 
-  var props = PropertiesService.getScriptProperties();
-  if (!props.getProperty('LIST_TOKEN')) props.setProperty('LIST_TOKEN', Utilities.getUuid());
+  // CSV の置き場フォルダ
+  var cfg = settings_();
+  var folder = null;
+  if (cfg.folderId) { try { folder = DriveApp.getFolderById(cfg.folderId); } catch (e) { folder = null; } }
+  if (!folder) {
+    folder = DriveApp.createFolder('NGT手配ボード_CSV置き場');
+    setValueByKey_(set, 'CSVの置き場（フォルダID）', folder.getId());
+  }
+  subFolder_(folder, '取込済み');
+  subFolder_(folder, 'エラー');
 
-  label_(LABEL_DONE);
-  label_(LABEL_ERROR);
+  // 完了報告フォーム
+  var form = form_();
+  if (!form) {
+    form = FormApp.create('NINJA GO TOURS 完了報告（ガイド用）');
+    props.setProperty('FORM_ID', form.getId());
+    buildForm_(form, tours_());
+    form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+    SpreadsheetApp.flush();
+    ss.getSheets().forEach(function (s) {
+      var u = '';
+      try { u = s.getFormUrl() || ''; } catch (e) { u = ''; }
+      if (u && u.indexOf(form.getId()) >= 0 && !ss.getSheetByName(SHEETS.REPORT)) s.setName(SHEETS.REPORT);
+    });
+  }
+  setValueByKey_(set, '完了報告フォーム', form.getPublishedUrl());
 
-  ScriptApp.getProjectTriggers().forEach(function (t) {
-    if (['poll', 'dailyDigest'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
-  });
-  ScriptApp.newTrigger('poll').timeBased().everyMinutes(5).create();
-  ScriptApp.newTrigger('dailyDigest').timeBased().atHour(9).everyDays(1).inTimezone('Asia/Tokyo').create();
+  // トリガー（このプロジェクトのものは作り直す）
+  ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('poll').timeBased().everyMinutes(10).create();
+  ScriptApp.newTrigger('onBoardEdit').forSpreadsheet(ss).onEdit().create();
+  ScriptApp.newTrigger('onReport').forSpreadsheet(ss).onFormSubmit().create();
+  var pre = hmToMin_(cfg.precheckTime);
+  ScriptApp.newTrigger('eveningCheck').timeBased().atHour(Math.floor(pre / 60)).everyDays(1).inTimezone('Asia/Tokyo').create();
 
-  log_('初期設定', null, 'シート・トリガー・ラベルを用意しました');
+  var now = now_(), L = ledger_();
+  var list = refreshAll_(L, settings_(), now);
+  renderTodo_(L, settings_(), now, list);
+  ss.setActiveSheet(ss.getSheetByName(SHEETS.TODO));
+  log_('初期設定', null, '第2版のシート・フォーム・置き場フォルダ・トリガーを用意しました');
+  try {
+    SpreadsheetApp.getUi().alert('初期設定が終わりました。\n\nCSVの置き場：\n' + folder.getUrl() + '\n\n完了報告フォーム：\n' + form.getPublishedUrl() +
+      '\n\n設定シートの「キラナの通知先」「リールの通知先」を確かめてください。');
+  } catch (e) { /* 画面がないとき（エディタから実行）は表示しない */ }
 }

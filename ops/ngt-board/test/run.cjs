@@ -1,6 +1,5 @@
-// NGT 手配ボードのテスト（Node で実行：node ops/ngt-board/test/run.cjs）
-// Google のサービス（スプレッドシート・Gmail など）を最小限の偽物に置き換えて、
-// 通知メールの取り込みから発注・キャンセルまでの流れを確かめる。
+// NGT 手配ボード 第2版のテスト（Node で実行：node ops/ngt-board/test/run.cjs）
+// Google のサービスを最小限の偽物に置き換え、CSV の取り込みから完了までの流れを確かめる。
 // 予約番号・氏名・アドレスはすべて架空。
 'use strict';
 const fs = require('fs');
@@ -9,552 +8,360 @@ const vm = require('vm');
 const assert = require('assert');
 
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-const J = (s) => new Date(s + ':00+09:00'); // '2026-11-12T10:00' を日本時間で
+const J = (s) => new Date(s + ':00+09:00');
 
-// ---------- 偽のスプレッドシート ----------
+// ---------- 偽の Google サービス ----------
+// 知らないメソッドは「何もしないで自分を返す」ようにして、書式の設定などを素通しにする
+function permissive(target) {
+  return new Proxy(target, {
+    get(t, k) {
+      if (k in t) return t[k];
+      if (typeof k === 'symbol') return undefined;
+      return () => permissive(t);
+    }
+  });
+}
 class FakeRange {
-  constructor(sheet, r, c, nr, nc) { Object.assign(this, { sheet, r, c, nr, nc }); }
-  setNumberFormat() { return this; }
-  setNote() { return this; }
-  setValues(vals) {
-    for (let i = 0; i < vals.length; i++) for (let j = 0; j < vals[i].length; j++) this.sheet.set(this.r + i, this.c + j, vals[i][j]);
-    return this;
-  }
+  constructor(sheet, r, c, nr, nc) { Object.assign(this, { sheet, r, c, nr, nc }); return permissive(this); }
+  setValues(vals) { for (let i = 0; i < vals.length; i++) for (let j = 0; j < vals[i].length; j++) this.sheet.set(this.r + i, this.c + j, vals[i][j]); return this; }
   setValue(v) { this.sheet.set(this.r, this.c, v); return this; }
+  setFormula(f) { this.sheet.set(this.r, this.c, '報告フォーム'); this.sheet.formulas[this.r + ':' + this.c] = f; return this; }
+  getValue() { return this.sheet.get(this.r, this.c); }
   getValues() {
     const out = [];
     for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(this.sheet.get(this.r + i, this.c + j)); out.push(row); }
     return out;
   }
+  getSheet() { return this.sheet; }
+  getRow() { return this.r; }
+  getColumn() { return this.c; }
+  getNumRows() { return this.nr; }
+  getNumColumns() { return this.nc; }
 }
+let gidSeq = 100;
 class FakeSheet {
-  constructor(name) { this.name = name; this.rows = []; }
+  constructor(name) { this.name = name; this.rows = []; this.formulas = {}; this.gid = ++gidSeq; return permissive(this); }
+  getName() { return this.name; }
+  setName(n) { this.name = n; return this; }
+  getSheetId() { return this.gid; }
   set(r, c, v) { while (this.rows.length < r) this.rows.push([]); const row = this.rows[r - 1]; while (row.length < c) row.push(''); row[c - 1] = v; }
   get(r, c) { const row = this.rows[r - 1] || []; return row[c - 1] === undefined ? '' : row[c - 1]; }
-  getLastRow() { return this.rows.length; }
+  getLastRow() { let n = this.rows.length; while (n > 0 && this.rows[n - 1].every((x) => x === '' || x === undefined)) n--; return n; }
   getMaxRows() { return 1000; }
-  appendRow(arr) { this.rows.push(arr.slice()); }
-  setFrozenRows() {}
-  getRange(r, c, nr, nc) { return new FakeRange(this, r, c, nr || 1, nc || 1); }
+  appendRow(arr) { this.rows.splice(this.getLastRow(), 0, arr.slice()); }
+  clear() { this.rows = []; return this; }
+  getRange(r, c, nr, nc) {
+    if (typeof r === 'string') return new FakeRange(this, 2, 2, 999, 1);
+    return new FakeRange(this, r, c, nr || 1, nc || 1);
+  }
   getDataRange() {
-    const w = Math.max(0, ...this.rows.map((r) => r.length));
-    return { getValues: () => this.rows.map((r) => { const x = r.slice(); while (x.length < w) x.push(''); return x; }) };
+    const n = this.getLastRow();
+    const w = Math.max(0, ...this.rows.slice(0, n).map((r) => r.length));
+    return { getValues: () => this.rows.slice(0, n).map((r) => { const x = r.slice(); while (x.length < w) x.push(''); return x; }) };
   }
 }
 class FakeSpreadsheet {
-  constructor() { this.sheets = {}; }
-  getSheetByName(n) { return this.sheets[n] || null; }
+  constructor() { this.sheets = {}; return permissive(this); }
+  getSheetByName(n) { return Object.values(this.sheets).find((s) => s.getName() === n) || null; }
   insertSheet(n) { return (this.sheets[n] = new FakeSheet(n)); }
-  setSpreadsheetTimeZone() {}
+  getUrl() { return 'https://docs.google.com/spreadsheets/d/TEST/edit'; }
+  getId() { return 'TEST'; }
+  getSheets() { return Object.values(this.sheets); }
 }
 
-// ---------- 偽の Gmail ----------
-let seq = 0;
-class FakeMessage {
-  constructor(o) { Object.assign(this, o); this.id = this.id || 'm' + (++seq); }
-  getId() { return this.id; }
-  getSubject() { return this.subject; }
-  getPlainBody() { return this.body; }
-  getDate() { return this.date; }
-  getFrom() { return this.from; }
-  getThread() { return this.thread; }
-}
-class FakeThread {
-  constructor() { this.id = 't' + (++seq); this.messages = []; this.labels = new Set(); }
-  getId() { return this.id; }
-  getMessages() { return this.messages.slice(); }
-  addLabel(l) { this.labels.add(l.name); return this; }
-}
-function makeGmail(clock) {
-  const threads = [];
-  const drafts = {};
-  const labels = {};
-  const G = {
-    threads, drafts,
-    deliver(o) { const th = new FakeThread(); const m = new FakeMessage({ ...o, thread: th }); th.messages.push(m); threads.push(th); return m; },
-    replyTo(thread, o) { const m = new FakeMessage({ ...o, thread }); thread.messages.push(m); return m; },
-    getUserLabelByName(n) { return labels[n] || null; },
-    createLabel(n) { return (labels[n] = { name: n }); },
-    createDraft(to, subject, body, opts) {
-      const id = 'd' + (++seq);
-      const d = {
-        to, subject, body, opts, getId: () => id,
-        send() { delete drafts[id]; const th = new FakeThread(); const m = new FakeMessage({ subject, body, from: 'NINJA GO TOURS <ops@example.com>', to, date: clock(), sent: true, thread: th }); th.messages.push(m); threads.push(th); return m; },
-        deleteDraft() { delete drafts[id]; }
-      };
-      drafts[id] = d;
-      return d;
-    },
-    getDraft(id) { if (!drafts[id]) throw new Error('no draft'); return drafts[id]; },
-    search(q) {
-      const tok = (q.match(/"([^"]+)"/) || [])[1];
-      const after = +(q.match(/after:(\d+)/) || [])[1] || 0;
-      if (q.indexOf('in:sent') >= 0) {
-        return threads.filter((th) => th.messages.some((m) => m.sent && m.date.getTime() / 1000 >= after && (m.subject + m.body).indexOf(tok) >= 0));
-      }
-      const fromM = q.match(/^from:([^\s]+)\s/);
-      if (fromM && fromM[1] !== 'no-reply@linktivity.co.jp') {
-        return threads.filter((th) => th.messages.some((m) => !m.sent && m.from.indexOf(fromM[1]) >= 0 && m.date.getTime() / 1000 >= after && (m.subject + m.body).indexOf(tok) >= 0));
-      }
-      if (q.indexOf('no-reply@linktivity.co.jp') >= 0) {
-        return threads.filter((th) => !th.labels.has('NGT台帳/取込済') && !th.labels.has('NGT台帳/取込不可') && th.messages.some((m) => m.from.indexOf('no-reply@linktivity.co.jp') >= 0));
-      }
-      throw new Error('想定外の検索: ' + q);
-    }
-  };
-  return G;
-}
-
-// ---------- 読み込み ----------
-function load(src) {
-  let clockT = J('2026-11-12T10:00').getTime();
-  const clock = () => new Date(clockT);
+function makeEnv() {
   const ss = new FakeSpreadsheet();
   const props = {};
   const mails = [];
-  const fetches = [];
-  const gmail = makeGmail(clock);
-  let uuid = 0;
+  const files = [];
+  const moved = [];
+  const folder = permissive({
+    getFiles() { const list = files.splice(0); let i = 0; return { hasNext: () => i < list.length, next: () => list[i++] }; },
+    getFoldersByName(n) { let done = false; return { hasNext: () => !done, next: () => { done = true; return permissive({ name: n, createFile() {} }); } }; },
+    createFolder(n) { return permissive({ name: n }); }
+  });
   const ctx = {
     console,
-    SpreadsheetApp: { getActiveSpreadsheet: () => ss },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
-    Utilities: {
-      getUuid: () => 'uuid-' + (++uuid),
-      formatDate: (d, tz, f) => { const t = new Date(d.getTime() + 9 * 3600e3); const p = (n) => String(n).padStart(2, '0'); return f.replace('yyyy', t.getUTCFullYear()).replace('MM', p(t.getUTCMonth() + 1)).replace('dd', p(t.getUTCDate())).replace('HH', p(t.getUTCHours())).replace('mm', p(t.getUTCMinutes())); }
-    },
+    SpreadsheetApp: permissive({ getActiveSpreadsheet: () => ss }),
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] || null, setProperty: (k, v) => { props[k] = v; } }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, waitLock: () => {}, releaseLock: () => {} }) },
     MailApp: { sendEmail: (o) => mails.push(o) },
-    UrlFetchApp: { fetch: (u, o) => { fetches.push({ u, o }); return { getResponseCode: () => 200, getContentText: () => '' }; } },
-    ScriptApp: {
-      getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }),
-      getProjectTriggers: () => [], deleteTrigger: () => {},
-      newTrigger: () => { const b = { timeBased: () => b, everyMinutes: () => b, atHour: () => b, everyDays: () => b, inTimezone: () => b, create: () => b }; return b; }
-    },
-    GmailApp: gmail,
-    HtmlService: {
-      createTemplateFromFile: () => { const t = { from: 'file', evaluate: () => ({ setTitle() { return this; }, addMetaTag() { return this; }, view: t.view, from: t.from }) }; return t; },
-      createTemplate: (html) => { const t = { from: 'inline', html, evaluate: () => ({ setTitle() { return this; }, addMetaTag() { return this; }, view: t.view, from: t.from }) }; return t; }
-    },
-    ContentService: { createTextOutput: (s) => s }
+    DriveApp: { getFolderById: () => folder },
+    FormApp: { openById: () => null },
+    Utilities: {
+      base64Decode: (s) => Buffer.from(s, 'base64'),
+      newBlob: (bytes, type, name) => ({ getDataAsString: () => Buffer.from(bytes).toString('utf8'), getName: () => name })
+    }
   };
   vm.createContext(ctx);
-  vm.runInContext(src || SRC, ctx, { filename: 'Code.gs' });
-  ctx.now_ = clock;
-  return { ctx, ss, props, mails, fetches, gmail, setNow: (s) => { clockT = J(s).getTime(); }, clock };
+  vm.runInContext(SRC, ctx);
+  ctx.__clock = J('2026-11-16T12:05');
+  vm.runInContext('now_ = function () { return __clock; };', ctx);
+  // 初期設定と同じシートを用意する（フォーム・フォルダ・トリガーは除く）
+  const led = ss.insertSheet('台帳'); led.appendRow(ctx.LEDGER_HEADERS);
+  const tours = ss.insertSheet('ツアー'); tours.appendRow(ctx.TOUR_HEADERS); ctx.TOUR_DEFAULTS.forEach((r) => tours.appendRow(r));
+  const set = ss.insertSheet('設定'); set.appendRow(['項目', '値', '説明']);
+  ctx.SETTING_DEFAULTS.forEach((r) => set.appendRow(r.slice()));
+  const setVal = (k, v) => { set.rows.forEach((r) => { if (r[0] === k) r[1] = v; }); };
+  setVal('キラナの通知先', 'kira@example.com');
+  setVal('リールの通知先', 'reelu@example.com');
+  setVal('CSVの置き場（フォルダID）', 'FOLDER');
+  ss.insertSheet('ログ').appendRow(ctx.LOG_HEADERS);
+  ss.insertSheet('今やること');
+  return {
+    ctx, ss, mails, props, files, moved,
+    at(s) { ctx.__clock = J(s); },
+    run(code) { return vm.runInContext(code, ctx); },
+    L() { return ctx.ledger_(); },
+    cfg() { return ctx.settings_(); },
+    tours() { return ctx.tours_(); },
+    importText(name, text) {
+      const L = ctx.ledger_();
+      const r = ctx.importCsv_(name, text, L, ctx.settings_(), ctx.tours_(), ctx.now_());
+      ctx.refreshAll_(ctx.ledger_(), ctx.settings_(), ctx.now_());
+      return r;
+    },
+    caseBy(no) { return ctx.ledger_().rows.find((c) => c['予約番号'] === no); },
+    caseId(id) { return ctx.ledger_().rows.find((c) => c['案件ID'] === id); },
+    derive(c) { return ctx.derive_(c, ctx.settings_(), ctx.now_()); },
+    // 台帳のセルを人が書き換えて、onEdit を起こす
+    edit(row, colName, value) {
+      const col = ctx.LEDGER_HEADERS.indexOf(colName) + 1;
+      led.set(row, col, value);
+      ctx.onBoardEdit({ range: led.getRange(row, col, 1, 1), user: { getEmail: () => 'staff@example.com' } });
+    },
+    led, set, setVal
+  };
 }
 
-function setSetting(env, key, value) {
-  const sh = env.ss.getSheetByName('設定');
-  const rows = sh.getDataRange().getValues();
-  for (let i = 1; i < rows.length; i++) if (rows[i][0] === key) { sh.set(i + 1, 2, value); return; }
-  throw new Error('設定がない: ' + key);
+const HEAD = 'booking_id,agent_booking_id,supplier_booking_id,status,purchase_date,cancelled_date,activity_date,activity_time,activity_id,activity_name,plan_id,plan_name,parent_activity_name,parent_plan_name,pickup_checkin,ota,booked_by,participant_name,contact_info,issued_status,expiration_date,unit_type1,unit_quantity1,unit_type2,unit_quantity2';
+function ngtRow(no, date, time, qty, extra) {
+  return [no, 'bk_test', '', (extra && extra.status) || 'CONFIRMED', '2026-11-10T00:00:00Z', '', date, time, 'LINKTIVITY-TEST',
+    'NINJA GO TOURS・東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者', 'LINKTIVITY-TEST-1',
+    '"東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者（60分・12歳以下無料）"', '', '', 'CHECKIN', 'ARS_NINJAGORIDE',
+    '株式会社テスト', 'Test Guest ' + no.slice(-2), 'guest' + no.slice(-2) + '@example.com', 'NOT_ISSUED', date, '大人子供共通 (13歳以上)', String(qty)].join(',');
 }
-function cases(env) { return env.ctx.ledger_().rows; }
-function caseOf(env, id) { return cases(env).find((c) => c['案件ID'] === id); }
+function nktRow(no, date, time, plan, units) {
+  return [no, '', '', 'CONFIRMED', '2026-11-10T00:00:00Z', '', date, time, 'LINKTIVITY-NKT', 'Ninja+Kabuki Tokyo', 'P', plan, '', '', 'CHECKIN', 'ARS_TRYHARD',
+    '株式会社テスト', 'NKT Guest', 'nkt@example.com', 'NOT_ISSUED', date].concat(units).join(',');
+}
 
-// ---------- 通知メールの見本（架空の番号）----------
-const NGT_NEW = (no) => ({
-  from: 'LINKTIVITY Inc. <no-reply@linktivity.co.jp>', subject: '予約が入りました # ' + no,
-  body: [
-    '予約が入りました！', '株式会社Kiranah Resort', 'ご担当者様', '', '新規予約が入りました。', '詳細は下記URLよりご確認ください。',
-    '* テスト予約の可能性があります。該当予約を検索できない場合、できても氏名等がTestとなっている場合はご放念ください。',
-    'NINJA GO TOURS・東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者',
-    '予約番号\t' + no, '代理店予約番号\tbk_test0000000000000000-TEST0000000', 'PLAN名\t東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者（60分・12歳以下無料）',
-    '備考:\t', '                    payment_order_id=ars-00000000000000-000000&site=WEBSITE', '2021 Copyright LINKTIVITY Inc.© All Rights Reserved.'
-  ].join('\n')
-});
-const NGT_CANCEL = (no) => ({
-  from: 'LINKTIVITY Inc. <no-reply@linktivity.co.jp>', subject: '予約がキャンセルされまし # ' + no,
-  body: [
-    '予約がキャンセルされました', '株式会社Kiranah Resort', 'ご担当者様', '', 'この予約はキャンセルされました。', '詳細は下記URLよりご確認ください。', '',
-    'NINJA GO TOURS・東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者',
-    '予約番号\t' + no, '代理店予約番号\tbk_test1111111111111111', 'PLAN名\t東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者（60分・12歳以下無料）',
-    '2021 Copyright LINKTIVITY Inc.© All Rights Reserved.'
-  ].join('\n')
-});
-const NKT_NEW = (no, plan) => ({
-  from: 'LINKTIVITY Inc. <no-reply@linktivity.co.jp>', subject: '予約が入りました # ' + no,
-  body: [
-    '予約が入りました！', '株式会社TryHard Japan', 'ご担当者様', '', '新規予約が入りました。', '詳細は下記URLよりご確認ください。',
-    '* テスト予約の可能性があります。', 'Ninja+Kabuki Tokyo', '予約番号\t' + no, '代理店予約番号\tbk_test2222-NW1TEST', 'PLAN名\t' + plan,
-    '備考:\t', 'payment_order_id=ars-00000000000000-000000&site=WEBSITE'
-  ].join('\n')
-});
-
-const results = [];
+let pass = 0;
 function test(name, fn) {
-  try { fn(); results.push(['ok', name]); } catch (e) { results.push(['NG', name, e]); }
+  try { fn(); pass++; console.log('ok  ' + name); }
+  catch (e) { console.log('NG  ' + name + '\n    ' + (e && e.stack || e)); process.exitCode = 1; }
 }
 
-// ================= 純粋な関数 =================
-test('通知メール（新規）を読み取れる', () => {
-  const env = load();
-  const m = NGT_NEW('ARS_NINJAGORIDE-20261112-TST1');
-  const p = env.ctx.parseLinktivityMail(m.subject, m.body);
-  assert.strictEqual(p.event, 'new');
-  assert.strictEqual(p.bookingNo, 'ARS_NINJAGORIDE-20261112-TST1');
-  assert.strictEqual(p.agentNo, 'bk_test0000000000000000-TEST0000000');
-  assert.ok(p.plan.startsWith('東京：新宿歌舞伎町'));
-  assert.strictEqual(p.product, 'NINJA GO TOURS・東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者');
-  assert.strictEqual(p.account, '株式会社Kiranah Resort');
-  assert.strictEqual(p.site, 'WEBSITE');
-});
-test('通知メール（キャンセル・件名が途中で切れている）を読み取れる', () => {
-  const env = load();
-  const m = NGT_CANCEL('ARS_TRIPLABO_WEB-20261023-TST2');
-  const p = env.ctx.parseLinktivityMail(m.subject, m.body);
-  assert.strictEqual(p.event, 'cancel');
-  assert.strictEqual(p.bookingNo, 'ARS_TRIPLABO_WEB-20261023-TST2');
-  assert.strictEqual(env.ctx.channelOf_(p.bookingNo), 'TRIPLABO_WEB');
-});
-test('表が改行で崩れた本文でも読み取れる', () => {
-  const env = load();
-  const body = '新規予約が入りました。\n\nNINJA GO TOURS・秘密の神社ウォーク\n予約番号\n\nARS_NINJAGORIDE-20261112-TST9\n代理店予約番号\nbk_x\nPLAN名\n秘密の神社ウォーク（60分）\n';
-  const p = env.ctx.parseLinktivityMail('予約が入りました # ARS_NINJAGORIDE-20261112-TST9', body);
-  assert.strictEqual(p.bookingNo, 'ARS_NINJAGORIDE-20261112-TST9');
-  assert.strictEqual(p.plan, '秘密の神社ウォーク（60分）');
-});
-test('ツアーの判定（秘密の神社・NKT セット・NKT 単体）', () => {
-  const env = load();
-  const tours = env.ctx.toursFromRows_(env.ctx.TOUR_DEFAULTS);
-  assert.strictEqual(env.ctx.matchTour_('東京：新宿歌舞伎町・ゴールデン街＆秘密の神社ウォーク with 忍者', tours).name, '秘境神社 Ninja Walk');
-  assert.strictEqual(env.ctx.matchTour_('新宿を遊び尽くす！SHINJUKU NINJA -LIVE- SHOW チケット＆ローカルツアーセット', tours).name, 'NKTセット（秘境神社 Ninja Walk）');
-  assert.strictEqual(env.ctx.matchTour_('Ninja+Kabuki Tokyo 一般チケット', tours), null);
-});
-test('開始時刻の候補', () => {
-  const env = load();
-  const t = env.ctx.timeOptions_('17:00-21:30/30');
-  assert.strictEqual(t.length, 10); assert.strictEqual(t[0], '17:00'); assert.strictEqual(t[9], '21:30');
-  assert.deepStrictEqual(Array.from(env.ctx.timeOptions_('16:30,19:30')), ['16:30', '19:30']);
-});
-test('入力の期限（昼・夜）', () => {
-  const env = load();
-  const cfg = env.ctx.normalizeSettings_({ '入力の期限（分）': '120', '夜間の開始': '22:00', '夜間の終了': '08:00' });
-  const f = (s) => env.ctx.fmtDT_(env.ctx.detailDue_(J(s), cfg));
-  assert.strictEqual(f('2026-11-12T10:05'), '11/12(木) 12:05');
-  assert.strictEqual(f('2026-11-12T21:30'), '11/13(金) 10:00'); // 23:30 は夜間 → 朝8時＋2時間
-  assert.strictEqual(f('2026-11-12T23:30'), '11/13(金) 10:00');
-  assert.strictEqual(f('2026-11-13T07:00'), '11/13(金) 10:00');
-});
-test('「取り込み開始」の文字は日本時間として読む', () => {
-  const env = load();
-  assert.strictEqual(env.ctx.toDate_('2026-11-12 10:00').toISOString(), '2026-11-12T01:00:00.000Z');
+test('CSV を読む（BOM・引用符・列の足りない行）', () => {
+  const env = makeEnv();
+  const rows = env.ctx.parseCsv_('﻿a,b,c\n1,"x,y",3\n4,5\n\n');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(rows)), [['a', 'b', 'c'], ['1', 'x,y', '3'], ['4', '5']]);
 });
 
-// ================= 一連の流れ =================
-function ready() {
-  const env = load();
-  env.ctx.setup();
-  setSetting(env, '通知先メール', 'kiranah@example.com');
-  setSetting(env, 'リールの宛先', 'reelu-ops@example.com');
-  setSetting(env, 'リールのドメイン', 'reelu.example');
-  return env;
-}
-
-test('初期設定：シート・取り込み開始・一覧のトークン', () => {
-  const env = ready();
-  ['台帳', 'ツアー', '設定', 'ログ'].forEach((n) => assert.ok(env.ss.getSheetByName(n), n));
-  const cfg = env.ctx.settings_();
-  assert.strictEqual(cfg.since.toISOString(), J('2026-11-12T10:00').toISOString());
-  assert.ok(env.props.LIST_TOKEN);
-});
-
-test('予約 → 詳細待ち → 催促 → 入力 → 下書き → 送信 → リールの返信 → キャンセル → 完了', () => {
-  const env = ready();
-  const NO = 'ARS_NINJAGORIDE-20261112-TST1';
-  env.gmail.deliver({ ...NGT_NEW(NO), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06');
-  env.ctx.poll();
-  let c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], '詳細待ち');
+test('NGT の CSV：新規予約が「新規（受注待ち）」で入り、リールの受注期限は14:00', () => {
+  const env = makeEnv();
+  const r = env.importText('kiranah-resort-20261116.csv', '﻿' + HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-AAAA', '2026-11-20', '17:00', 2) + '\n');
+  assert.strictEqual(r.src, 'NGT');
+  assert.strictEqual(r.added.length, 1);
+  const c = env.caseBy('ARS_NINJAGORIDE-20261116-AAAA');
+  assert.strictEqual(c['案件ID'], 'NGT-0001');
   assert.strictEqual(c['ツアー'], '秘境神社 Ninja Walk');
+  assert.strictEqual(c['開始'], '17:00');
+  assert.strictEqual(c['大人'], 2);
   assert.strictEqual(c['経路'], '公式直販');
-  assert.strictEqual(env.mails.length, 1);
-  assert.ok(env.mails[0].subject.includes('新しい予約'));
-  assert.ok(env.mails[0].body.includes(NO));
+  const d = env.derive(c);
+  assert.strictEqual(d.st, '新規（受注待ち）');
+  assert.strictEqual(d.who, 'リール');
+  assert.strictEqual(d.due.getTime(), J('2026-11-16T14:00').getTime());
+  assert.strictEqual(String(c['次にやる人']), 'リール');
+});
 
-  // 同じメールを二重に取り込まない
+test('NKT の CSV：セット商品だけ取り込み、時刻を公演→ウォーク（15:00→16:30）に読み替える', () => {
+  const env = makeEnv();
+  const text = HEAD + '\n' +
+    nktRow('ARS_TRYHARD-20261116-SET1', '2026-11-21', '15:00', '新宿を遊び尽くす！SHINJUKU NINJA -LIVE- SHOW チケット＆ローカルツアーセット', ['大人子供共通', '2']) + '\n' +
+    nktRow('ARS_TRYHARD-20261116-SHOW', '2026-11-21', '18:00', 'Ninja+Kabuki Tokyo', ['大人 (7歳以上)', '2', '子供 (6歳以下)', '1']) + '\n';
+  const r = env.importText('tryhard-20261116.csv', text);
+  assert.strictEqual(r.src, 'NKT');
+  assert.strictEqual(r.added.length, 1);
+  assert.strictEqual(r.skipped, 1);
+  const c = env.caseBy('ARS_TRYHARD-20261116-SET1');
+  assert.strictEqual(c['開始'], '16:30');
+  assert.strictEqual(c['ツアー'], 'NKTセット（秘境神社）');
+  assert.strictEqual(c['経路'], 'NKTセット（NKT直販）');
+});
+
+test('同じ CSV を2回入れても重複しない。人数の変更は「変更・注意」に残る', () => {
+  const env = makeEnv();
+  const csv = (q) => HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-BBBB', '2026-11-22', '18:00', q) + '\n';
+  env.importText('kiranah-resort-a.csv', csv(2));
+  const r = env.importText('kiranah-resort-b.csv', csv(3));
+  assert.strictEqual(r.added.length, 0);
+  assert.strictEqual(r.changed.length, 1);
+  assert.strictEqual(env.L().rows.length, 1);
+  const c = env.caseBy('ARS_NINJAGORIDE-20261116-BBBB');
+  assert.strictEqual(c['大人'], 3);
+  assert.ok(/大人 2→3/.test(c['変更・注意']));
+});
+
+test('CSV から消えた予約はキャンセル。リールが受注済みなら「キャンセル確認」を待つ', () => {
+  const env = makeEnv();
+  const a = ngtRow('ARS_NINJAGORIDE-20261116-CCC1', '2026-11-23', '17:00', 2);
+  const b = ngtRow('ARS_NINJAGORIDE-20261116-CCC2', '2026-11-23', '18:00', 1);
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + a + '\n' + b + '\n');
+  const c1 = env.caseBy('ARS_NINJAGORIDE-20261116-CCC1');
+  env.edit(c1._row, '①受注（リール）', true);
+  env.at('2026-11-17T12:05');
+  const r = env.importText('kiranah-resort-2.csv', HEAD + '\n' + b + '\n');
+  assert.strictEqual(r.cancelled.length, 1);
+  const c = env.caseBy('ARS_NINJAGORIDE-20261116-CCC1');
+  assert.strictEqual(env.derive(c).st, 'キャンセル（リール確認待ち）');
+  env.edit(c._row, 'キャンセル確認（リール）', true);
+  assert.strictEqual(env.derive(env.caseBy('ARS_NINJAGORIDE-20261116-CCC1')).st, 'キャンセル済み');
+});
+
+test('一度に多くの予約が消えたら、キャンセルにせず確認を求める。また載ったら戻す', () => {
+  const env = makeEnv();
+  const rows = [1, 2, 3, 4, 5, 6].map((i) => ngtRow('ARS_NINJAGORIDE-20261116-DD0' + i, '2026-11-25', '17:00', 1));
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + rows.join('\n') + '\n');
+  const r = env.importText('kiranah-resort-2.csv', HEAD + '\n');
+  assert.strictEqual(r.cancelled.length, 0);
+  assert.strictEqual(r.held.length, 6);
+  // 1件だけ消えたときはキャンセルにし、次に載ったら取り消す
+  env.importText('kiranah-resort-3.csv', HEAD + '\n' + rows.slice(1).join('\n') + '\n');
+  assert.ok(env.caseBy('ARS_NINJAGORIDE-20261116-DD01')['キャンセル日時']);
+  const r4 = env.importText('kiranah-resort-4.csv', HEAD + '\n' + rows.join('\n') + '\n');
+  assert.strictEqual(r4.restored.length, 1);
+  assert.ok(!env.caseBy('ARS_NINJAGORIDE-20261116-DD01')['キャンセル日時']);
+});
+
+test('ボタン（✓）で進む：②に✓すると①も付く → ③ → 完了報告 → ⑤受領で完了', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-EEEE', '2026-11-20', '17:00', 2) + '\n');
+  let c = env.caseBy('ARS_NINJAGORIDE-20261116-EEEE');
+  env.at('2026-11-16T13:10');
+  env.led.set(c._row, env.ctx.LEDGER_HEADERS.indexOf('ガイド名') + 1, 'ガイドA');
+  env.edit(c._row, '②手配完了（リール）', true);
+  c = env.caseBy('ARS_NINJAGORIDE-20261116-EEEE');
+  assert.strictEqual(c['①受注（リール）'], true);
+  assert.ok(c['受注日時'] && c['手配日時']);
+  assert.strictEqual(env.derive(c).st, '手配済み（ゲスト連絡待ち）');
+  env.edit(c._row, '③ゲスト連絡（リール）', true);
+  c = env.caseBy('ARS_NINJAGORIDE-20261116-EEEE');
+  assert.strictEqual(env.derive(c).who, 'ガイド');
+  env.at('2026-11-20T18:30');
+  const nv = { '案件ID': ['NGT-0001'], 'ガイド名': ['ガイドA'] };
+  nv[env.ctx.Q.MEET] = ['予定どおり合流した']; nv[env.ctx.Q.TROUBLE] = ['なかった']; nv[env.ctx.Q.REACTION] = ['5'];
+  nv[env.ctx.Q.REVIEW] = ['その場で書いてもらった']; nv[env.ctx.Q.BEST + '（秘境神社 Ninja Walk）'] = ['秘境の神社'];
+  env.ctx.onReport({ namedValues: nv });
+  c = env.caseBy('ARS_NINJAGORIDE-20261116-EEEE');
+  assert.strictEqual(env.derive(c).st, '完了報告済み（受領待ち）');
+  assert.ok(/盛り上がった：秘境の神社/.test(c['報告の要約']));
+  assert.strictEqual(String(c['④完了報告（ガイド）']).indexOf('報告済み'), 0);
+  env.edit(c._row, '⑤受領（キラナ）', true);
+  assert.strictEqual(env.derive(env.caseBy('ARS_NINJAGORIDE-20261116-EEEE')).st, '完了');
+});
+
+test('前日20時に未手配ならキラナとリールに1回だけ知らせ、キラナのキャンセル対応で閉じる', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-FFFF', '2026-11-18', '17:00', 1) + '\n');
+  env.at('2026-11-16T13:20');
+  env.edit(env.caseBy('ARS_NINJAGORIDE-20261116-FFFF')._row, '①受注（リール）', true);
+  env.at('2026-11-17T20:05');
+  env.mails.length = 0;
   env.ctx.poll();
-  assert.strictEqual(cases(env).length, 1);
+  let c = env.caseBy('ARS_NINJAGORIDE-20261116-FFFF');
+  assert.strictEqual(env.derive(c).st, '未手配（期限切れ）');
+  assert.strictEqual(env.derive(c).who, 'キラナ');
   assert.strictEqual(env.mails.length, 1);
-
-  // 期限（12:05）を過ぎたら催促。間隔（60分）内は繰り返さない
-  env.setNow('2026-11-12T12:10'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 2);
-  assert.ok(env.mails[1].subject.includes('期限切れ'));
-  env.setNow('2026-11-12T12:40'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 2);
-  env.setNow('2026-11-12T13:11'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 3);
-  assert.ok(env.mails[2].subject.includes('2回目'));
-
-  // 画面で入力 → 下書き
-  c = caseOf(env, 'NGT-0001');
-  env.setNow('2026-11-12T13:20');
-  const r = env.ctx.apiSave('NGT-0001', c['トークン'], { tour: '秘境神社 Ninja Walk', date: '2026-11-20', time: '19:00', adults: '2', children: '1', guest: 'Test Guest', contact: 'guest@example.com', memo: '' });
-  assert.ok(r.msg.includes('下書き'));
-  c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], '発注待ち');
-  const drafts = Object.values(env.gmail.drafts);
-  assert.strictEqual(drafts.length, 1);
-  assert.strictEqual(drafts[0].subject, '【ご依頼】11月20日(金) 19:00「秘境神社 Ninja Walk」ガイドご手配のお願い［NGT-0001］');
-  assert.ok(drafts[0].body.includes('集合場所：新宿東宝ビル1F'));
-  assert.ok(drafts[0].body.includes('大人2名（12歳以下 1名）'));
-  assert.strictEqual(drafts[0].to, 'reelu-ops@example.com');
-
-  // 下書きを送るまで「発注待ち」。期限（30分）を過ぎたら催促
-  env.setNow('2026-11-12T13:55'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '発注待ち');
-  assert.ok(env.mails[env.mails.length - 1].subject.includes('発注待ち'));
-
-  // 送信 → 返信待ち
-  env.setNow('2026-11-12T14:00'); const sent = drafts[0].send();
-  env.setNow('2026-11-12T14:05'); env.ctx.poll();
-  c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], '返信待ち（発注済み）');
-  assert.strictEqual(c['発注日時'].toISOString(), J('2026-11-12T14:00').toISOString());
-
-  // リールの返信 → 手配済み
-  env.gmail.replyTo(sent.thread, { from: 'Reelu <ops@reelu.example>', subject: 'Re: ' + sent.subject, body: 'かしこまりました。ガイドの手配を進めます。', date: J('2026-11-12T15:00') });
-  env.setNow('2026-11-12T15:05'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '手配済み');
-
-  // キャンセルの通知 → キャンセルのメールの下書き → 送信 → 返信なしで催促 → 返信 → 完了
-  const before = env.mails.length;
-  env.gmail.deliver({ ...NGT_CANCEL(NO), date: J('2026-11-15T09:00') });
-  env.setNow('2026-11-15T09:03'); env.ctx.poll();
-  c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], 'キャンセル（リールへ連絡待ち）');
-  assert.ok(env.mails[before].subject.startsWith('【至急】'));
-  const cx = Object.values(env.gmail.drafts)[0];
-  assert.ok(cx.subject.startsWith('【キャンセル】11月20日(金) 19:00'));
-  env.setNow('2026-11-15T09:10'); const cxSent = cx.send();
-  env.setNow('2026-11-15T09:15'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], 'キャンセル（リールの返信待ち）');
-  env.setNow('2026-11-16T09:20'); env.ctx.poll(); // 24時間たっても返信なし
-  assert.ok(env.mails[env.mails.length - 1].subject.includes('キャンセル（リールの返信待ち）'));
-  env.gmail.replyTo(cxSent.thread, { from: 'Reelu <ops@reelu.example>', subject: 'Re: ' + cxSent.subject, body: '承知しました。', date: J('2026-11-16T10:00') });
-  env.setNow('2026-11-16T10:05'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], 'キャンセル（完了）');
+  assert.ok(/未手配/.test(env.mails[0].subject));
+  assert.ok(/kira@example.com/.test(env.mails[0].to) && /reelu@example.com/.test(env.mails[0].to));
+  env.at('2026-11-17T20:15');
+  env.ctx.poll();
+  assert.strictEqual(env.mails.length, 1, '同じ段階では2回送らない');
+  env.edit(c._row, 'キャンセル対応（キラナ）', true);
+  c = env.caseBy('ARS_NINJAGORIDE-20261116-FFFF');
+  assert.strictEqual(env.derive(c).st, 'キャンセル（リール確認待ち）');
 });
 
-test('詳細待ちのままキャンセル → 未発注で閉じ、下書きも消す', () => {
-  const env = ready();
-  const NO = 'ARS_NINJAGORIDE-20261112-TST3';
-  env.gmail.deliver({ ...NGT_NEW(NO), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  env.gmail.deliver({ ...NGT_CANCEL(NO), date: J('2026-11-12T10:30') });
-  env.setNow('2026-11-12T10:31'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], 'キャンセル（未発注）');
-  env.setNow('2026-11-12T13:00'); const n = env.mails.length; env.ctx.poll();
-  assert.strictEqual(env.mails.length, n, 'キャンセル後に催促しない');
-});
-
-test('台帳にない予約のキャンセル → 至急で知らせ、すぐに二重には知らせない', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_CANCEL('ARS_TRIPLABO_WEB-20261023-TST2'), date: J('2026-11-12T10:10') });
-  env.setNow('2026-11-12T10:11'); env.ctx.poll();
-  const c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], 'キャンセル（台帳になし・要確認）');
+test('受注の期限切れ（14:00）を通知。夜間は送らない', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-GGGG', '2026-11-28', '17:00', 1) + '\n');
+  env.at('2026-11-16T22:30');
+  env.mails.length = 0;
+  env.ctx.poll();
+  assert.strictEqual(env.mails.length, 0);
+  env.at('2026-11-17T08:10');
+  env.ctx.poll();
   assert.strictEqual(env.mails.length, 1);
-  assert.ok(env.mails[0].subject.startsWith('【至急】'));
-  env.setNow('2026-11-12T10:16'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 1);
-  env.setNow('2026-11-12T11:12'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 2);
-  const r = env.ctx.apiAction('NGT-0001', c['トークン'], 'cx_acked');
-  assert.ok(r.msg.includes('完了'));
+  assert.ok(/期限切れ 1件/.test(env.mails[0].subject));
 });
 
-test('NKT：セットは取り込み、セット以外は対象外', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NKT_NEW('ARS_TRYHARD-20261112-TST4', '新宿を遊び尽くす！SHINJUKU NINJA -LIVE- SHOW チケット＆ローカルツアーセット'), date: J('2026-11-12T10:20') });
-  env.gmail.deliver({ ...NKT_NEW('ARS_TRYHARD-20261112-TST5', 'Ninja+Kabuki Tokyo 一般席'), date: J('2026-11-12T10:21') });
-  env.setNow('2026-11-12T10:25'); env.ctx.poll();
-  assert.strictEqual(cases(env).length, 1);
-  const c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['ツアー'], 'NKTセット（秘境神社 Ninja Walk）');
-  assert.strictEqual(c['経路'], 'NKT直販');
-});
-
-test('読み取れない通知・取り込み開始より前のメール', () => {
-  const env = ready();
-  env.gmail.deliver({ from: 'LINKTIVITY Inc. <no-reply@linktivity.co.jp>', subject: 'お知らせ', body: 'メンテナンスのお知らせ', date: J('2026-11-12T10:30') });
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261111-TST6'), date: J('2026-11-11T07:43') });
-  env.setNow('2026-11-12T10:31'); env.ctx.poll();
-  assert.strictEqual(cases(env).length, 0);
-  assert.strictEqual(env.mails.length, 1);
-  assert.ok(env.mails[0].subject.includes('読み取れない'));
-  env.setNow('2026-11-12T10:36'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, 1, '同じメールで二度知らせない');
-});
-
-test('夜に届いた予約は、朝まで催促しない', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TST7'), date: J('2026-11-12T23:30') });
-  env.setNow('2026-11-12T23:31'); env.ctx.poll();
-  const n = env.mails.length;
-  env.setNow('2026-11-13T07:55'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, n);
-  env.setNow('2026-11-13T10:01'); env.ctx.poll();
-  assert.strictEqual(env.mails.length, n + 1);
-});
-
-test('台帳のシートに直接入力しても、発注に進む', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TST8'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  const sh = env.ss.getSheetByName('台帳');
+test('手入力（メール・インフルエンサー）の行に案件IDが付き、リールの受注待ちになる', () => {
+  const env = makeEnv();
   const H = env.ctx.LEDGER_HEADERS;
-  sh.set(2, H.indexOf('催行日') + 1, J('2026-11-21T00:00'));
-  sh.set(2, H.indexOf('開始時刻') + 1, '18:30');
-  sh.set(2, H.indexOf('大人') + 1, 3);
-  env.setNow('2026-11-12T10:20'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '発注待ち');
-  assert.strictEqual(Object.keys(env.gmail.drafts).length, 1);
+  const put = (col, v) => env.led.set(2, H.indexOf(col) + 1, v);
+  put('催行日', '2026-11-21'); put('開始', '18:00'); put('ツアー', '浅草ナイト'); put('大人', 2); put('代表者名', '@test_creator');
+  env.edit(2, '経路', 'インフルエンサー');
+  const c = env.L().rows[0];
+  assert.strictEqual(c['案件ID'], 'NGT-0001');
+  assert.strictEqual(c['取込元'], '手入力');
+  assert.strictEqual(env.derive(c).st, '新規（受注待ち）');
+  // CSV の「消えた予約」の判定に巻き込まれない
+  const r = env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-HHHH', '2026-11-21', '17:00', 1) + '\n');
+  assert.strictEqual(r.cancelled.length, 0);
+  assert.strictEqual(env.caseId('NGT-0002')['予約番号'], 'ARS_NINJAGORIDE-20261116-HHHH');
 });
 
-test('自動送信：入力と同時に送り、変更は【変更】で送る', () => {
-  const env = ready();
-  setSetting(env, '発注のしかた', '自動送信');
-  setSetting(env, '発注メールの件名の先頭', '【試運用】');
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS10'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  let c = caseOf(env, 'NGT-0001');
-  env.setNow('2026-11-12T10:30');
-  env.ctx.apiSave('NGT-0001', c['トークン'], { tour: '秘境神社 Ninja Walk', date: '2026-11-13', time: '17:30', adults: '1', children: '0', guest: 'Test', contact: 'x', memo: '' });
-  c = caseOf(env, 'NGT-0001');
-  assert.strictEqual(c['状態'], '返信待ち（発注済み）');
-  const sentSubjects = env.gmail.threads.flatMap((t) => t.messages).filter((m) => m.sent).map((m) => m.subject);
-  assert.ok(sentSubjects[0].startsWith('【試運用】【ご依頼】11月13日(金) 17:30'));
-  // 催行まで48時間を切っているので、返信の期限は2時間
-  env.setNow('2026-11-12T12:31'); const n = env.mails.length; env.ctx.poll();
-  assert.strictEqual(env.mails.length, n + 1);
-  assert.ok(env.mails[env.mails.length - 1].body.includes('電話'));
-  // 時刻の変更 → 【変更】を送り、ふたたび返信待ち
-  env.setNow('2026-11-12T12:40');
-  const r = env.ctx.apiSave('NGT-0001', c['トークン'], { tour: '秘境神社 Ninja Walk', date: '2026-11-13', time: '19:00', adults: '1', children: '0', guest: 'Test', contact: 'x', memo: '' });
-  assert.ok(r.msg.includes('変更'));
-  const last = env.gmail.threads.flatMap((t) => t.messages).filter((m) => m.sent).pop();
-  assert.ok(last.subject.startsWith('【試運用】【変更】11月13日(金) 19:00'));
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '返信待ち（発注済み）');
+test('手配後に CSV の日時が変わったら、手配からやり直しにする', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-IIII', '2026-11-26', '17:00', 2) + '\n');
+  env.edit(env.caseBy('ARS_NINJAGORIDE-20261116-IIII')._row, '②手配完了（リール）', true);
+  const r = env.importText('kiranah-resort-2.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-IIII', '2026-11-27', '17:00', 2) + '\n');
+  assert.strictEqual(r.changed.length, 1);
+  const c = env.caseBy('ARS_NINJAGORIDE-20261116-IIII');
+  assert.strictEqual(c['②手配完了（リール）'], false);
+  assert.strictEqual(env.derive(c).st, '受注済み（手配中）');
+  assert.ok(/手配からやり直し/.test(c['変更・注意']));
 });
 
-test('テスト予約として閉じる・トークン違いは拒否', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS11'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  const c = caseOf(env, 'NGT-0001');
-  assert.throws(() => env.ctx.apiAction('NGT-0001', 'wrong', 'test'));
-  env.ctx.apiAction('NGT-0001', c['トークン'], 'test');
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], 'テスト予約');
+test('完了報告で「合流できなかった」は至急で知らせる', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-JJJJ', '2026-11-20', '17:00', 2) + '\n');
+  env.mails.length = 0;
+  const nv = { '案件ID': ['ngt-0001'] };
+  nv[env.ctx.Q.MEET] = ['合流できなかった']; nv[env.ctx.Q.TROUBLE] = ['なかった']; nv[env.ctx.Q.REACTION] = ['3'];
+  env.ctx.onReport({ namedValues: nv });
+  assert.strictEqual(env.mails.length, 1);
+  assert.ok(/至急/.test(env.mails[0].subject) && /合流できなかった/.test(env.mails[0].subject));
 });
 
-test('ウェブ画面：正しいリンクだけ開ける', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS12'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  const c = caseOf(env, 'NGT-0001');
-  const ok = JSON.parse(env.ctx.doGet({ parameter: { id: 'NGT-0001', k: c['トークン'] } }).view.replace(/\\u003c/g, '<'));
-  assert.strictEqual(ok.page, 'case');
-  assert.strictEqual(ok.data.bookingNo, 'ARS_NINJAGORIDE-20261112-TS12');
-  const ng = JSON.parse(env.ctx.doGet({ parameter: { id: 'NGT-0001', k: 'x' } }).view);
-  assert.strictEqual(ng.page, 'error');
-  const list = JSON.parse(env.ctx.doGet({ parameter: { k: env.props.LIST_TOKEN } }).view);
-  assert.strictEqual(list.page, 'list');
-  assert.strictEqual(list.data.items.length, 1);
+test('19時の事前確認：翌日分に未手配があれば知らせる', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-KKKK', '2026-11-17', '18:00', 2) + '\n');
+  env.at('2026-11-16T19:00');
+  env.mails.length = 0;
+  env.ctx.eveningCheck();
+  assert.strictEqual(env.mails.length, 1);
+  assert.ok(/未手配が 1件/.test(env.mails[0].subject));
 });
 
-test('LINE：グループを登録し、至急の通知を送る（名前は載せない）', () => {
-  const env = ready();
-  env.props.LINE_TOKEN = 'dummy-token';
-  setSetting(env, 'LINE通知', 'ON');
-  env.ctx.doPost({ postData: { contents: JSON.stringify({ events: [{ type: 'join', source: { type: 'group', groupId: 'Cgroup1' } }] }) } });
-  assert.strictEqual(env.props.LINE_TO, 'Cgroup1');
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS13'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  assert.strictEqual(env.fetches.length, 1);
-  const payload = JSON.parse(env.fetches[0].o.payload);
-  assert.strictEqual(payload.to, 'Cgroup1');
-  assert.ok(payload.messages[0].text.includes('NGT-0001'));
+test('置き場フォルダの CSV を取り込み、取込済みへ移し、まとめを送る', () => {
+  const env = makeEnv();
+  const text = HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-LLLL', '2026-11-29', '17:00', 2) + '\n';
+  let movedTo = '';
+  env.files.push({
+    getName: () => 'kiranah-resort-20261116.csv', getDateCreated: () => J('2026-11-16T12:01'),
+    getBlob: () => ({ getDataAsString: () => text }), moveTo: (f) => { movedTo = f.name; }
+  });
+  env.mails.length = 0;
+  env.ctx.poll();
+  assert.ok(env.caseBy('ARS_NINJAGORIDE-20261116-LLLL'));
+  assert.strictEqual(movedTo, '取込済み');
+  assert.ok(env.mails.some((m) => /CSVを取り込みました/.test(m.subject)));
+  assert.ok(/最終取込：NGT/.test(env.props.LAST_IMPORT));
+  const todo = env.ss.getSheetByName('今やること');
+  assert.ok(todo.rows.some((r) => /リールがやること.*（1件）/.test(r[0])));
 });
 
-test('毎朝のまとめ', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS14'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  env.setNow('2026-11-13T09:00'); env.ctx.dailyDigest();
-  const m = env.mails[env.mails.length - 1];
-  assert.ok(m.subject.includes('今日のまとめ'));
-  assert.ok(m.body.includes('■ 詳細待ち（1件）'));
-});
-
-test('1ファイル版：画面の HTML が入り、設定の初期値が入る', () => {
-  const { execFileSync } = require('child_process');
-  const tmp = path.join(require('os').tmpdir(), 'ngt-overrides-' + process.pid + '.json');
-  fs.writeFileSync(tmp, JSON.stringify({ '通知先メール': 'me@example.com', 'リールの宛先': 'reelu@example.com' }));
-  const bundle = execFileSync(process.execPath, [path.join(__dirname, '..', 'build.cjs'), tmp], { encoding: 'utf8' });
-  fs.unlinkSync(tmp);
-  const env = load(bundle);
-  env.ctx.setup();
-  const cfg = env.ctx.settings_();
-  assert.deepStrictEqual(Array.from(cfg.notifyTo), ['me@example.com']);
-  assert.deepStrictEqual(Array.from(cfg.reeluTo), ['reelu@example.com']);
-  assert.strictEqual(cfg.orderMode, 'draft');
-  const out = env.ctx.doGet({ parameter: { k: env.props.LIST_TOKEN } });
-  assert.strictEqual(out.from, 'inline');
-  assert.strictEqual(JSON.parse(out.view).page, 'list');
-});
-
-test('台帳に直接書いた日付・時刻（区切りなし・日本語）も読む', () => {
-  const env = load();
-  const y = env.ctx.toYmd_, h = env.ctx.toHm_;
-  assert.strictEqual(y('20261112'), '2026-11-12');
-  assert.strictEqual(y(20261112), '2026-11-12');
-  assert.strictEqual(y('2026/11/2'), '2026-11-02');
-  assert.strictEqual(y('2026年11月12日'), '2026-11-12');
-  assert.strictEqual(y('20261399'), '');
-  assert.strictEqual(h('1700'), '17:00');
-  assert.strictEqual(h(1700), '17:00');
-  assert.strictEqual(h('930'), '09:30');
-  assert.strictEqual(h('17時'), '17:00');
-  assert.strictEqual(h('17時30分'), '17:30');
-  assert.strictEqual(h('１７：３０'), '17:30');
-  assert.strictEqual(h('17'), '17:00');
-  assert.strictEqual(h(0.75), '18:00');
-  assert.strictEqual(h('2500'), '');
-});
-
-test('台帳に「20261121」「1830」と直接書いても発注に進む', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS15'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  const sh = env.ss.getSheetByName('台帳');
-  const H = env.ctx.LEDGER_HEADERS;
-  sh.set(2, H.indexOf('催行日') + 1, 20261121);
-  sh.set(2, H.indexOf('開始時刻') + 1, '1830');
-  sh.set(2, H.indexOf('大人') + 1, 2);
-  env.setNow('2026-11-12T10:20'); env.ctx.poll();
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '発注待ち');
-  assert.ok(Object.values(env.gmail.drafts)[0].subject.includes('11月21日(土) 18:30'));
-});
-
-test('日時なしで手配済みにした案件に初めて日時を入れても【変更】は作らない', () => {
-  const env = ready();
-  env.gmail.deliver({ ...NGT_NEW('ARS_NINJAGORIDE-20261112-TS16'), date: J('2026-11-12T10:05') });
-  env.setNow('2026-11-12T10:06'); env.ctx.poll();
-  const sh = env.ss.getSheetByName('台帳');
-  const H = env.ctx.LEDGER_HEADERS;
-  sh.set(2, H.indexOf('状態') + 1, '手配済み');
-  const c = caseOf(env, 'NGT-0001');
-  env.setNow('2026-11-12T10:30');
-  env.ctx.apiSave('NGT-0001', c['トークン'], { tour: '秘境神社 Ninja Walk', date: '2026-11-20', time: '19:00', adults: '2', children: '0', guest: 'T', contact: 'x', memo: '' });
-  assert.strictEqual(caseOf(env, 'NGT-0001')['状態'], '手配済み');
-  assert.strictEqual(Object.keys(env.gmail.drafts).length, 0);
-});
-
-let ng = 0;
-results.forEach((r) => { if (r[0] === 'NG') { ng++; console.log('NG  ' + r[1] + '\n    ' + (r[2] && r[2].stack ? r[2].stack.split('\n').slice(0, 3).join('\n    ') : r[2])); } else console.log('ok  ' + r[1]); });
-console.log('\n' + (results.length - ng) + '/' + results.length + ' ok');
-process.exit(ng ? 1 : 0);
+console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));
