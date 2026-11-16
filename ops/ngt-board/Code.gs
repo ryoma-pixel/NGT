@@ -61,6 +61,11 @@ var AUTO_COLS = [H.ID, H.WHO, H.TODO, H.DUE, H.ST, H.NOTE, H.SRC, H.T_CREATED, H
 // 数式（リンク）を入れる列。行をまとめて書き戻すときは飛ばす
 var FORMULA_COLS = [H.REPORT];
 
+// 見出しの表示（チェック欄は「だれが」を2行目に。読むときは改行を外してキーにする）
+function dispHeader_(h) {
+  return [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].indexOf(h) >= 0 ? h.replace('（', '\n（') : h;
+}
+
 var WHO = { REELU: 'リール', KIRA: 'キラナ', GUIDE: 'ガイド' };
 var ROUTES_MANUAL = ['メール', 'インフルエンサー'];
 var ROUTE_CHOICES = ['メール', 'インフルエンサー', '公式直販', 'Klook', 'Viator', 'GetYourGuide', 'NKTセット', 'その他'];
@@ -564,7 +569,7 @@ function ledger_() {
   var sh = ss_().getSheetByName(SHEETS.LEDGER);
   if (!sh) throw new Error('「台帳」のシートがありません。先に関数「setup」を実行してください。');
   var values = sh.getDataRange().getValues();
-  var head = values[0].map(String);
+  var head = values[0].map(function (h) { return String(h).replace(/\n/g, ''); });
   if (head.indexOf(H.WHO) < 0) throw new Error('台帳が第2版の形になっていません。先に関数「setup」を実行してください。');
   var rows = [];
   for (var r = 1; r < values.length; r++) {
@@ -653,34 +658,77 @@ function applyCheck_(c, colName, now, user) {
 
 // ===== 画面（台帳の色・今やること）=====
 
-var COLORS = { REELU: '#fde7d4', KIRA: '#dbe8fb', GUIDE: '#e2f2e0', LATE: '#f8c9c4', DONE: '#eeeeee', HEAD: '#1f2d52' };
+var COLORS = {
+  REELU: '#fde7d4', KIRA: '#dbe8fb', GUIDE: '#e2f2e0', LATE: '#f8c9c4', SOON: '#fff2cc', DONE: '#f1f1f1', HEAD: '#1f2d52',
+  REELU_HI: '#f6b26b', KIRA_HI: '#9fc0f5', GUIDE_HI: '#93c47d', LATE_HI: '#e06666', MUTED: '#8a8a8a', WHITE: '#ffffff'
+};
 
 function whoColor_(d, now) {
   if (!d.who) return COLORS.DONE;
   if (isOverdue_(d, now)) return COLORS.LATE;
   return d.who === WHO.REELU ? COLORS.REELU : d.who === WHO.KIRA ? COLORS.KIRA : COLORS.GUIDE;
 }
+function whoHi_(who, late) {
+  if (late) return COLORS.LATE_HI;
+  return who === WHO.KIRA ? COLORS.KIRA_HI : who === WHO.GUIDE ? COLORS.GUIDE_HI : COLORS.REELU_HI;
+}
 
-// 全行の「次にやる人・次にやること・期限・状態」を書き直す
+// 段階ごとに「次に押すチェック欄」（台帳ではこの欄に色を付ける）
+var STEP_COLS = {
+  accept: [H.ACCEPT], arrange: [H.ARRANGE, H.GUIDE], guest: [H.GUEST], report: [H.REPORT], receive: [H.RECEIVE],
+  cxok: [H.CXOK], unarranged: [H.CXKIRA, H.ARRANGE]
+};
+
+// 「あと1時間20分」「45分 過ぎ」
+function dur_(ms) {
+  var m = Math.round(ms / MIN_MS);
+  if (m < 60) return m + '分';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + '時間' + (m % 60 ? (m % 60) + '分' : '');
+  var d = Math.floor(h / 24);
+  return d + '日' + (h % 24 ? (h % 24) + '時間' : '');
+}
+function rel_(due, now) {
+  if (!due) return '';
+  var diff = due.getTime() - now.getTime();
+  return diff < 0 ? '⚠ ' + dur_(-diff) + ' 過ぎ' : 'あと' + dur_(diff);
+}
+
+// 全行の「次にやる人・次にやること・期限・状態」を書き直し、色を付ける
 function refreshAll_(L, cfg, now) {
   var last = Math.max(L.last, 1);
   if (last < 2) return [];
   var byRow = {};
   L.rows.forEach(function (c) { byRow[c._row] = c; });
-  var vals = [], bgs = [], list = [];
+  var span = colOf_(L, H.CXKIRA);            // A列〜「キャンセル対応（キラナ）」まで色を付ける
+  var vals = [], bgs = [], fcs = [], list = [];
   for (var r = 2; r <= last; r++) {
     var c = byRow[r];
-    if (!c || !c[H.ID]) { vals.push(['', '', '', '']); bgs.push(['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']); continue; }
+    var bg = [], fc = [];
+    for (var k = 0; k < span; k++) { bg.push(COLORS.WHITE); fc.push('#000000'); }
+    if (!c || !c[H.ID]) { vals.push(['', '', '', '']); bgs.push(bg); fcs.push(fc); continue; }
     var d = derive_(c, cfg, now);
     c._d = d;
     list.push(c);
     var late = isOverdue_(d, now);
     vals.push([d.who ? (late ? '⚠ ' : '') + d.who : '—', d.todo, d.due || '', d.st]);
     var col = whoColor_(d, now);
-    bgs.push([col, col, col, col, col]);
+    for (k = 0; k < 5; k++) bg[k] = col;
+    if (!d.who) {                             // 完了・キャンセル済みは薄く
+      for (k = 0; k < span; k++) { bg[k] = COLORS.DONE; fc[k] = COLORS.MUTED; }
+    } else {
+      (STEP_COLS[d.step] || []).forEach(function (name, i) {
+        var idx = colOf_(L, name) - 1;
+        if (idx < 0 || idx >= span) return;
+        if (name === H.GUIDE && String(c[H.GUIDE] || '').trim()) return;
+        var who = d.step === 'unarranged' && i > 0 ? WHO.REELU : d.who;
+        bg[idx] = i === 0 ? whoHi_(who, late) : (who === WHO.REELU ? COLORS.REELU : COLORS.KIRA);
+      });
+    }
+    bgs.push(bg); fcs.push(fc);
   }
   L.sh.getRange(2, colOf_(L, H.WHO), vals.length, 4).setValues(vals);
-  L.sh.getRange(2, 1, bgs.length, 5).setBackgrounds(bgs);
+  L.sh.getRange(2, 1, bgs.length, span).setBackgrounds(bgs).setFontColors(fcs);
   return list;
 }
 
@@ -689,62 +737,90 @@ function todoUrl_() {
   return ss.getUrl() + (sh ? '#gid=' + sh.getSheetId() : '');
 }
 
+function paxText_(c) {
+  var a = num_(c[H.ADULT], 0), k = num_(c[H.CHILD], 0);
+  return (a ? '大人' + a : '') + (k ? (a ? '・' : '') + '子' + k : '');
+}
+
+// 「今やること」のシートを作り直す（1回の書き込みで値、まとめて書式）
 function renderTodo_(L, cfg, now, list) {
   var sh = ss_().getSheetByName(SHEETS.TODO);
   if (!sh) return;
   list = list || L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; });
   var gid = L.sh.getSheetId();
   var W = 9;
-  var out = [], fmt = [];
-  var push = function (row, kind) { while (row.length < W) row.push(''); out.push(row); fmt.push(kind || ''); };
+  var out = [], bg = [], fw = [], fc = [], fs = [], tables = [];
+  var push = function (row, style) {
+    style = style || {};
+    while (row.length < W) row.push('');
+    out.push(row);
+    var b = [], w = [], f = [], z = [];
+    for (var i = 0; i < W; i++) {
+      b.push(style.bg || COLORS.WHITE); w.push(style.bold ? 'bold' : 'normal');
+      f.push(style.fc || '#1b2440'); z.push(style.size || 11);
+    }
+    if (style.cells) Object.keys(style.cells).forEach(function (i) { var s = style.cells[i]; if (s.bg) b[i] = s.bg; if (s.bold) w[i] = 'bold'; if (s.fc) f[i] = s.fc; if (s.size) z[i] = s.size; });
+    bg.push(b); fw.push(w); fc.push(f); fs.push(z);
+  };
+  var link = function (c) { return '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","' + c[H.ID] + ' ↗")'; };
   var byDue = function (a, b) { return (a._d.due ? a._d.due.getTime() : 9e15) - (b._d.due ? b._d.due.getTime() : 9e15); };
-  var line = function (c) {
-    var d = c._d, late = isOverdue_(d, now);
-    return [(late ? '⚠ 期限切れ ' : '') + fmtDT_(d.due), d.todo, c[H.ID], fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]),
-      String(c[H.TOUR] || ''), (num_(c[H.ADULT], 0) || '') + (num_(c[H.CHILD], 0) ? '＋子' + num_(c[H.CHILD], 0) : ''),
-      String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''),
-      '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","台帳で開く")'];
-  };
-  push(['NGT 手配ボード　今やること', '', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], 'title');
-  push([PropertiesService.getScriptProperties().getProperty('LAST_IMPORT') || '最終取込：まだありません'], 'sub');
-  push([''], '');
-  var sec = function (title, who, color) {
-    var items = list.filter(function (c) { return who.indexOf(c._d.who) >= 0; }).sort(byDue);
-    push([title + '（' + items.length + '件）'], 'sec:' + color);
-    if (!items.length) { push(['いまはありません'], 'none'); push([''], ''); return; }
-    push(['期限', 'やること', '案件ID', '催行日・開始', 'ツアー', '人数', '経路', 'ガイド', ''], 'head');
-    items.forEach(function (c) { push(line(c), isOverdue_(c._d, now) ? 'late' : 'row:' + color); });
-    push([''], '');
-  };
-  sec('■ リールがやること（ガイドの完了報告を含む）', [WHO.REELU, WHO.GUIDE], COLORS.REELU);
-  sec('■ キラナがやること', [WHO.KIRA], COLORS.KIRA);
-  // これから3日のツアー（全体の見通し）
+  var mine = function (who) { return list.filter(function (c) { return who.indexOf(c._d.who) >= 0; }).sort(byDue); };
+  var reelu = mine([WHO.REELU, WHO.GUIDE]), kira = mine([WHO.KIRA]);
+  var lateN = list.filter(function (c) { return c._d.who && isOverdue_(c._d, now); }).length;
   var t0 = ymd_(now), t3 = ymd_(new Date(now.getTime() + 3 * DAY_MS));
   var soon = list.filter(function (c) { var y = toYmd_(c[H.DATE]); return y >= t0 && y <= t3 && c._d.step !== 'cxdone'; })
     .sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
-  push(['■ これから3日のツアー（' + soon.length + '件）'], 'sec:#e8e8e8');
-  if (soon.length) {
-    push(['催行日・開始', '状態', '案件ID', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', ''], 'head');
-    soon.forEach(function (c) {
-      push([fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), c._d.st, c[H.ID], String(c[H.TOUR] || ''),
-        (num_(c[H.ADULT], 0) || '') + (num_(c[H.CHILD], 0) ? '＋子' + num_(c[H.CHILD], 0) : ''), String(c[H.ROUTE] || ''),
-        String(c[H.GUIDE] || ''), c._d.who || '—', '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","台帳で開く")'], 'row:#ffffff');
+
+  push(['NGT 手配ボード　今やること'], { bold: true, size: 18, fc: COLORS.HEAD });
+  push(['更新 ' + fmtDT_(now) + '　｜　' + (PropertiesService.getScriptProperties().getProperty('LAST_IMPORT') || '最終取込：まだありません')], { fc: '#666666', size: 10 });
+  push(['リール ' + reelu.length + '件', 'キラナ ' + kira.length + '件', '期限切れ ' + lateN + '件', '3日以内のツアー ' + soon.length + '件'], {
+    bold: true, size: 12, cells: { 0: { bg: COLORS.REELU }, 1: { bg: COLORS.KIRA }, 2: { bg: lateN ? COLORS.LATE : COLORS.DONE }, 3: { bg: '#eeeeee' } }
+  });
+  push([''], {});
+
+  var section = function (title, items, color, hi) {
+    push([title + '　' + items.length + '件'], { bold: true, size: 13, bg: hi, fc: '#1b2440' });
+    if (!items.length) { push(['いまはありません'], { fc: COLORS.MUTED }); push([''], {}); return; }
+    var start = out.length + 1;
+    push(['期限', '残り', 'やること', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '案件（開く）'], { bold: true, bg: color, size: 10 });
+    items.forEach(function (c) {
+      var d = c._d, late = isOverdue_(d, now);
+      var soonDue = !late && d.due && d.due.getTime() - now.getTime() < 2 * H_MS;
+      push([fmtDT_(d.due), rel_(d.due, now), (d.who === WHO.GUIDE ? '［ガイド］' : '') + d.todo, String(c[H.TOUR] || ''),
+        fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+        { bg: late ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE, cells: { 1: { bold: true, fc: late ? '#b42318' : '#1b2440' } } });
     });
-  } else push(['ありません'], 'none');
+    tables.push([start, out.length]);
+    push([''], {});
+  };
+  section('■ リールがやること（ガイドの完了報告も）', reelu, COLORS.REELU, COLORS.REELU_HI);
+  section('■ キラナがやること', kira, COLORS.KIRA, COLORS.KIRA_HI);
+
+  push(['■ 3日以内のツアー　' + soon.length + '件'], { bold: true, size: 13, bg: '#d9d9d9' });
+  if (soon.length) {
+    var start = out.length + 1;
+    push(['催行日・開始', '状態', '次にやる人', 'ツアー', '人数', '経路', 'ガイド', '', '案件（開く）'], { bold: true, bg: '#eeeeee', size: 10 });
+    var lastDay = '';
+    soon.forEach(function (c) {
+      var day = toYmd_(c[H.DATE]);
+      var d = c._d;
+      push([(day !== lastDay ? fmtMD_(day) + ' ' : '　　　 ') + toHm_(c[H.TIME]), d.st, d.who || '—', String(c[H.TOUR] || ''), paxText_(c),
+        String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), '', link(c)],
+        { cells: { 1: { bg: whoColor_(d, now) }, 2: { bg: whoColor_(d, now) } } });
+      lastDay = day;
+    });
+    tables.push([start, out.length]);
+  } else push(['ありません'], { fc: COLORS.MUTED });
 
   sh.clear();
-  sh.getRange(1, 1, out.length, W).setValues(out);
-  for (var i = 0; i < fmt.length; i++) {
-    var k = fmt[i], rg = sh.getRange(i + 1, 1, 1, W);
-    if (k === 'title') rg.setFontSize(16).setFontWeight('bold').setFontColor(COLORS.HEAD);
-    else if (k === 'sub') rg.setFontColor('#555555');
-    else if (k.indexOf('sec:') === 0) rg.setBackground(k.slice(4)).setFontWeight('bold').setFontSize(12);
-    else if (k === 'head') rg.setFontWeight('bold').setBackground('#f3f3f3');
-    else if (k === 'late') rg.setBackground(COLORS.LATE).setFontWeight('bold');
-    else if (k.indexOf('row:') === 0) rg.setBackground('#ffffff');
-    else if (k === 'none') rg.setFontColor('#777777');
-  }
-  sh.setFrozenRows(1);
+  var rg = sh.getRange(1, 1, out.length, W);
+  rg.setValues(out).setBackgrounds(bg).setFontWeights(fw).setFontColors(fc).setFontSizes(fs).setVerticalAlignment('middle');
+  sh.getRange(1, 3, out.length, 1).setWrap(true);
+  tables.forEach(function (t) {
+    sh.getRange(t[0], 1, t[1] - t[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
+  });
+  [120, 110, 330, 170, 120, 90, 140, 100, 120].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
+  sh.setFrozenRows(3);
 }
 
 // ===== 通知 =====
@@ -1220,9 +1296,9 @@ function setup() {
   todo.setColumnWidths(1, 1, 150).setColumnWidth(2, 380).setColumnWidths(3, 7, 110);
 
   var led = ss.getSheetByName(SHEETS.LEDGER) || ss.insertSheet(SHEETS.LEDGER, 1);
-  if (led.getLastRow() === 0) led.appendRow(LEDGER_HEADERS);
   var n = LEDGER_HEADERS.length, rows = led.getMaxRows() - 1;
   var col = function (name) { return LEDGER_HEADERS.indexOf(name) + 1; };
+  led.getRange(1, 1, 1, n).setValues([LEDGER_HEADERS.map(dispHeader_)]);
   led.setFrozenRows(1);
   led.setFrozenColumns(1);
   led.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#ffffff').setBackground('#6b7280').setWrap(true).setVerticalAlignment('middle');
@@ -1230,7 +1306,15 @@ function setup() {
   [H.RECEIVE, H.CXKIRA].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1d4ed8'); });
   led.getRange(1, col(H.REPORT)).setBackground('#15803d');
   [H.DATE, H.TIME, H.TOUR, H.ADULT, H.CHILD, H.NAME, H.CONTACT, H.ROUTE, H.MEMO].forEach(function (h) { led.getRange(1, col(h)).setBackground('#1f2d52'); });
-  led.setRowHeight(1, 42);
+  led.setRowHeight(1, 48);
+  led.getRange(1, 1, 1, n).setHorizontalAlignment('center');
+  led.getRange(2, 1, rows, n).setVerticalAlignment('middle');
+  // 予約番号から右（記録用の列）はまとめて折りたたむ。左上の「＋」で開ける
+  var g1 = col(H.BOOKING);
+  if (led.getColumnGroupDepth(g1) === 0) led.getRange(1, g1, 1, n - g1 + 1).shiftColumnGroupDepth(1);
+  led.collapseAllColumnGroups();
+  // 見出しに絞り込み（フィルタ）を付ける
+  if (!led.getFilter()) led.getRange(1, 1, led.getMaxRows(), n).createFilter();
   led.getRange(2, col(H.DATE), rows, 1).setNumberFormat('yyyy-mm-dd');
   [H.TIME, H.BOOKING, H.AGENT, H.ID].forEach(function (h) { led.getRange(2, col(h), rows, 1).setNumberFormat('@'); });
   [H.DUE, H.T_CREATED, H.T_ACCEPT, H.T_ARRANGE, H.T_GUEST, H.T_REPORT, H.T_RECEIVE, H.T_CX, H.T_CXOK].forEach(function (h) {
@@ -1242,7 +1326,8 @@ function setup() {
   var widths = {}; widths[H.ID] = 90; widths[H.WHO] = 80; widths[H.TODO] = 300; widths[H.DUE] = 110; widths[H.ST] = 150;
   widths[H.DATE] = 95; widths[H.TIME] = 55; widths[H.TOUR] = 160; widths[H.ADULT] = 45; widths[H.CHILD] = 50; widths[H.NAME] = 140;
   widths[H.CONTACT] = 170; widths[H.ROUTE] = 120; widths[H.MEMO] = 180; widths[H.GUIDE] = 100; widths[H.NOTE] = 260; widths[H.REPORT_SUM] = 320;
-  [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { widths[h] = 90; });
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.REPORT, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { widths[h] = 92; });
+  [H.ACCEPT, H.ARRANGE, H.GUEST, H.RECEIVE, H.CXOK, H.CXKIRA].forEach(function (h) { led.getRange(2, col(h), rows, 1).setHorizontalAlignment('center'); });
   Object.keys(widths).forEach(function (h) { led.setColumnWidth(col(h), widths[h]); });
   led.getRange(2, col(H.TODO), rows, 1).setWrap(true);
   led.getRange(2, col(H.NOTE), rows, 1).setWrap(true);

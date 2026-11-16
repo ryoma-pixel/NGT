@@ -361,7 +361,7 @@ test('置き場フォルダの CSV を取り込み、取込済みへ移し、ま
   assert.ok(env.mails.some((m) => /CSVを取り込みました/.test(m.subject)));
   assert.ok(/最終取込：NGT/.test(env.props.LAST_IMPORT));
   const todo = env.ss.getSheetByName('今やること');
-  assert.ok(todo.rows.some((r) => /リールがやること.*（1件）/.test(r[0])));
+  assert.ok(todo.rows.some((r) => /リールがやること.*1件/.test(r[0])));
 });
 
 
