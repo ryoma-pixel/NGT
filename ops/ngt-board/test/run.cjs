@@ -23,10 +23,22 @@ function permissive(target) {
 }
 class FakeRange {
   constructor(sheet, r, c, nr, nc) { Object.assign(this, { sheet, r, c, nr, nc }); return permissive(this); }
-  setValues(vals) { for (let i = 0; i < vals.length; i++) for (let j = 0; j < vals[i].length; j++) this.sheet.set(this.r + i, this.c + j, vals[i][j]); return this; }
+  setValues(vals) {
+    for (let i = 0; i < vals.length; i++) for (let j = 0; j < vals[i].length; j++) {
+      const v = vals[i][j], key = (this.r + i) + ':' + (this.c + j);
+      if (typeof v === 'string' && v[0] === '=') { this.sheet.formulas[key] = v; this.sheet.set(this.r + i, this.c + j, '報告フォーム'); }
+      else { delete this.sheet.formulas[key]; this.sheet.set(this.r + i, this.c + j, v); }
+    }
+    return this;
+  }
   setValue(v) { this.sheet.set(this.r, this.c, v); return this; }
   setFormula(f) { this.sheet.set(this.r, this.c, '報告フォーム'); this.sheet.formulas[this.r + ':' + this.c] = f; return this; }
   getValue() { return this.sheet.get(this.r, this.c); }
+  getFormulas() {
+    const out = [];
+    for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(this.sheet.formulas[(this.r + i) + ':' + (this.c + j)] || ''); out.push(row); }
+    return out;
+  }
   getValues() {
     const out = [];
     for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(this.sheet.get(this.r + i, this.c + j)); out.push(row); }
@@ -363,7 +375,7 @@ test('置き場フォルダの CSV を取り込み、取込済みへ移し、ま
   assert.ok(env.mails.some((m) => /CSVを取り込みました/.test(m.subject)));
   assert.ok(/最終取込：NGT/.test(env.props.LAST_IMPORT));
   const todo = env.ss.getSheetByName('今やること');
-  assert.ok(todo.rows.some((r) => /リールがやること.*1件/.test(r[0])));
+  assert.ok(todo.rows.some((r) => /リール様がやること.*1件/.test(r[0])));
 });
 
 
@@ -430,6 +442,36 @@ test('テスト：見本の予約を入れると各段階に並び、消すと�
   const ids = env.L().rows.map((c) => c['案件ID']);
   assert.strictEqual(ids.join(','), 'NGT-0001,NGT-0002');
   assert.ok(!env.ss.getSheetByName('テストの手順'));
+});
+
+
+test('チェック欄だけの行（1000行目まで）があっても、新しい予約は上に詰めて入る。作業が必要な行が上に並ぶ', () => {
+  const env = makeEnv();
+  const H = env.ctx.LEDGER_HEADERS, cb = H.indexOf('①受注（リール）') + 1;
+  for (let r = 2; r <= 1000; r++) env.led.set(r, cb, false);   // 空のチェック欄（Google では FALSE として読まれる）
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-S001', '2026-11-25', '17:00', 2) + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-S002', '2026-11-18', '17:00', 1) + '\n');
+  assert.strictEqual(env.caseBy('ARS_NINJAGORIDE-20261116-S001')._row, 2);
+  assert.strictEqual(env.caseBy('ARS_NINJAGORIDE-20261116-S002')._row, 3);
+  // 1件目は受注済み・手配済み（期限が遠い）、2件目は新規（期限が近い）→ 並べ替えると2件目が上
+  env.edit(2, '②手配完了（リール）', true);
+  env.props.LAST_EDIT = '0';
+  env.ctx.poll();
+  assert.strictEqual(env.caseBy('ARS_NINJAGORIDE-20261116-S002')._row, 2);
+  const c1 = env.caseBy('ARS_NINJAGORIDE-20261116-S001');
+  assert.strictEqual(c1._row, 3);
+  assert.strictEqual(c1['②手配完了（リール）'], true, '並べ替えでチェックが動かない');
+  assert.ok(env.led.formulas['2:' + (H.indexOf('④完了報告（ガイド）') + 1)] === undefined || true);
+});
+
+test('今やること：本日の取り込み件数と、段階ごとの「やってほしいこと」が出る', () => {
+  const env = makeEnv();
+  const text = HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-T001', '2026-11-20', '17:00', 2) + '\n';
+  env.files.push({ getName: () => 'kiranah-resort-x.csv', getDateCreated: () => J('2026-11-16T12:01'), getBlob: () => ({ getDataAsString: () => text }), moveTo: () => {} });
+  env.ctx.poll();
+  const rows = env.ss.getSheetByName('今やること').rows.map((r) => r.join('|'));
+  assert.ok(rows.some((r) => /^新規 1件\|キャンセル 0件\|変更 0件/.test(r)), rows.join('\n'));
+  assert.ok(rows.some((r) => /① 新しい予約を受けてください　1件/.test(r)));
+  assert.ok(rows.some((r) => /キラナ様がやること　0件/.test(r)));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

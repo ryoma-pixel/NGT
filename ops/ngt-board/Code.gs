@@ -577,7 +577,9 @@ function ledger_() {
     for (var i = 0; i < head.length; i++) o[head[i]] = values[r][i];
     if (o[H.ID] || o[H.DATE] || o[H.TOUR] || o[H.NAME] || o[H.BOOKING]) rows.push(o);
   }
-  return { sh: sh, head: head, rows: rows, last: values.length };
+  // チェック欄は空でも「使われている行」に数えられるため、最後の行は中身のある行で決める
+  var last = rows.reduce(function (m, c) { return Math.max(m, c._row); }, 1);
+  return { sh: sh, head: head, rows: rows, last: last, used: values.length };
 }
 
 function saveCase_(L, c) {
@@ -593,7 +595,7 @@ function saveCase_(L, c) {
 }
 
 function appendCase_(L, c) {
-  c._row = Math.max(L.last, L.rows.reduce(function (m, x) { return Math.max(m, x._row); }, 1)) + 1;
+  c._row = L.rows.reduce(function (m, x) { return Math.max(m, x._row); }, 1) + 1;
   L.last = c._row;
   saveCase_(L, c);
   L.rows.push(c);
@@ -742,85 +744,172 @@ function paxText_(c) {
   return (a ? '大人' + a : '') + (k ? (a ? '・' : '') + '子' + k : '');
 }
 
-// 「今やること」のシートを作り直す（1回の書き込みで値、まとめて書式）
+// 「今やること」の見出し：段階ごとに「何をしてほしいか」と「どこを押すか」
+var TASKS = {
+  REELU: [
+    { step: 'accept', title: '① 新しい予約を受けてください', how: '台帳の「①受注」に✓（今日14:00まで）' },
+    { step: 'arrange', title: '② ガイドを手配してください', how: '台帳にガイド名を入れて「②手配完了」に✓（ツアー前日20:00まで）' },
+    { step: 'guest', title: '③ ゲストに連絡してください', how: 'ガイドがゲストと連絡できたら、台帳の「③ゲスト連絡」に✓' },
+    { step: 'report', title: '④ ガイドから完了報告をもらってください', how: '台帳④の「報告フォーム」のリンクをガイドに送る（ツアー翌日12:00まで）' },
+    { step: 'cxok', title: '× キャンセルになりました。ガイドに伝えてください', how: '伝えたら、台帳の「キャンセル確認（リール）」に✓' }
+  ],
+  KIRA: [
+    { step: 'import', title: '今日のCSVを取り込んでください', how: 'メニュー「NGT 手配ボード」→「CSVを取り込む」で kiranah-resort- と tryhard- の2つを選ぶ' },
+    { step: 'unarranged', title: '前日20時を過ぎても手配できていません', how: '原則キャンセル対応。お客様・予約サイトの手続きが済んだら、台帳の「キャンセル対応（キラナ）」に✓' },
+    { step: 'input', title: '手入力の予約に足りない項目があります', how: '台帳で催行日・開始・ツアー・大人の人数を入れる' },
+    { step: 'receive', title: 'ガイドの完了報告を読んで受領してください', how: '台帳の「報告の要約」を読み、「⑤受領（キラナ）」に✓' },
+    { step: 'held', title: 'CSVに載っていない予約があります（要確認）', how: '書き出しの条件が正しいか確かめ、キャンセルなら「キャンセル対応（キラナ）」に✓' }
+  ]
+};
+
+// 「今やること」のシートを作り直す（値は1回で書き、書式もまとめて付ける）
 function renderTodo_(L, cfg, now, list) {
   var sh = ss_().getSheetByName(SHEETS.TODO);
   if (!sh) return;
   list = list || L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; });
   var gid = L.sh.getSheetId();
-  var W = 9;
+  var W = 8;
   var out = [], bg = [], fw = [], fc = [], fs = [], tables = [];
   var push = function (row, style) {
     style = style || {};
     while (row.length < W) row.push('');
     out.push(row);
     var b = [], w = [], f = [], z = [];
-    for (var i = 0; i < W; i++) {
-      b.push(style.bg || COLORS.WHITE); w.push(style.bold ? 'bold' : 'normal');
-      f.push(style.fc || '#1b2440'); z.push(style.size || 11);
-    }
-    if (style.cells) Object.keys(style.cells).forEach(function (i) { var s = style.cells[i]; if (s.bg) b[i] = s.bg; if (s.bold) w[i] = 'bold'; if (s.fc) f[i] = s.fc; if (s.size) z[i] = s.size; });
+    for (var i = 0; i < W; i++) { b.push(style.bg || COLORS.WHITE); w.push(style.bold ? 'bold' : 'normal'); f.push(style.fc || '#1b2440'); z.push(style.size || 11); }
+    if (style.cells) Object.keys(style.cells).forEach(function (i) { var x = style.cells[i]; if (x.bg) b[i] = x.bg; if (x.bold) w[i] = 'bold'; if (x.fc) f[i] = x.fc; if (x.size) z[i] = x.size; });
     bg.push(b); fw.push(w); fc.push(f); fs.push(z);
   };
-  var link = function (c) { return '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","' + c[H.ID] + ' ↗")'; };
+  var link = function (c) { return '=HYPERLINK("#gid=' + gid + '&range=A' + c._row + '","' + c[H.ID] + ' を開く")'; };
   var byDue = function (a, b) { return (a._d.due ? a._d.due.getTime() : 9e15) - (b._d.due ? b._d.due.getTime() : 9e15); };
-  var mine = function (who) { return list.filter(function (c) { return who.indexOf(c._d.who) >= 0; }).sort(byDue); };
-  var reelu = mine([WHO.REELU, WHO.GUIDE]), kira = mine([WHO.KIRA]);
-  var lateN = list.filter(function (c) { return c._d.who && isOverdue_(c._d, now); }).length;
-  var t0 = ymd_(now), t3 = ymd_(new Date(now.getTime() + 3 * DAY_MS));
-  var soon = list.filter(function (c) { var y = toYmd_(c[H.DATE]); return y >= t0 && y <= t3 && c._d.step !== 'cxdone'; })
-    .sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+  var started = function (c) { var t = startOf_(c); return t && now.getTime() >= t.getTime(); };
 
-  push(['NGT 手配ボード　今やること'], { bold: true, size: 18, fc: COLORS.HEAD });
-  push(['更新 ' + fmtDT_(now) + '　｜　' + (PropertiesService.getScriptProperties().getProperty('LAST_IMPORT') || '最終取込：まだありません')], { fc: '#666666', size: 10 });
-  push(['リール ' + reelu.length + '件', 'キラナ ' + kira.length + '件', '期限切れ ' + lateN + '件', '3日以内のツアー ' + soon.length + '件'], {
-    bold: true, size: 12, cells: { 0: { bg: COLORS.REELU }, 1: { bg: COLORS.KIRA }, 2: { bg: lateN ? COLORS.LATE : COLORS.DONE }, 3: { bg: '#eeeeee' } }
+  // 段階ごとに分ける（ツアー前の「完了報告待ち」は、まだやることがないので出さない）
+  var groups = {};
+  list.forEach(function (c) {
+    var st = c._d.step;
+    if (!c._d.who) return;
+    if (st === 'report' && !started(c)) return;
+    (groups[st] = groups[st] || []).push(c);
+    if (String(c[H.NOTE]).indexOf('要確認：最新のCSVに載っていません') >= 0 && !c[H.T_CX]) (groups.held = groups.held || []).push(c);
   });
+  var t = todayImport_(now);
+  var noonPassed = minOfDay_(now) >= hmToMin_(cfg.checkTime) - 30;   // 12:30 を過ぎても取り込みがなければ知らせる
+  var count = function (side) { return TASKS[side].reduce(function (n, g) { return n + (g.step === 'import' ? (!t && noonPassed ? 1 : 0) : (groups[g.step] || []).length); }, 0); };
+  var lateIn = function (side) {
+    return TASKS[side].reduce(function (n, g) { return n + (groups[g.step] || []).filter(function (c) { return isOverdue_(c._d, now); }).length; }, 0);
+  };
+
+  push(['NGT 手配ボード　今やること', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 7: { size: 10, fc: '#666666' } } });
+  // 本日の取り込み
+  if (t) {
+    push(['本日の取り込み（' + t.files.join('・') + '）'], { bold: true, size: 11, fc: '#555555' });
+    push(['新規 ' + t.added + '件', 'キャンセル ' + t.cancelled + '件', '変更 ' + t.changed + '件', t.held ? '要確認 ' + t.held + '件' : ''], {
+      bold: true, size: 14, cells: { 0: { bg: '#d9ead3' }, 1: { bg: t.cancelled ? COLORS.LATE : '#eeeeee' }, 2: { bg: t.changed ? COLORS.SOON : '#eeeeee' }, 3: { bg: t.held ? COLORS.LATE : COLORS.WHITE } }
+    });
+  } else {
+    push(['本日の取り込み'], { bold: true, size: 11, fc: '#555555' });
+    push([noonPassed ? 'まだ取り込まれていません' : '12:00 にキラナ様がCSVを取り込みます'], { bold: true, size: 13, fc: noonPassed ? '#b42318' : '#555555' });
+  }
   push([''], {});
 
-  var section = function (title, items, color, hi) {
-    push([title + '　' + items.length + '件'], { bold: true, size: 13, bg: hi, fc: '#1b2440' });
-    if (!items.length) { push(['いまはありません'], { fc: COLORS.MUTED }); push([''], {}); return; }
-    var start = out.length + 1;
-    push(['期限', '残り', 'やること', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '案件（開く）'], { bold: true, bg: color, size: 10 });
-    items.forEach(function (c) {
-      var d = c._d, late = isOverdue_(d, now);
-      var soonDue = !late && d.due && d.due.getTime() - now.getTime() < 2 * H_MS;
-      push([fmtDT_(d.due), rel_(d.due, now), (d.who === WHO.GUIDE ? '［ガイド］' : '') + d.todo, String(c[H.TOUR] || ''),
-        fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
-        { bg: late ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE, cells: { 1: { bold: true, fc: late ? '#b42318' : '#1b2440' } } });
+  var side = function (key, title, color, hi) {
+    var n = count(key), late = lateIn(key);
+    push([title + '　' + n + '件' + (late ? '（うち期限切れ ' + late + '件）' : '')], { bold: true, size: 14, bg: hi, fc: '#1b2440' });
+    if (!n) { push(['いまはありません'], { fc: COLORS.MUTED }); push([''], {}); return; }
+    TASKS[key].forEach(function (g) {
+      if (g.step === 'import') {
+        if (!t && noonPassed) { push([g.title], { bold: true, size: 12, bg: color }); push(['→ ' + g.how], { fc: '#444444' }); push([''], {}); }
+        return;
+      }
+      var items = (groups[g.step] || []).sort(byDue);
+      if (!items.length) return;
+      push([g.title + '　' + items.length + '件'], { bold: true, size: 12, bg: color });
+      push(['→ ' + g.how], { fc: '#444444' });
+      var start = out.length + 1;
+      push(['期限', '残り', 'ツアー', '催行日・開始', '人数', '経路', 'ガイド', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+      items.forEach(function (c) {
+        var d = c._d, isLate = isOverdue_(d, now);
+        var soonDue = !isLate && d.due && d.due.getTime() - now.getTime() < 2 * H_MS;
+        push([fmtDT_(d.due), rel_(d.due, now), String(c[H.TOUR] || ''), fmtMD_(toYmd_(c[H.DATE])) + ' ' + toHm_(c[H.TIME]), paxText_(c),
+          String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), link(c)],
+          { bg: isLate ? COLORS.LATE : soonDue ? COLORS.SOON : COLORS.WHITE, cells: { 1: { bold: true, fc: isLate ? '#b42318' : '#1b2440' } } });
+      });
+      tables.push([start, out.length]);
+      push([''], {});
     });
-    tables.push([start, out.length]);
-    push([''], {});
   };
-  section('■ リールがやること（ガイドの完了報告も）', reelu, COLORS.REELU, COLORS.REELU_HI);
-  section('■ キラナがやること', kira, COLORS.KIRA, COLORS.KIRA_HI);
+  side('REELU', '■ リール様がやること', COLORS.REELU, COLORS.REELU_HI);
+  side('KIRA', '■ キラナ様がやること', COLORS.KIRA, COLORS.KIRA_HI);
 
-  push(['■ 3日以内のツアー　' + soon.length + '件'], { bold: true, size: 13, bg: '#d9d9d9' });
-  if (soon.length) {
-    var start = out.length + 1;
-    push(['催行日・開始', '状態', '次にやる人', 'ツアー', '人数', '経路', 'ガイド', '', '案件（開く）'], { bold: true, bg: '#eeeeee', size: 10 });
-    var lastDay = '';
-    soon.forEach(function (c) {
-      var day = toYmd_(c[H.DATE]);
-      var d = c._d;
-      push([(day !== lastDay ? fmtMD_(day) + ' ' : '　　　 ') + toHm_(c[H.TIME]), d.st, d.who || '—', String(c[H.TOUR] || ''), paxText_(c),
-        String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), '', link(c)],
-        { cells: { 1: { bg: whoColor_(d, now) }, 2: { bg: whoColor_(d, now) } } });
-      lastDay = day;
+  // 明日のツアー：前日20時の締切に向けて、全件「手配済み」になっているかを見る
+  var tomorrow = ymd_(new Date(now.getTime() + DAY_MS));
+  var tm = list.filter(function (c) { return toYmd_(c[H.DATE]) === tomorrow && c._d.step !== 'cxdone'; })
+    .sort(function (a, b) { return (startOf_(a) || 0) - (startOf_(b) || 0); });
+  var ready = tm.filter(function (c) { return ['guest', 'report', 'receive', 'done'].indexOf(c._d.step) >= 0; }).length;
+  push(['■ 明日（' + fmtMD_(tomorrow) + '）のツアー　' + tm.length + '件　手配済み ' + ready + '／' + tm.length], { bold: true, size: 14, bg: '#d9d9d9' });
+  push(['→ 今日' + cfg.arrangeDeadline + 'までに、全件が「手配済み」になっていればOK'], { fc: '#444444' });
+  if (tm.length) {
+    var s2 = out.length + 1;
+    push(['開始', '状態', 'ツアー', '人数', '経路', 'ガイド', '次にやる人', '台帳'], { bold: true, bg: '#f3f3f3', size: 10 });
+    tm.forEach(function (c) {
+      var d = c._d, col = whoColor_(d, now);
+      push([toHm_(c[H.TIME]), d.st, String(c[H.TOUR] || ''), paxText_(c), String(c[H.ROUTE] || ''), String(c[H.GUIDE] || ''), d.who || '—', link(c)],
+        { cells: { 1: { bg: col }, 6: { bg: col } } });
     });
-    tables.push([start, out.length]);
+    tables.push([s2, out.length]);
   } else push(['ありません'], { fc: COLORS.MUTED });
 
   sh.clear();
   var rg = sh.getRange(1, 1, out.length, W);
   rg.setValues(out).setBackgrounds(bg).setFontWeights(fw).setFontColors(fc).setFontSizes(fs).setVerticalAlignment('middle');
-  sh.getRange(1, 3, out.length, 1).setWrap(true);
-  tables.forEach(function (t) {
-    sh.getRange(t[0], 1, t[1] - t[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
+  tables.forEach(function (x) {
+    sh.getRange(x[0], 1, x[1] - x[0] + 1, W).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
   });
-  [120, 110, 330, 170, 120, 90, 140, 100, 120].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
-  sh.setFrozenRows(3);
+  [130, 120, 180, 120, 90, 150, 110, 130].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
+  sh.setFrozenRows(1);
+}
+
+// ===== 台帳の並べ替え（作業が必要な行を上に）=====
+
+function sortKey_(c, now) {
+  var d = c._d;
+  if (!c[H.ID]) return [3, 0];
+  if (d.who) return [isOverdue_(d, now) ? 0 : 1, d.due ? d.due.getTime() : 9e15];
+  return [2, -(startOf_(c) || new Date(0)).getTime()];      // 完了・キャンセル済みは、新しいツアーを上に
+}
+
+// 並べ替えて上に詰める。変わったら true（呼んだ側で台帳を読み直す）
+function sortLedger_(L, cfg, now) {
+  if (!L.rows.length) return false;
+  var list = L.rows.map(function (c) { if (!c._d) c._d = derive_(c, cfg, now); return c; });
+  var sorted = list.slice().sort(function (a, b) {
+    var x = sortKey_(a, now), y = sortKey_(b, now);
+    return x[0] - y[0] || x[1] - y[1] || a._row - b._row;
+  });
+  var same = sorted.every(function (c, i) { return c._row === i + 2; });
+  if (same) return false;
+  var n = L.head.length, last = L.last;
+  var rg = L.sh.getRange(2, 1, last - 1, n);
+  var vals = rg.getValues(), fx = rg.getFormulas();
+  var rowsOut = sorted.map(function (c) {
+    var i = c._row - 2;
+    return vals[i].map(function (v, j) { return fx[i][j] ? fx[i][j] : v; });
+  });
+  while (rowsOut.length < last - 1) { var blank = []; for (var k = 0; k < n; k++) blank.push(''); rowsOut.push(blank); }
+  rg.setValues(rowsOut);
+  if (last - 1 > sorted.length) L.sh.getRange(sorted.length + 2, 1, last - 1 - sorted.length, n).setBackground(null).setFontColor(null);
+  return true;
+}
+
+function sortLedger() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var cfg = settings_(), now = now_(), L = ledger_();
+    if (sortLedger_(L, cfg, now)) L = ledger_();
+    var list = refreshAll_(L, cfg, now);
+    renderTodo_(L, cfg, now, list);
+  } finally { lock.releaseLock(); }
 }
 
 // ===== 通知 =====
@@ -928,6 +1017,21 @@ function rememberImport_(results, now) {
   ok.forEach(function (r) { prev[r.src] = fmtDT_(now) + '（新規' + r.added.length + '・キャンセル' + r.cancelled.length + '・変更' + r.changed.length + '）'; });
   props.setProperty('LAST_IMPORT_BY_SRC', JSON.stringify(prev));
   props.setProperty('LAST_IMPORT', '最終取込：' + Object.keys(prev).sort().map(function (k) { return k + ' ' + prev[k]; }).join('　／　'));
+  // 今日の合計（「今やること」のいちばん上に出す）
+  var today = ymd_(now), t = {};
+  try { t = JSON.parse(props.getProperty('TODAY_IMPORT') || '{}'); } catch (e) { t = {}; }
+  if (t.day !== today) t = { day: today, added: 0, cancelled: 0, changed: 0, held: 0, files: [] };
+  ok.forEach(function (r) {
+    t.added += r.added.length; t.cancelled += r.cancelled.length; t.changed += r.changed.length; t.held += r.held.length;
+    t.files.push(r.src + ' ' + fmtDT_(now).slice(-5));
+  });
+  props.setProperty('TODAY_IMPORT', JSON.stringify(t));
+}
+
+function todayImport_(now) {
+  var t = {};
+  try { t = JSON.parse(PropertiesService.getScriptProperties().getProperty('TODAY_IMPORT') || '{}'); } catch (e) { t = {}; }
+  return t.day === ymd_(now) ? t : null;
 }
 
 // 「CSVを取り込む」画面から呼ばれる。files = [{ name, b64 }]
@@ -948,6 +1052,7 @@ function importUploaded(files) {
     });
     rememberImport_(results, now);
     var list = refreshAll_(L, cfg, now);
+    if (sortLedger_(L, cfg, now)) { L = ledger_(); list = refreshAll_(L, cfg, now); }
     ensureReportLinks_(L, list);
     renderTodo_(L, cfg, now, list);
     importSummaryMail_(cfg, results);
@@ -1186,6 +1291,7 @@ function onBoardEdit(e) {
   if (!e || !e.range) return;
   var sh = e.range.getSheet();
   if (sh.getName() !== SHEETS.LEDGER || e.range.getRow() < 2) return;
+  PropertiesService.getScriptProperties().setProperty('LAST_EDIT', String(now_().getTime()));
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return;
   try {
@@ -1217,6 +1323,9 @@ function poll() {
     var results = importFromFolder_(cfg, L, tours, now);
     rememberImport_(results, now);
     var list = refreshAll_(L, cfg, now);
+    // 並べ替えは、取り込んだときと、20分だれも台帳を触っていないときだけ（作業中に行が動かないように）
+    var lastEdit = num_(PropertiesService.getScriptProperties().getProperty('LAST_EDIT'), 0);
+    if ((results.length || now.getTime() - lastEdit > 20 * MIN_MS) && sortLedger_(L, cfg, now)) { L = ledger_(); list = refreshAll_(L, cfg, now); }
     ensureReportLinks_(L, list);
     alertOverdue_(L, cfg, now, list);
     renderTodo_(L, cfg, now, list);
@@ -1283,6 +1392,7 @@ function seedTest() {
     });
     L = ledger_();
     var list = refreshAll_(L, cfg, now);
+    if (sortLedger_(L, cfg, now)) { L = ledger_(); list = refreshAll_(L, cfg, now); }
     ensureReportLinks_(L, list);
     L.rows.filter(function (c) { return c[H.ID] === 'TEST-05'; }).forEach(function (c) {
       L.sh.getRange(c._row, colOf_(L, H.REPORT)).setValue('報告済み（見本）');
@@ -1352,6 +1462,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('NGT 手配ボード')
     .addItem('CSVを取り込む（ファイルを選ぶ）', 'showUpload')
     .addItem('今すぐ更新（置き場のCSVも取り込む）', 'poll')
+    .addItem('台帳を並べ替える（作業が必要な順）', 'sortLedger')
     .addItem('完了報告フォームのリンクを表示', 'showFormLink')
     .addSeparator()
     .addItem('テスト：見本の予約を入れる', 'seedTest')
@@ -1511,6 +1622,7 @@ function setup() {
 
   var now = now_(), L = ledger_();
   var list = refreshAll_(L, settings_(), now);
+  if (sortLedger_(L, settings_(), now)) { L = ledger_(); list = refreshAll_(L, settings_(), now); }
   renderTodo_(L, settings_(), now, list);
   ss.setActiveSheet(ss.getSheetByName(SHEETS.TODO));
 
