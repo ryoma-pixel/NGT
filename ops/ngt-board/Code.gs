@@ -1177,7 +1177,14 @@ function setup() {
   Object.keys(notes).forEach(function (h) { led.getRange(1, col(h)).setNote(notes[h]); });
   // スクリプトが書く列は、うっかり書き換えないよう警告を出す
   led.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) { if (p.getDescription() === 'NGT自動') p.remove(); });
-  AUTO_COLS.forEach(function (h) { led.getRange(2, col(h), rows, 1).protect().setDescription('NGT自動').setWarningOnly(true); });
+  // 隣り合う列はまとめて1つの範囲にする（範囲の数が多いと初期設定が遅くなる）
+  var autoIdx = AUTO_COLS.map(col).sort(function (a, b) { return a - b; });
+  for (var ai = 0; ai < autoIdx.length;) {
+    var aj = ai;
+    while (aj + 1 < autoIdx.length && autoIdx[aj + 1] === autoIdx[aj] + 1) aj++;
+    led.getRange(2, autoIdx[ai], rows, autoIdx[aj] - autoIdx[ai] + 1).protect().setDescription('NGT自動').setWarningOnly(true);
+    ai = aj + 1;
+  }
 
   var tours = ss.getSheetByName(SHEETS.TOURS) || ss.insertSheet(SHEETS.TOURS);
   if (tours.getLastRow() === 0) {
@@ -1218,17 +1225,26 @@ function setup() {
   subFolder_(folder, 'エラー');
 
   // 完了報告フォーム
+  // 途中で止まっても、もう一度 setup を実行すれば続きから作る
   var form = form_();
   if (!form) {
     form = FormApp.create('NINJA GO TOURS 完了報告（ガイド用）');
     props.setProperty('FORM_ID', form.getId());
+    props.deleteProperty('FORM_READY');
+  }
+  if (props.getProperty('FORM_READY') !== '1') {
     buildForm_(form, tours_());
-    form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+    var dest = '';
+    try { dest = form.getDestinationId() || ''; } catch (e) { dest = ''; }
+    if (dest !== ss.getId()) form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
     SpreadsheetApp.flush();
+    props.setProperty('FORM_READY', '1');
+  }
+  if (!ss.getSheetByName(SHEETS.REPORT)) {
     ss.getSheets().forEach(function (s) {
       var u = '';
       try { u = s.getFormUrl() || ''; } catch (e) { u = ''; }
-      if (u && u.indexOf(form.getId()) >= 0 && !ss.getSheetByName(SHEETS.REPORT)) s.setName(SHEETS.REPORT);
+      if (u && !ss.getSheetByName(SHEETS.REPORT) && (u.indexOf(form.getId()) >= 0 || /フォームの回答|Form Responses/.test(s.getName()))) s.setName(SHEETS.REPORT);
     });
   }
   setValueByKey_(set, '完了報告フォーム', form.getPublishedUrl());
