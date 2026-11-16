@@ -49,6 +49,7 @@ class FakeSheet {
   getLastRow() { let n = this.rows.length; while (n > 0 && this.rows[n - 1].every((x) => x === '' || x === undefined)) n--; return n; }
   getMaxRows() { return 1000; }
   appendRow(arr) { this.rows.splice(this.getLastRow(), 0, arr.slice()); }
+  deleteRow(r) { this.rows.splice(r - 1, 1); }
   clear() { this.rows = []; return this; }
   getRange(r, c, nr, nc) {
     if (typeof r === 'string') return new FakeRange(this, 2, 2, 999, 1);
@@ -64,6 +65,7 @@ class FakeSpreadsheet {
   constructor() { this.sheets = {}; return permissive(this); }
   getSheetByName(n) { return Object.values(this.sheets).find((s) => s.getName() === n) || null; }
   insertSheet(n) { return (this.sheets[n] = new FakeSheet(n)); }
+  deleteSheet(sh) { Object.keys(this.sheets).forEach((k) => { if (this.sheets[k] === sh) delete this.sheets[k]; }); }
   getUrl() { return 'https://docs.google.com/spreadsheets/d/TEST/edit'; }
   getId() { return 'TEST'; }
   getSheets() { return Object.values(this.sheets); }
@@ -402,6 +404,32 @@ test('完了報告フォームは時間切れでも、次の実行で続きか�
     assert.strictEqual(list.choices.length, tours.length);
     assert.ok(items.filter((i) => /の行程について$/.test(i.title)).every((p) => p.goTo && p.goTo.title === '【任意】そのほか'));
   } finally { env.run('delete Date.now'); }
+});
+
+
+test('テスト：見本の予約を入れると各段階に並び、消すと本物の予約だけ残る', () => {
+  const env = makeEnv();
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-REAL', '2026-11-20', '17:00', 2) + '\n');
+  env.mails.length = 0;
+  env.ctx.seedTest();
+  const st = (id) => env.derive(env.caseId(id)).st;
+  assert.strictEqual(st('TEST-01'), '新規（受注待ち）');
+  assert.strictEqual(st('TEST-02'), '受注済み（手配中）');
+  assert.strictEqual(st('TEST-03'), '手配済み（ゲスト連絡待ち）');
+  assert.strictEqual(st('TEST-04'), 'ゲスト連絡済み');
+  assert.strictEqual(st('TEST-05'), '完了報告済み（受領待ち）');
+  assert.strictEqual(st('TEST-06'), '未手配（期限切れ）');
+  assert.strictEqual(st('TEST-07'), 'キャンセル（リール確認待ち）');
+  assert.ok(env.ss.getSheetByName('テストの手順'));
+  env.ctx.poll();
+  assert.strictEqual(env.mails.length, 0, '触る前の見本では通知しない');
+  // 見本のあとに本物の予約が入っても、番号は NGT- の続きになる
+  env.importText('kiranah-resort-2.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-REAL', '2026-11-20', '17:00', 2) + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-NEW1', '2026-11-21', '17:00', 1) + '\n');
+  assert.strictEqual(env.caseBy('ARS_NINJAGORIDE-20261116-NEW1')['案件ID'], 'NGT-0002');
+  env.ctx.clearTest();
+  const ids = env.L().rows.map((c) => c['案件ID']);
+  assert.strictEqual(ids.join(','), 'NGT-0001,NGT-0002');
+  assert.ok(!env.ss.getSheetByName('テストの手順'));
 });
 
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

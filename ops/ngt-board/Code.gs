@@ -541,7 +541,7 @@ function addNote_(c, text) {
 
 function nextCaseId_(rows) {
   var max = 0;
-  rows.forEach(function (c) { var m = String(c[H.ID] || '').match(/(\d+)$/); if (m) max = Math.max(max, +m[1]); });
+  rows.forEach(function (c) { var m = String(c[H.ID] || '').match(/^NGT-(\d+)$/); if (m) max = Math.max(max, +m[1]); });
   var n = String(max + 1);
   while (n.length < 4) n = '0' + n;
   return 'NGT-' + n;
@@ -844,7 +844,7 @@ function alertOverdue_(L, cfg, now, list) {
   if (inQuiet_(now, cfg.quietStart, cfg.quietEnd)) return 0;
   var hits = (list || []).filter(function (c) {
     var d = c._d;
-    return d && d.who && isOverdue_(d, now) && String(c[H.ALERTED]) !== d.step;
+    return d && d.who && isOverdue_(d, now) && String(c[H.ALERTED]) !== d.step && String(c[H.ALERTED]) !== 'test';
   });
   if (!hits.length) return 0;
   var unarranged = hits.filter(function (c) { return c._d.step === 'unarranged'; });
@@ -1239,6 +1239,113 @@ function eveningCheck() {
       .concat(['', '今日' + cfg.arrangeDeadline + 'を過ぎても未手配のときは、原則キラナでキャンセル対応になります。']));
 }
 
+// ===== テスト（見本の予約で流れを体験する）=====
+
+var TEST_SHEET = 'テストの手順';
+
+function isTest_(c) { return /^TEST-/.test(String(c[H.ID] || '')) || /^TEST-/.test(String(c[H.BOOKING] || '')); }
+
+// 見本の予約を、それぞれ違う段階で台帳に入れる（名前・連絡先はすべて架空）
+function seedTest() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var cfg = settings_(), now = now_();
+    removeTestRows_();
+    var L = ledger_();
+    var day = function (n) { return ymd_(new Date(now.getTime() + n * DAY_MS)); };
+    var ago = function (h) { return new Date(now.getTime() - h * H_MS); };
+    var samples = [
+      { id: 'TEST-01', d: 1, t: '17:00', tour: '秘境神社 Ninja Walk', a: 2, route: '公式直販', name: '見本 A' },
+      { id: 'TEST-02', d: 3, t: '19:30', tour: 'NKTセット（秘境神社）', a: 2, route: 'NKTセット（Klook）', name: '見本 B', accept: 2 },
+      { id: 'TEST-03', d: 2, t: '18:00', tour: '浅草ナイト', a: 2, k: 1, route: 'Viator', name: '見本 C', accept: 20, arrange: 5, guide: 'ガイドA（見本）' },
+      { id: 'TEST-04', d: -1, t: '17:00', tour: 'ゴールデン街ナイト', a: 3, route: '公式直販', name: '見本 D', accept: 50, arrange: 40, guest: 30, guide: 'ガイドB（見本）' },
+      { id: 'TEST-05', d: -2, t: '11:00', tour: 'ハンコ作り', a: 1, route: 'Klook', name: '見本 E', accept: 80, arrange: 70, guest: 60, guide: 'ガイドC（見本）', report: 40 },
+      { id: 'TEST-06', d: 0, t: '21:00', tour: '秘境神社 Ninja Walk', a: 2, route: 'GetYourGuide', name: '見本 F' },
+      { id: 'TEST-07', d: 4, t: '17:30', tour: '新宿二丁目 LGBTQ+', a: 2, route: '公式直販', name: '見本 G', accept: 3, cancel: 1 }
+    ];
+    samples.forEach(function (x) {
+      var c = {};
+      c[H.ID] = x.id; c[H.DATE] = day(x.d); c[H.TIME] = x.t; c[H.TOUR] = x.tour; c[H.ADULT] = x.a; c[H.CHILD] = x.k || '';
+      c[H.NAME] = x.name + '（見本）'; c[H.CONTACT] = 'sample@example.com'; c[H.ROUTE] = x.route; c[H.MEMO] = 'テスト用の見本です';
+      c[H.BOOKING] = 'TEST-' + x.id.slice(5); c[H.SRC] = 'テスト'; c[H.T_CREATED] = x.accept ? ago(x.accept + 1) : now;
+      if (x.guide) c[H.GUIDE] = x.guide;
+      if (x.accept) { c[H.ACCEPT] = true; c[H.T_ACCEPT] = ago(x.accept); }
+      if (x.arrange) { c[H.ARRANGE] = true; c[H.T_ARRANGE] = ago(x.arrange); }
+      if (x.guest) { c[H.GUEST] = true; c[H.T_GUEST] = ago(x.guest); }
+      if (x.report) {
+        c[H.T_REPORT] = ago(x.report);
+        c[H.REPORT_SUM] = '反応 5/5／合流：予定どおり合流した／行程：すべて回った／終了：予定どおり／レビュー：その場で書いてもらった／トラブル：なかった／盛り上がった：印章店で注文（見本）';
+      }
+      if (x.cancel) { c[H.T_CX] = ago(x.cancel); c[H.CX_REASON] = 'CSVに載っていない（キャンセルとみなす）'; c[H.NOTE] = '見本：CSVから消えたためキャンセル'; }
+      c[H.ALERTED] = 'test';   // 見本は入れた直後に通知を送らない（段階が進むと通常どおり通知する）
+      appendCase_(L, c);
+    });
+    L = ledger_();
+    var list = refreshAll_(L, cfg, now);
+    ensureReportLinks_(L, list);
+    L.rows.filter(function (c) { return c[H.ID] === 'TEST-05'; }).forEach(function (c) {
+      L.sh.getRange(c._row, colOf_(L, H.REPORT)).setValue('報告済み（見本）');
+    });
+    renderTodo_(L, cfg, now, list);
+    writeTestGuide_();
+    log_('テスト', null, '見本の予約を7件入れました');
+    try { SpreadsheetApp.getUi().alert('見本の予約を7件入れました。\n「テストの手順」のシートの順に試してください。終わったら、メニュー「テスト：見本の予約を消す」で消せます。'); } catch (e) { /* エディタから実行 */ }
+  } finally { lock.releaseLock(); }
+}
+
+function removeTestRows_() {
+  var L = ledger_();
+  var rows = L.rows.filter(isTest_).map(function (c) { return c._row; }).sort(function (a, b) { return b - a; });
+  rows.forEach(function (r) { L.sh.deleteRow(r); });
+  return rows.length;
+}
+
+function clearTest() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var n = removeTestRows_();
+    var g = ss_().getSheetByName(TEST_SHEET);
+    if (g) ss_().deleteSheet(g);
+    var cfg = settings_(), now = now_(), L = ledger_();
+    renderTodo_(L, cfg, now, refreshAll_(L, cfg, now));
+    log_('テスト', null, '見本の予約を' + n + '件消しました');
+    try { SpreadsheetApp.getUi().alert('見本の予約を' + n + '件消しました。'); } catch (e) { /* エディタから実行 */ }
+  } finally { lock.releaseLock(); }
+}
+
+function writeTestGuide_() {
+  var ss = ss_();
+  var sh = ss.getSheetByName(TEST_SHEET) || ss.insertSheet(TEST_SHEET, 0);
+  var rows = [
+    ['テストの手順（見本の予約で、1件の予約が完了するまでを体験します）', '', '', ''],
+    ['順', 'だれ', 'やること', 'こうなればOK'],
+    ['1', 'みんな', '「今やること」を開く。いちばん上の件数と、リール・キラナそれぞれの「やること」を見る', 'TEST-01〜07 が期限の順に並んでいる。赤は期限切れ'],
+    ['2', 'リール', 'TEST-01（新規）の「TEST-01 ↗」を押して台帳へ。色の付いた ①受注 に✓', '今やることで TEST-01 が「ガイドを手配し…②手配完了」に変わる'],
+    ['3', 'リール', 'TEST-02（受注済み）の ガイド名 に「ガイドX」と入れ、②手配完了 に✓', '「ゲストと連絡できたら ③」に変わる'],
+    ['4', 'リール', 'TEST-03（手配済み）の ③ゲスト連絡 に✓', '次にやる人が「ガイド」になり、④に報告フォームのリンクが出る'],
+    ['5', 'ガイド', 'TEST-04（ツアー済み）の ④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', '台帳が「完了報告済み（受領待ち）」になり、報告の要約に1行入る。「合流できなかった」を選ぶと【至急】メールが届く'],
+    ['6', 'キラナ', 'TEST-05（報告済み）の「報告の要約」を読んで ⑤受領 に✓', '行が灰色になり「完了」'],
+    ['7', 'キラナ', 'TEST-06（今日のツアーで未手配＝期限切れ）の キャンセル対応（キラナ）に✓', 'キャンセル済みになる（リールが受注していた場合は、リールの確認待ちになる）'],
+    ['8', 'リール', 'TEST-07（キャンセル）の キャンセル確認（リール）に✓', '「キャンセル済み」になり灰色に'],
+    ['9', 'キラナ', '台帳のいちばん下の空いた行に、催行日・開始・ツアー・大人・代表者名を書き、経路で「インフルエンサー」を選ぶ', '案件ID（NGT-…）が自動で付き、リールの受注待ちになる。※この行は見本ではないので、試した後は行ごと削除'],
+    ['10', 'キラナ', 'メニュー「CSVを取り込む」で、テスト用のCSV（kiranah-resort-test.csv と tryhard-test.csv）を選ぶ', '新規が今やることに並び、お知らせメールが届く。NKTはセット商品の1件だけ、時刻は19:30で入る'],
+    ['11', 'みんな', '終わったら、メニュー「テスト：見本の予約を消す」', '見本（TEST-…）と、このシートが消える'],
+    ['', '', '※ 見本は、✓を付けるなどして触るまでは期限切れの通知を送りません。触ったあとは本番と同じように、通知先（いまはご本人だけ）にメールが届きます。', '']
+  ];
+  sh.clear();
+  sh.getRange(1, 1, rows.length, 4).setValues(rows).setWrap(true).setVerticalAlignment('middle');
+  sh.getRange(1, 1, 1, 4).setFontSize(14).setFontWeight('bold').setFontColor(COLORS.HEAD);
+  sh.getRange(2, 1, 1, 4).setFontWeight('bold').setBackground('#eeeeee');
+  var whoCol = rows.map(function (r) { return r[1] === 'リール' ? COLORS.REELU : r[1] === 'キラナ' ? COLORS.KIRA : r[1] === 'ガイド' ? COLORS.GUIDE : COLORS.WHITE; });
+  for (var i = 2; i < rows.length; i++) sh.getRange(i + 1, 2).setBackground(whoCol[i]);
+  sh.getRange(2, 1, rows.length - 2, 4).setBorder(true, true, true, true, true, true, '#d0d0d0', SpreadsheetApp.BorderStyle.SOLID);
+  sh.setColumnWidth(1, 40).setColumnWidth(2, 70).setColumnWidth(3, 520).setColumnWidth(4, 420);
+  sh.setFrozenRows(2);
+  ss.setActiveSheet(sh);
+}
+
 // ===== メニュー・初期設定 =====
 
 function onOpen() {
@@ -1246,6 +1353,9 @@ function onOpen() {
     .addItem('CSVを取り込む（ファイルを選ぶ）', 'showUpload')
     .addItem('今すぐ更新（置き場のCSVも取り込む）', 'poll')
     .addItem('完了報告フォームのリンクを表示', 'showFormLink')
+    .addSeparator()
+    .addItem('テスト：見本の予約を入れる', 'seedTest')
+    .addItem('テスト：見本の予約を消す', 'clearTest')
     .addSeparator()
     .addItem('完了報告フォームを作り直す（ツアーを変えたとき）', 'rebuildForm')
     .addItem('初期設定（最初に1回）', 'setup')
