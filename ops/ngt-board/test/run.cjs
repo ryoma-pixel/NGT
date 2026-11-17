@@ -565,4 +565,61 @@ test('対応一覧：キャンセルは別の欄。リール様のやること�
   assert.ok(/^新規 2件\|\|キャンセル 1件\|変更 0件/.test(rows.find((r) => /^新規 /.test(r))));
 });
 
+test('見本（TEST-）は、✓を付けた後も期限切れ・19時・取り込み・至急のメールを送らない（本物は送る）', () => {
+  const env = makeEnv();
+  env.ctx.seedTest();
+  env.edit(env.caseId('TEST-01')._row, 'メモ', '触った');            // 触ると通知済みの印が消える（以前はここから通知が出ていた）
+  env.edit(env.caseId('TEST-02')._row, '①受注（リール）', true);
+  env.mails.length = 0;
+  env.at('2026-11-16T14:30'); env.ctx.poll();
+  env.at('2026-11-16T19:00'); env.ctx.eveningCheck();
+  env.at('2026-11-16T20:30'); env.ctx.poll();
+  env.at('2026-11-17T13:00'); env.ctx.poll();
+  // 見本だけのテスト用CSV（置き場フォルダ経由）
+  const text = HEAD + '\n' + ngtRow('TEST-90', '2026-11-25', '17:00', 2) + '\n';
+  env.files.push({ getName: () => 'kiranah-resort-test.csv', getDateCreated: () => J('2026-11-17T13:01'), getBlob: () => ({ getDataAsString: () => text }), moveTo: () => {} });
+  env.ctx.poll();
+  assert.ok(env.caseBy('TEST-90'), '見本のCSVは取り込む');
+  // 見本の完了報告で「合流できなかった」
+  const nv = { '案件ID': ['TEST-04'] };
+  nv[env.ctx.Q.MEET] = ['合流できなかった']; nv[env.ctx.Q.TROUBLE] = ['なかった']; nv[env.ctx.Q.REACTION] = ['3'];
+  env.ctx.onReport({ namedValues: nv });
+  assert.strictEqual(env.mails.length, 0, env.mails.map((m) => m.subject).join(' / '));
+  assert.ok(/^【至急】/.test(env.caseId('TEST-04')['報告の要約']), '台帳の報告の要約には【至急】が出る');
+  // 本物の予約は通常どおり送る
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261117-REAL', '2026-11-28', '17:00', 1) + '\n');
+  env.at('2026-11-18T14:30'); env.ctx.poll();
+  assert.strictEqual(env.mails.length, 1);
+  assert.ok(/期限切れ 1件/.test(env.mails[0].subject));
+  assert.ok(/ARS|NGT-/.test(env.mails[0].body) && !/TEST-/.test(env.mails[0].body), env.mails[0].body);
+});
+
+test('設定「メール通知」を OFF にすると、メールを1通も送らない（台帳・対応一覧は更新する）', () => {
+  const env = makeEnv();
+  env.setVal('メール通知', 'OFF');
+  env.importText('kiranah-resort-1.csv', HEAD + '\n' + ngtRow('ARS_NINJAGORIDE-20261116-OFF1', '2026-11-18', '17:00', 1) + '\n');
+  env.mails.length = 0;
+  env.at('2026-11-17T19:00'); env.ctx.eveningCheck();
+  env.at('2026-11-17T20:30'); env.ctx.poll();
+  assert.strictEqual(env.mails.length, 0);
+  assert.strictEqual(env.derive(env.caseBy('ARS_NINJAGORIDE-20261116-OFF1')).st, '未手配（期限切れ）');
+  assert.ok(env.ss.getSheetByName('対応一覧').rows.some((r) => /メール通知は停止中/.test(r[0])), '対応一覧に停止中と出る');
+  assert.ok(env.ss.getSheetByName('ログ').rows.some((r) => r[1] === 'メール停止中'), '19時のお知らせはログに残る');
+  env.setVal('メール通知', 'ON');
+  env.at('2026-11-17T20:40'); env.ctx.poll();
+  assert.strictEqual(env.mails.length, 1, 'ON に戻すと送る');
+});
+
+test('設定シートに「メール通知」の行がなければ、10分おきの更新でいちばん上に足す', () => {
+  const env = makeEnv();
+  const i = env.set.rows.findIndex((r) => r[0] === 'メール通知');
+  env.set.rows.splice(i, 1);
+  env.ctx.poll();
+  assert.strictEqual(env.set.rows[1][0], 'メール通知');
+  assert.strictEqual(env.set.rows[1][1], 'ON');
+  assert.strictEqual(env.set.rows.filter((r) => r[0] === 'メール通知').length, 1);
+  env.ctx.poll();
+  assert.strictEqual(env.set.rows.filter((r) => r[0] === 'メール通知').length, 1, '2回目は足さない');
+});
+
 console.log('\n' + pass + ' 件 成功' + (process.exitCode ? '（失敗あり）' : ''));

@@ -96,6 +96,7 @@ var TOUR_DEFAULTS = [
 ];
 
 var SETTING_DEFAULTS = [
+  ['メール通知', 'ON', 'OFF にすると、通知メールをすべて止める（台帳と対応一覧の更新は続く）。見本（TEST-…）はONでもメールを送らない'],
   ['キラナの通知先', '', 'キラナの担当者のアドレス。複数はカンマ区切り'],
   ['リールの通知先', '', 'リールの担当者・共有アドレス。複数はカンマ区切り'],
   ['リールの確認時刻', '13:00', 'リールが毎日台帳を見る時刻'],
@@ -247,6 +248,7 @@ function num_(v, d) { var n = Number(v); return isFinite(n) && String(v).trim() 
 
 function normalizeSettings_(raw) {
   return {
+    mailOn: !/^(off|オフ|停止|止める|false|0)$/i.test(String(raw['メール通知'] == null ? 'ON' : raw['メール通知']).trim()),
     kiraTo: splitList_(raw['キラナの通知先']),
     reeluTo: splitList_(raw['リールの通知先']),
     checkTime: toHm_(raw['リールの確認時刻']) || '13:00',
@@ -566,6 +568,21 @@ function settings_() {
   return normalizeSettings_(raw);
 }
 
+// 新しく増えた設定の項目を足す（値は初期値。「メール通知」は見つけやすいようにいちばん上）
+function ensureSettingRows_(set) {
+  set = set || ss_().getSheetByName(SHEETS.SETTINGS);
+  if (!set || set.getLastRow() === 0) return;
+  var haveKeys = set.getDataRange().getValues().map(function (r) { return String(r[0]); });
+  SETTING_DEFAULTS.forEach(function (r) {
+    if (haveKeys.indexOf(r[0]) >= 0) return;
+    if (r[0] === 'メール通知') { set.insertRowBefore(2); set.getRange(2, 1, 1, 3).setValues([[r[0], r[1], r[2]]]); }
+    else set.appendRow([r[0], r[1], r[2]]);
+  });
+  var keys = set.getDataRange().getValues().map(function (r) { return String(r[0]); });
+  var i = keys.indexOf('メール通知');
+  if (i > 0) set.getRange(i + 1, 2).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['ON', 'OFF'], true).setAllowInvalid(true).build());
+}
+
 function tours_() {
   var sh = ss_().getSheetByName(SHEETS.TOURS);
   return toursFromRows_(sh ? sh.getDataRange().getValues().slice(1) : TOUR_DEFAULTS);
@@ -817,6 +834,7 @@ function renderTodo_(L, cfg, now, list) {
   var noonPassed = minOfDay_(now) >= hmToMin_(cfg.checkTime) - 30;   // 12:30 を過ぎても取り込みがなければ知らせる
 
   push(['NGT 手配ボード　対応一覧', '', '', '', '', '', '', '', '更新 ' + fmtDT_(now)], { bold: true, size: 18, fc: COLORS.HEAD, cells: { 8: { size: 10, fc: '#666666' } } });
+  if (!cfg.mailOn) push(['メール通知は停止中です（設定シートの「メール通知」を ON に戻すと再開します）'], { bg: COLORS.LATE, bold: true, fc: '#b42318' });
 
   // 本日の取り込み：件数は台帳から数える（取り込みの記録ではなく、いま台帳にある予約で数えるので食い違わない）
   var today = ymd_(now), md = fmtMD_(today);
@@ -992,6 +1010,7 @@ function sortLedger() {
 function sheetLink_() { return todoUrl_(); }
 
 function mail_(to, subject, lines) {
+  if (!settings_().mailOn) { log_('メール停止中', null, subject); return; }
   to = (to || []).filter(function (x) { return x; });
   if (!to.length) { log_('通知先なし', null, subject); return; }
   MailApp.sendEmail({ to: to.join(','), subject: '【NGT 手配】' + subject, body: lines.concat(['', '対応一覧：' + sheetLink_()]).join('\n'), name: 'NGT 手配ボード' });
@@ -1005,10 +1024,11 @@ function caseLine_(c) {
 
 // 期限を過ぎた案件を、段階ごとに1回だけ知らせる（夜間は朝に回す）
 function alertOverdue_(L, cfg, now, list) {
-  if (inQuiet_(now, cfg.quietStart, cfg.quietEnd)) return 0;
+  // メール停止中は「通知済み」の印を付けない（ON に戻したとき、まだ期限切れのものを知らせる）
+  if (!cfg.mailOn || inQuiet_(now, cfg.quietStart, cfg.quietEnd)) return 0;
   var hits = (list || []).filter(function (c) {
     var d = c._d;
-    return d && d.who && isOverdue_(d, now) && String(c[H.ALERTED]) !== d.step && String(c[H.ALERTED]) !== 'test';
+    return d && d.who && !isTest_(c) && isOverdue_(d, now) && String(c[H.ALERTED]) !== d.step;
   });
   if (!hits.length) return 0;
   var unarranged = hits.filter(function (c) { return c._d.step === 'unarranged'; });
@@ -1034,6 +1054,11 @@ function alertOverdue_(L, cfg, now, list) {
 function importSummaryMail_(cfg, results) {
   var lines = ['LINKTIVITY の CSV を台帳に取り込みました。', ''];
   var any = false;
+  var real = function (a) { return (a || []).filter(function (c) { return !isTest_(c); }); };
+  results = results.map(function (r) {
+    if (r.error) return r;
+    return { src: r.src, file: r.file, added: real(r.added), cancelled: real(r.cancelled), changed: real(r.changed), restored: real(r.restored), held: real(r.held) };
+  });
   results.forEach(function (r) {
     if (r.error) { lines.push('× ' + r.file + '：' + r.error); any = true; return; }
     lines.push('■ ' + r.src + '（' + r.file + '）　新規 ' + r.added.length + '件・キャンセル ' + r.cancelled.length + '件・変更 ' + r.changed.length + '件');
@@ -1360,12 +1385,12 @@ function applyReport_(L, nv, now) {
   if (detail) sum.push('内容：' + detail);
   var imp = first_(nv, Q.IMPROVE);
   if (imp) sum.push('改善：' + imp);
-  c[H.REPORT_SUM] = sum.join('／');
-  c[H.ALERTED] = '';
   var urgent = [];
   if (meet === A.MEET[2]) urgent.push('ゲストと合流できなかった');
   if (trouble === A.TROUBLE[1]) urgent.push('ケガ・トラブル・苦情があった');
   if (num_(reaction, 5) <= 2) urgent.push('ゲストの反応が ' + reaction + '/5');
+  c[H.REPORT_SUM] = (urgent.length ? '【至急】' : '') + sum.join('／');
+  c[H.ALERTED] = '';
   return { c: c, id: id, urgent: urgent, detail: detail };
 }
 
@@ -1381,7 +1406,8 @@ function onReport(e) {
       L.sh.getRange(r.c._row, colOf_(L, H.REPORT)).setValue('報告済み ' + fmtDT_(now));
       log_('完了報告', r.c, r.c[H.REPORT_SUM]);
     } else log_('完了報告', null, r.urgent.join('、'));
-    if (r.urgent.length) {
+    if (r.urgent.length && (r.c ? isTest_(r.c) : /^TEST-/.test(String(r.id || '')))) log_('見本のためメールなし', r.c, '【至急】完了報告：' + r.urgent.join('・'));
+    else if (r.urgent.length) {
       mail_(both_(cfg), '【至急】完了報告：' + r.urgent.join('・'),
         [r.c ? caseLine_(r.c) : '案件ID：' + r.id].concat(r.urgent.map(function (x) { return '・' + x; }))
           .concat(r.detail ? ['', '内容：' + r.detail] : []));
@@ -1425,6 +1451,7 @@ function poll() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return;
   try {
+    try { ensureSettingRows_(); } catch (err) { log_('設定の項目の追加に失敗', null, String(err)); }
     var cfg = settings_(), tours = tours_(), now = now_(), L = ledger_();
     initManual_(L, now);
     var results = importFromFolder_(cfg, L, tours, now);
@@ -1444,7 +1471,7 @@ function poll() {
 function eveningCheck() {
   var cfg = settings_(), now = now_(), L = ledger_();
   var tomorrow = ymd_(new Date(now.getTime() + DAY_MS));
-  var open = L.rows.filter(function (c) { return c[H.ID]; }).map(function (c) { c._d = derive_(c, cfg, now); return c; })
+  var open = L.rows.filter(function (c) { return c[H.ID] && !isTest_(c); }).map(function (c) { c._d = derive_(c, cfg, now); return c; })
     .filter(function (c) { return c._d.step === 'accept' || c._d.step === 'arrange'; });
   var hard = open.filter(function (c) { return toYmd_(c[H.DATE]) === tomorrow; });
   // 目安が今日の期限の時刻までに来るもの（今夜目安を迎える分も含めて、19時に先に知らせる）
@@ -1606,21 +1633,21 @@ function writeTestGuide_() {
   var rows = [
     ['テストの手順（見本の予約で、受付からキャンセル・完了までを体験します）', '', '', ''],
     ['順', 'だれ', 'やること', 'こうなればOK'],
-    ['1', 'みんな', '「対応一覧」を開く。いちばん上の取り込み件数と、リール様・キラナ様それぞれのやることを見る', '見本（TEST-01〜08）が「受注してください」「ガイドを手配してください」などに分かれて並ぶ'],
+    ['1', 'みんな', '「対応一覧」を開く。いちばん上の取り込み件数と、リール様・キラナそれぞれのやることを見る', '見本（TEST-01〜08）が「受注してください」「ガイドを手配してください」などに分かれて並ぶ'],
     ['2', 'リール', 'TEST-01（受注してください）の「TEST-01 を開く」を押して台帳へ。色の付いた欄（①受注）に✓', 'TEST-01 が「ガイドを手配してください」に移る'],
     ['3', 'リール', 'TEST-02（ガイドを手配してください）のガイド名に「ガイドX」と入れ、色の付いた欄（②手配完了）に✓', '「ゲストに連絡してください」に移る'],
     ['4', 'リール・ガイド', 'TEST-03（ゲストに連絡してください）の色の付いた欄（③ゲスト連絡）に✓。ガイドが付けてもよい', '「ガイドに完了報告を送ってもらってください」に移る（ツアーの後に出る）'],
-    ['5', 'ガイド', 'TEST-04（ツアー済み）の台帳④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', 'キラナ様の「完了報告を読んで、受領してください」に移る。「合流できなかった」を選ぶと【至急】メールが届く'],
+    ['5', 'ガイド', 'TEST-04（ツアー済み）の台帳④「報告フォーム」を開き、案件IDが入っているのを確かめて回答・送信', 'キラナの「完了報告を読んで、受領してください」に移る。「合流できなかった」を選ぶと台帳の「報告の要約」に【至急】と出る（本番ではメールも届く）'],
     ['6', 'キラナ', 'TEST-05 の「報告の要約」を読み、色の付いた欄（⑤受領）に✓', '行が灰色になり「完了」'],
     ['7', 'リール', 'TEST-06（今日のツアーで、前日20時を過ぎても未手配）を見る。赤い「期限切れ」で出ている。手配できたらガイド名を入れて ②手配完了 に✓', '「ゲストに連絡してください」に移る。※キャンセルの手続きは手配ボードの外で行い、CSVから消えると「キャンセルが発生しました」に出る'],
     ['8', 'リール', 'TEST-07（キャンセルが発生しました）を確認し、色の付いた欄（キャンセル確認）に✓', '対応一覧から消え、台帳は灰色＋取り消し線になる。TEST-08 は受注前のキャンセルなので、はじめから「キャンセル済み」（だれも何もしなくてよい）'],
     ['9', 'キラナ', 'メニュー「予約を手入力する」で、経路「インフルエンサー」・催行日・開始・ツアー・人数・代表者名を入れて登録', '案件ID（NGT-…）が付き、リール様の「受注してください」に出る。※見本ではないので、試した後は台帳の行ごと削除'],
     ['10', 'キラナ', 'メニュー「CSVを取り込む」で、テスト用のCSV（kiranah-resort-test.csv と tryhard-test.csv）を選ぶ', '本日の取り込みに「新規 3件」。NKTはセット商品の1件だけ、時刻は19:30で入る'],
     ['11', 'リール', '取り込まれた「見本 I（テスト）」（11/18 秘境神社）を受注する', '「ガイドを手配してください」に移る'],
-    ['12', 'キラナ', 'メニュー「CSVを取り込む」で、kiranah-resort-test-cancel.csv だけを選ぶ（見本 I が載っていないCSV＝キャンセルされた想定）', '取り込み画面に「キャンセルになった予約」として見本 I が出る。対応一覧の「本日のキャンセル」と、リール様の「キャンセルが発生しました」に出る。お知らせメールも届く'],
+    ['12', 'キラナ', 'メニュー「CSVを取り込む」で、kiranah-resort-test-cancel.csv だけを選ぶ（見本 I が載っていないCSV＝キャンセルされた想定）', '取り込み画面に「キャンセルになった予約」として見本 I が出る。対応一覧の「本日のキャンセル」と、リール様の「キャンセルが発生しました」に出る（見本なのでメールは届かない）'],
     ['13', 'リール', '見本 I の色の付いた欄（キャンセル確認）に✓', '「キャンセル済み」になる'],
     ['14', 'みんな', '終わったら、メニュー「テスト：見本の予約を消す」', '見本（TEST-…）と、このシートが消える'],
-    ['', '', '※ 見本は、✓を付けるなどして触るまでは期限切れの通知を送りません。触ったあとは本番と同じように、通知先（いまはご本人だけ）にメールが届きます。テスト用CSVは見本どうしだけで照らし合わせるので、本物の予約がキャンセル扱いになることはありません。', '']
+    ['', '', '※ 見本（TEST-…）は、期限切れ・取り込み・完了報告のメールを一切送りません（本物の予約のメールは通常どおり）。メールを全部止めたいときは、設定シートの「メール通知」を OFF に。テスト用CSVは見本どうしだけで照らし合わせるので、本物の予約がキャンセル扱いになることはありません。', '']
   ];
   sh.clear();
   sh.getRange(1, 1, rows.length, 4).setValues(rows).setWrap(true).setVerticalAlignment('middle');
@@ -1787,9 +1814,7 @@ function setup() {
     set.setColumnWidth(1, 240).setColumnWidth(2, 260).setColumnWidth(3, 480);
   }
   set.setFrozenRows(1);
-  // 新しく増えた設定の項目を足す（値は初期値）
-  var haveKeys = set.getDataRange().getValues().map(function (r) { return String(r[0]); });
-  SETTING_DEFAULTS.forEach(function (r) { if (haveKeys.indexOf(r[0]) < 0) set.appendRow([r[0], r[1], r[2]]); });
+  ensureSettingRows_(set);
 
   var log = ss.getSheetByName(SHEETS.LOG) || ss.insertSheet(SHEETS.LOG);
   if (log.getLastRow() === 0) log.appendRow(LOG_HEADERS);
