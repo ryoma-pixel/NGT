@@ -287,6 +287,13 @@
 - **新サイトへの切り替え前に直すURLのずれ**：STUDIOだけにあるコラム `ginza-pedestrian-paradise-hours`・`ginza-yurakucho-under-the-tracks`（取り込みが必要）／`/column/HanazonoShrine`→`hanazono-shrine-shinjuku-guide`、`/column/KabukichoatNight`→`is-kabukicho-safe-at-night`、`/column/asakusa-at-night-things-to-dov`（STUDIO側の誤字）→`asakusa-at-night-things-to-do`、`/tour/asakusa-night`→`asakusa-night-photo-walk` の転送／STUDIOで公開済みなのに新サイトでは下書き：omikuji・how-to-pray・asakusa-at-night／浅草ナイトは LINKTIVITY-UXZAM で予約受付中（新サイトも2026-10-28に予約受付中へ切り替え、`/tour/asakusa-night` の転送も追加済み）。
 - 計測の注意：googletagmanager.com には作業環境から接続できない（GTMの中身は未確認）。Lighthouse はプロキシのCA鍵だけを許可する `--ignore-certificate-errors-spki-list` で実行した。
 
+## 2026-11-19 Googleプロフィールの口コミ返信（加藤様の依頼「奥田さんが返信できる仕組み」）
+- 仕組みは**B案で進める**（ご本人決定）：GBPのAPIで口コミを取得 → Claude APIで返信案 → 奥田さんがスプレッドシートで承認 → APIで投稿。**NKT（NGT）のGoogle Workspace（Kiranah名義）で作る**。取得は**週1回の定例**（ご本人「毎週定例業務にしたい」）。未着手。残りの確認：GBPのオーナーのアカウント、作業者、奥田さんの所属・メール、承認ルール（仮：★3以下は加藤様）、キーワード方針の加藤様への説明。
+- 前提（2026-11-18 検索結果経由で確認。developers.google.com は作業環境から未接続）：API利用はGoogle Cloudのプロジェクトごとに審査（14日以内、承認まで上限0）。条件は確認済みで60日以上のプロフィールとウェブサイトの掲載。第三者が返信を自動化するにはオーナーの明示的な同意が必要。
+- 申請前に、GBPの「ウェブサイト」欄を `https://ninjagotours.com/` に直す（10/22の診断では `/comic-lp`＝404）。
+- キーワード（加藤様指定の21語）は1件に1〜2語だけ、口コミの内容に合うものを使う。「Last-minute activities in Tokyo」は予約締切が前日12:00のため使わない。「1-hour」系はEスクーター（145分）の口コミに使わない。NKTは「produced by Ninja + Kabuki Tokyo」の形だけ。★3以下はキーワードを入れない。英語以外の口コミは同じ言語で返信し、キーワードは入れない。ガイド名は口コミに名前が出ている場合だけ使う。
+- 当面はコピペ運用：2026-11-19 に21件の返信文（日本語訳つき）を作成 → https://claude.ai/artifact/4ot1aZRXYsEvPLD7tmG3ty （非公開、1件ずつコピー・Slack用5投稿のコピー）。口コミの本文が省略されていた6件は全文の確認が必要。
+
 ## 旧サイトから見つかった問題（要対応）
 - ~~利用規約・プライバシーポリシーが NINJA GO RIDE 専用~~ → 2026-09-25 ウォークツアー向けに書き直し（法務確認待ち）。ウォークツアー（子ども・キャンセル規定など）を対象にした規約がない。改訂は法務確認のうえ行う（文面は勝手に書き換えない）。
 - 特商法表記のサービスURL・メールアドレスが旧ドメイン（ninja-kabukitokyo.com / info_ninja-go-ride@…）のまま。
